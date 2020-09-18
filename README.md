@@ -23,6 +23,8 @@ Además, ese necesario ingestar los datos de `https://www.transtats.bts.gov/DL_S
 
 La ejecución del archivo se hizo en modo local usando 4GB de memoria y 8 _cores_. 
 
-Para ejecutarlo debemos de usar el comando 
-```spark-submit --driver-memory 4g --master local[8] rita_spark_demoras_en_rutas.py --config /ruta/a/archivo_de_configuracion.json```.
+Para ejecutarlo debemos de usar el comando:
+```
+spark-submit --driver-memory 4g --master local[8] rita_spark_demoras_en_rutas.py --config /ruta/a/archivo_de_configuracion.json
+```
 
