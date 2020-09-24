@@ -103,7 +103,7 @@ def update_graph(grpname):
     fig.update_yaxes(title_text="Número de aviones", showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Número de vuelos", showgrid=False, row=1, col=2)
     fig.update_yaxes(title_text="Aeropuertos en Estados Unidos", showgrid=False, row=2, col=1)
-    fig.update_yaxes(title_text="Numero de usuarios detectados", showgrid=False, row=2, col=2)
+    fig.update_yaxes(title_text="Número de vuelos", showgrid=False, row=2, col=2)
     fig.update_yaxes(title_text="Número de vuelos", showgrid=False, row=3, col=1)
     fig.update_yaxes(title_text="Número de vuelos", showgrid=False, row=4, col=1)
 
