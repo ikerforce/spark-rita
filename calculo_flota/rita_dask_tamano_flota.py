@@ -5,6 +5,7 @@ import argparse # Utilizado para leer archivo de configuracion
 import json # Utilizado para leer archivo de configuracion
 import time # Utilizado para medir el timpo de ejecucion
 import dask.dataframe as dd # Utilizado para el procesamiento de los datos
+import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL
 from sqlalchemy import create_engine
 
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
@@ -78,12 +79,12 @@ lista_df = rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_
 for resultado in lista_df:
 	resultado.to_sql(results_table, uri, if_exists='append', index=False)
 
-print(lista_df[1].head())
-
-print(tiempo_ejecucion(t_inicio))
+t_final = time.time() # Tiempo de finalizacion de la ejecucion
 # ----------------------------------------------------------------------------------------------------
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-
+info_tiempo = [[t_inicio, t_final, t_final - t_inicio, exec_desc, resources, time.strftime('%Y-%m-%d %H:%M:%S')]]
+df_tiempo = pd.DataFrame(data=info_tiempo, columns=['start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
+df_tiempo.to_sql(time_table, uri, if_exists=time_table_mode, index=False)
 # ----------------------------------------------------------------------------------------------------
