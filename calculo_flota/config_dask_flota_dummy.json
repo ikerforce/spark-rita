@@ -1,0 +1,13 @@
+{
+"user":"",
+"password":"",
+"database":"",
+"time_table":"",
+"time_table_mode":"append",
+"results_table":"",
+"results_table_mode":"",
+"input_table":"",
+"partition_column":"",
+"description":"",
+"resources":""
+}
