@@ -8,7 +8,7 @@ __Semana 4-5__ _Introducción_ - Objetivo, motivación y alcance (preguntas que 
 
 __Semana 6__ _Marco teórico_ - Fundamentos de procesamiento en paralelo
 
-__Semana 7__ _Marco__ teórico_ - Yarn (Spark y Hadoop)
+__Semana 7__ _Marco teórico_ - Yarn (Spark y Hadoop)
 
 __Semana 8__ _Marco teórico_ - Spark
 
@@ -34,7 +34,7 @@ __Semana 18__ _Ejecución_ - Migración a nube
 
 __Semana 19-20__ _Ejecución_ - Ejecución del experimento en la nube
 
-__Semana 21__ _ Ejecución_ - Migración de dashboard
+__Semana 21__ _Ejecución_ - Migración de dashboard
 
 __Semana 22__ _Marco teórico_ - Infraestructura y proveedor de servicio en la nube
 
