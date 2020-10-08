@@ -1,0 +1,74 @@
+Dataset seleccionado: RITA
+Preguntas:
+	1. ¿Cuáles son las rutas más transitadas (Por número de vuelos o de pasajeros)? ¿Clustering por aeropuerto? (Ya encontré ubicación de aeropuertos)
+	# R 1.1 Lo resuelvo con un group by tomando origen y destino y count a FL number o cualquier columna
+	# R 1.2 Para ponerlo en el mapa debo de hacer un join con las ubicaciones por lo que debo mantener el código de aeropuerto en el paso anterior
+	2. ¿Cuáles son los aeropuertos con mayor número/tiempo de demoras?
+	# R 2.1 Va a ser una diferencia entre CRS Time y BLK Time
+	# R 2.2 Después de hacer la diferencia debo de ver cuanto tiempo de tolerancia le doy al vuelo
+	# R 2.3 Hacer columna booleana con retrasados y no retrasados
+	# # R 2.3.1 Sum sobre la columna booleana para los retrasados y no retrasados por aeropuerto con un groupby  / estandarizar por numero de vuelos
+	# R 2.4 Hacer un promedio del tiempo de retraso por aeropuerto con un groupby
+	3. ¿Qué aerolíneas tienen más demoras?
+	# R 3.1 - 3.3 Son exactamente los mismos pasos que 2.1 a 2.3
+	# R 3.4 groupBy por aerolínea sumando valores de la columna booleana / estandarizar por numero de vuelos
+	# R 3.5 groupBy por aerolínea obteniendo promedio de demoras
+	4. ¿Qué tipo de avión tiene más demoras?
+	# R 4.1 - 4.3 Mismos pasado que 2.1 a 2.3
+	# R 4.4 Join con matricula y tipo de avion
+	# R 4.4 groupBy por tipo de avion sumando valores de la columna booleana
+	# R 4.5 groupBy por tipo de avion obteniendo promedio de demoras
+	5. ¿Cuáles son las rutas más largas?
+	5.1 En tiempo
+	# R 5.1.1 Generar nueva columna con diferencia entre BKL Departure y BLK Arrival (duración del vuelo)
+	# R 5.1.2 Group by por ruta para saber tiempo promedio de duración
+	[X] 5.2 En distancia 
+	# R 5.2.1 Obtener todas las rutas existentes
+	# R 5.2.2 Calcular la distancia entre cada uno de los aeropuertos de acuerdo a latitud y longitud
+	6. ¿Aproximación de la ruta óptima (en tiempo) entre dos aeropuertos?
+	# R 6.1 Algoritmo por definir pero usa la información de 5.1
+	[X] 7. ¿Aproximación de la ruta óptima (en distancia) entre dos aeropuertos?
+	# R 7.1 Algoritmo por definir pero usa la información de 5.2
+	8. Tamaño de la flota de cada aerolínea.
+	# R 8.1 GroupBy por aerolínea y count distinct sobre Tail Number
+	9. ¿Qué aviones están obsoletos?
+	# R 9.1 Usando tabla del punto 4.4 veo cuáles modelos han dejado de operar
+	# R 9.2 Hacer el análisis por aerolínea
+	10. ¿Qué aviones son los más nuevos?
+	# Igual que 9 pero viendo cuales empiezan a operar
+	
+Modelo:
+	1. Clustering puedo usar K-means o otro de clustering o simplemente group by ciudad. Encontrar todos los vuelos que recorren dicha ruta y sumarlos.
+	2. Ver promedio por aeropuerto.
+	3. Ver promedio por aerolínea.
+	4. Ver promedio por tipo de avión.
+	5. Cálculo de distancia.
+		5.1 Tiempo promedio
+		5.2 Distancia Haversine
+	6. Usar vecino más cercano o árbol de búsqueda con límite de iteraciones.
+	7. Usar vecino más cercano o árbol de búsqueda con límite de iteraciones.
+	8. Conteo de valores únicos de número de cola (considerando el tiempo).
+	9. Ver en él histórico qué equipos de avión han desaparecido.
+	10. Ver en él histórico qué equipos de avión aparecieron en los últimos años.
+	
+Presentación:
+	1. Dashboard de mapa con líneas que representen las rutas y el grosor de la línea el número de aviones (o pasajeros) que la transitaron.
+	2. Dashboard de mapa con punto cuyo radio sea proporcional al tiempo promedio de demora.
+	3. Gráfica de barras en dashboard.
+	4. Gráfica de barras en dashboard.
+	5. Se combina con el 1 (tal vez diferente color las más largas).
+	6. Es como el primero pero solo para la ruta.
+	7. Juntar con 6 y mostrar más rápida en tiempo y más rápida en distancia.
+	8. Gráfico de barras o de pay.
+	9. Línea de tiempo con número de aviones por periodo.
+	10. Igual que 9.
+	
+Herramientas:
+	1. Grafana
+	2. Tableau (Ver licencia)
+	3. D3 (Ver qué tanto JavaScript necesito)
+	4. D3 py
+	5. Bokeh
+
+hd2o, rapids, dask
+	
