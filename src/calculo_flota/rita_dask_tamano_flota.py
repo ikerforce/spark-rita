@@ -55,7 +55,7 @@ def conjuntos_rollup(columnas):
 
 def group_by_rollup(df, columnas_agregacion, columnas_totales):
     columnas_nulas = [item for item in columnas_totales if item not in columnas_agregacion]
-    resultado = df.groupby(columnas_agregacion).agg(agregaciones).reset_index().compute()
+    resultado = df.groupby(columnas_agregacion).agg(nunique).reset_index().compute()
     for columna in columnas_nulas:
         resultado[columna] = -1
     return resultado
@@ -72,7 +72,9 @@ def rollup(df, columnas, agregaciones):
 # ----------------------------------------------------------------------------------------------------
 conjuntos_rollup(['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'])
 
-agregaciones = {'TAIL_NUM' : 'count'}
+agregaciones = {'TAIL_NUM' : 'nunique'}
+
+nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.nunique())
 
 lista_df = rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 
