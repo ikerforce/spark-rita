@@ -63,23 +63,22 @@ def group_by_rollup(df, columnas_agregacion, columnas_totales):
 def rollup(df, columnas, agregaciones):
     df = df[list(set(columnas + list(agregaciones.keys())))]
     conjuntos_columnas = conjuntos_rollup(columnas)
-    dataframes = list(map(lambda X: group_by_rollup(df, X, columnas), conjuntos_columnas[1:]))
+    dataframes = list(map(lambda X: group_by_rollup(df, X, columnas), conjuntos_columnas))
     return dataframes
 # ----------------------------------------------------------------------------------------------------
 
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-conjuntos_rollup(['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'])
-
 agregaciones = {'TAIL_NUM' : 'nunique'}
 
-nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.nunique())
+nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.sum())
 
 lista_df = rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 
-for resultado in lista_df:
-	resultado.to_sql(results_table, uri, if_exists='append', index=False)
+lista_df[0].to_sql(results_table, uri, if_exists='replace', index=False) # En la primera escritura borro los resultados anteriores
+for resultado in lista_df[1:]:
+	resultado.to_sql(results_table, uri, if_exists='append', index=False) # Despupes solo hago append
 
 t_final = time.time() # Tiempo de finalizacion de la ejecucion
 # ----------------------------------------------------------------------------------------------------
