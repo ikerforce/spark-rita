@@ -57,7 +57,7 @@ def group_by_rollup(df, columnas_agregacion, columnas_totales):
     columnas_nulas = [item for item in columnas_totales if item not in columnas_agregacion]
     resultado = df.groupby(columnas_agregacion).agg(nunique).reset_index().compute()
     for columna in columnas_nulas:
-        resultado[columna] = -1
+        resultado[columna] = None
     return resultado
 
 def rollup(df, columnas, agregaciones):
