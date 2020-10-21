@@ -63,8 +63,7 @@ df_rita = spark.read.format("jdbc")\
 def tamano_flota_aerolinea(df):
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
-        .agg(F.grouping_id().alias('GROUPING_ID'), F.expr('COUNT(DISTINCT TAIL_NUM)').alias('N_TAIL_NUM'))\
-        .orderBy(F.desc('GROUPING_ID'))
+        .agg(F.expr('COUNT(DISTINCT TAIL_NUM)').alias('TAIL_NUM'))
     return df_resp
 # ----------------------------------------------------------------------------------------------------
 
