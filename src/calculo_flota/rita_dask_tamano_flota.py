@@ -49,7 +49,7 @@ def tiempo_ejecucion(t_inicial):
     tiempo['segundos'] = tiempo_segundos % 3600 % 60
     return tiempo
 
-def conjuntos_rollup(columnas):
+def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregacion total
     conjuntos = list(map(lambda x: columnas[0:x+1], range(len(columnas))))
     return conjuntos
 
