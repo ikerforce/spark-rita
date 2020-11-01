@@ -1,9 +1,12 @@
+# Importaciones necesarias
 import dask.dataframe as dd
 import time
 
-nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.sum())
+nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.sum()) # Definimos como hacer la agregacion para contar elementos únicos
 
 def tiempo_ejecucion(t_inicial):
+    """Esta función mide el tiempo transcurrido entre t_inicial y el momento en el que se llama la función.
+    El resultado es un JSON con los campos: horas, minutos y segundos."""
     tiempo_segundos = time.time() - t_inicial
     tiempo = {}
     tiempo['horas'] = int(tiempo_segundos // 3600)
@@ -11,7 +14,7 @@ def tiempo_ejecucion(t_inicial):
     tiempo['segundos'] = tiempo_segundos % 3600 % 60
     return tiempo
 
-def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregacion totalgit 
+def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregacion total
     conjuntos = list(map(lambda x: columnas[0:x+1], range(len(columnas))))
     return conjuntos
 
