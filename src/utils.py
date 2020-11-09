@@ -15,7 +15,7 @@ def tiempo_ejecucion(t_inicial):
     return tiempo
 
 def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregacion total
-    conjuntos = list(map(lambda x: columnas[0:x+1], range(len(columnas))))
+    conjuntos = [['X']] + list(map(lambda x: columnas[0:x+1], range(len(columnas))))
     return conjuntos
 
 def group_by_rollup(df, columnas_agregacion, columnas_totales):
@@ -23,10 +23,12 @@ def group_by_rollup(df, columnas_agregacion, columnas_totales):
     resultado = df.groupby(columnas_agregacion).agg(nunique).reset_index().compute()
     for columna in columnas_nulas:
         resultado[columna] = None
-    return resultado
+    return resultado.drop(columns=['X'])
 
 def rollup(df, columnas, agregaciones):
     df = df[list(set(columnas + list(agregaciones.keys())))]
+    df['X'] = 1 # Esta es una columna temporal para hacer la agregación total
     conjuntos_columnas = conjuntos_rollup(columnas)
+    for i in conjuntos_columnas: print(i)
     dataframes = list(map(lambda X: group_by_rollup(df, X, columnas), conjuntos_columnas))
     return dataframes
