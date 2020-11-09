@@ -29,6 +29,5 @@ def rollup(df, columnas, agregaciones):
     df = df[list(set(columnas + list(agregaciones.keys())))]
     df['X'] = 1 # Esta es una columna temporal para hacer la agregación total
     conjuntos_columnas = conjuntos_rollup(columnas)
-    for i in conjuntos_columnas: print(i)
     dataframes = list(map(lambda X: group_by_rollup(df, X, columnas), conjuntos_columnas))
     return dataframes
