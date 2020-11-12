@@ -49,7 +49,7 @@ df = dd.read_sql_table(input_table, uri=uri, index_col=partition_col)
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'count', 'DEP_DELAY':'count', 'ACTUAL_ELAPSED_TIME':'count', 'TAXI_IN':'count', 'TAXI_OUT':'count'}
+agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 
 lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 
