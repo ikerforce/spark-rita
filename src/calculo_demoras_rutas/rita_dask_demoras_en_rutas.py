@@ -49,8 +49,8 @@ df = dd.read_sql_table(input_table, uri=uri, index_col=partition_col)
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-df['ROUTE_AIRPORTS'] = df.apply(lambda row: row['ORIGIN'] + row['DEST'], axis=1) # Agregamos una columna que sea el concatenado de el origen y destino para así tener una ruta
-df.compute().head()
+df['ROUTE_AIRPORTS'] = df.apply(lambda row: row['ORIGIN'] + '-' + row['DEST'], axis=1, meta='str') # Agregamos una columna que sea el concatenado de el origen y destino para así tener una ruta
+print(df['ROUTE_AIRPORTS'].compute().head())
 # Cálculo de demoras en el origen
 agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 
