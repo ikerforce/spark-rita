@@ -61,13 +61,24 @@ def principales_rutas_fecha(df):
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
     df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID','ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
-        .agg(F.count("FL_DATE").alias("N_FLIGHTS"), F.avg('ARR_DELAY').alias("ARR_DELAY"), F.avg('DEP_DELAY').alias("DEP_DELAY"), F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"))\
+        .agg(
+            F.count("FL_DATE").alias("N_FLIGHTS"),
+            F.avg('ARR_DELAY').alias("ARR_DELAY"),
+            F.avg('DEP_DELAY').alias("DEP_DELAY"),
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
+            )\
         .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))\
         .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_MKT_ID', 'ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
-        .agg(F.grouping_id().alias('GROUPING_ID'), F.count("FL_DATE").alias("N_FLIGHTS"), F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME"))\
+        .agg(
+            F.grouping_id().alias('GROUPING_ID'), 
+            F.count("FL_DATE").alias("N_FLIGHTS"), 
+            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
+            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), 
+            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME")
+            )\
         .orderBy(F.desc('GROUPING_ID'))\
         .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
         .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
