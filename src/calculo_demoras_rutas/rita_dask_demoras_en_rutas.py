@@ -51,8 +51,8 @@ df = dd.read_sql_table(input_table, uri=uri, index_col=partition_col)
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
 df['ROUTE_AIRPORTS'] = df.apply(lambda row: row['ORIGIN'] + '-' + row['DEST'], axis=1, meta='str') # Agregamos una columna que sea el concatenado de el origen y destino para así tener una ruta
-df['ROUTE_MKT_ID'] = df.apply(lambda row: row['ORIGIN_MKT_ID'] + '-' + row['DEST_MKT_ID'], axis=1, meta='str') # Agregamos una columna que sea el concatenado de el origen y destino de mkt_id para así tener una ruta
-
+df['ROUTE_MKT_ID'] = df.apply(lambda row: str(row['ORIGIN_CITY_MARKET_ID']) + '-' + str(row['DEST_CITY_MARKET_ID']), axis=1, meta='str') # Agregamos una columna que sea el concatenado de el origen y destino de mkt_id para así tener una ruta
+df.compute()
 # Cálculo de demoras en rutas agrupadas por aeropuerto
 agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 
@@ -60,7 +60,7 @@ lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_
 
 lista_df[0].to_sql(results_table_aeropuertos, uri, if_exists='replace', index=False) # En la primera escritura borro los resultados anteriores
 for resultado in lista_df[1:]:
-    resultado.to_sql(results_table_aeropuertos, uri, if_exists='append', index=False) # Despupes solo hago append
+    resultado.to_sql(results_table_aeropuertos, uri, if_exists='append', index=False) # Después solo hago append
 
 # Cálculo de demoras agrupadas por mkt_id
 agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
