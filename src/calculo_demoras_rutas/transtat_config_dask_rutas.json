@@ -1,7 +1,8 @@
 {
 "time_table":"dask_tiempo_demoras_rutas",
 "time_table_mode":"append",
-"results_table":"dask_demoras_rutas",
+"results_table_aeropuerto":"dask_demoras_rutas_aeropuerto",
+"results_table_mkt":"dask_demoras_rutas_mkt",
 "results_table_mode":"overwrite",
 "input_table":"RITA_20",
 "db_numPartitions":"20",
