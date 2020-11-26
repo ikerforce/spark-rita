@@ -1,7 +1,7 @@
 {
 "time_table":"spark_tiempo_demoras_aerolineas",
 "time_table_mode":"append",
-"results_table":"spark_retraso_aerolineas",
+"results_table":"demoras_aerolineas_spark",
 "results_table_mode":"overwrite",
 "input_table":"RITA_20",
 "db_numPartitions":"20",
