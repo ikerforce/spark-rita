@@ -67,7 +67,7 @@ def aeropuerto_demoras_aerolinea(df):
     - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     """
-    df_resp = df.rollup('OP_CARRIER_AIRLINE_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+    df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("FL_DATE"),
             F.avg('ARR_DELAY').alias("ARR_DELAY"),
