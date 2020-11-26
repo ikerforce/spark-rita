@@ -17,20 +17,23 @@ import time # Utilizado para medir el timpo de ejecucion
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
+parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
 with open(args.config) as json_file:
-	config = json.load(json_file)
-user = config["user"] # Usuario de mysql
-password = config["password"] # Password de mysql
-database = config["database"] # Base de datos en la que almaceno resultados y tiempo de ejecucion
+    config = json.load(json_file)
+with open(args.creds) as json_file:
+    creds = json.load(json_file)
+user = creds["user"] # Usuario de mysql
+password = creds["password"] # Password de mysql
+database = creds["database"] # Base de datos en la que almaceno resultados y tiempo de ejecucion
 time_table = config["time_table"] # Tabla en la que almaceno el tiempo de ejecucion de la tarea
 results_table = config["results_table"] # Tabla en la que almaceno el resultado de los vuelos de origen
 input_table = config["input_table"] # Tabla con los datos necesarios para la ejecucion del algoritmo
 time_table_mode = config["time_table_mode"] # Forma en la que escribo el resultado en la tabla (append o overwrite)
 results_table_mode = config["results_table_mode"] # Forma en la que escribo el resultado en la tabla (append o overwrite)
-db_url = config["db_url"] # URL de la base de datos
-db_driver = config["db_driver"] # Driver de la base de datos
+db_url = creds["db_url"] # URL de la base de datos
+db_driver = creds["db_driver"] # Driver de la base de datos
 db_numPartitions = config["db_numPartitions"] # Numero de particiones en las que escribimos la base de datos
 exec_desc = config["description"] # Descripcion breve de la ejecucion que estamos haciendo
 resources = config["resources"] # Descripcion breve de los recursos utilizados para la ejecucion
