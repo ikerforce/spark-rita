@@ -69,12 +69,12 @@ def aeropuerto_demoras_aerolinea(df):
     """
     df_resp = df.rollup('OP_CARRIER_AIRLINE_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("AVG_TAXI_IN"),
-            F.avg('TAXI_OUT').alias("AVG_TAXI_OUT")
+            F.count("FL_DATE").alias("FL_DATE"),
+            F.avg('ARR_DELAY').alias("ARR_DELAY"),
+            F.avg('DEP_DELAY').alias("DEP_DELAY"),
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.avg('TAXI_IN').alias("TAXI_IN"),
+            F.avg('TAXI_OUT').alias("TAXI_OUT")
             )
     return df_resp
 # ----------------------------------------------------------------------------------------------------
