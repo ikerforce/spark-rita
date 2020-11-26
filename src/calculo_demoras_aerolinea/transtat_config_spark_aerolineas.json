@@ -5,6 +5,6 @@
 "results_table_mode":"overwrite",
 "input_table":"RITA_20",
 "db_numPartitions":"20",
-"description":"Ejecucion de prueba en equipo local.",
+"description":"Ejecucion de prueba en equipo local con 10000 registros.",
 "resources":"SPARK LOCAL DEFAULT"
 }
