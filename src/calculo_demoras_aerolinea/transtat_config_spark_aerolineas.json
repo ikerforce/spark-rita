@@ -1,5 +1,5 @@
 {
-"time_table":"spark_tiempo_demoras_aerolineas",
+"time_table":"demoras_aerolineas_tiempo_spark",
 "time_table_mode":"append",
 "results_table":"demoras_aerolineas_spark",
 "results_table_mode":"overwrite",
