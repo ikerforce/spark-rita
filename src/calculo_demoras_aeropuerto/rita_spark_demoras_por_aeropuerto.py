@@ -115,7 +115,7 @@ df_resp_origen.write.format("jdbc")\
     .mode(results_table_mode)\
     .save()
 
-df_resp_destino = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
+df_resp_destino = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta
 df_resp_destino.write.format("jdbc")\
     .options(
         url=db_url + database,
