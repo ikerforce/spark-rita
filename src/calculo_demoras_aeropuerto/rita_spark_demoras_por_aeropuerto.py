@@ -67,15 +67,13 @@ def aeropuerto_demoras_origen(df):
     """
     df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.grouping_id().alias('GROUPING_ID'),
-            F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("AVG_TAXI_IN"),
-            F.avg('TAXI_OUT').alias("AVG_TAXI_OUT")
-            )\
-        .orderBy(F.asc('GROUPING_ID'))
+            F.count("FL_DATE"),
+            F.avg('ARR_DELAY'),
+            F.avg('DEP_DELAY'),
+            F.avg('ACTUAL_ELAPSED_TIME'),
+            F.avg('TAXI_IN'),
+            F.avg('TAXI_OUT')
+            )
     return df_resp
 
 def aeropuerto_demoras_destino(df):
@@ -89,15 +87,13 @@ def aeropuerto_demoras_destino(df):
     """
     df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.grouping_id().alias('GROUPING_ID'),
-            F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("AVG_TAXI_IN"),
-            F.avg('TAXI_OUT').alias("AVG_TAXI_OUT")
-            )\
-        .orderBy(F.asc('GROUPING_ID'))
+            F.count("FL_DATE"),
+            F.avg('ARR_DELAY'),
+            F.avg('DEP_DELAY'),
+            F.avg('ACTUAL_ELAPSED_TIME'),
+            F.avg('TAXI_IN'),
+            F.avg('TAXI_OUT')
+            )
     return df_resp
 # ----------------------------------------------------------------------------------------------------
 
