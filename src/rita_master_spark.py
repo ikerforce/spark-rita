@@ -64,6 +64,46 @@ def aeropuerto_demoras_aerolinea(df):
             F.avg('TAXI_OUT').alias("TAXI_OUT")
             )
     return df_resp
+
+def aeropuerto_demoras_origen(df):
+    """Esta funcion calcula, tomando como referencia el aeropuerto de origen:
+    - El retraso promedio en la salida de los vuelos.
+    - El retraso promedio en la llegada de los vuelos.
+    - La duración promedio de los vuelos.
+    - El tiempo de rodaje del avión desde el aterrizaje hasta la puerta de desembarco.
+    - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
+    Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
+    """
+    df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+        .agg(
+            F.count("FL_DATE"),
+            F.avg('ARR_DELAY'),
+            F.avg('DEP_DELAY'),
+            F.avg('ACTUAL_ELAPSED_TIME'),
+            F.avg('TAXI_IN'),
+            F.avg('TAXI_OUT')
+            )
+    return df_resp
+
+def aeropuerto_demoras_destino(df):
+    """Esta funcion calcula, tomando como referencia el aeropuerto de destino:
+    - El retraso promedio en la salida de los vuelos.
+    - El retraso promedio en la llegada de los vuelos.
+    - La duración promedio de los vuelos.
+    - El tiempo de rodaje del avión desde el aterrizaje hasta la puerta de desembarco.
+    - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
+    Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
+    """
+    df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+        .agg(
+            F.count("FL_DATE"),
+            F.avg('ARR_DELAY'),
+            F.avg('DEP_DELAY'),
+            F.avg('ACTUAL_ELAPSED_TIME'),
+            F.avg('TAXI_IN'),
+            F.avg('TAXI_OUT')
+            )
+    return df_resp
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -75,6 +115,10 @@ except:
 	print('\n\n\t\tNo se definió el proceso que se desea ejecutar.\n\n')
 if process == 'aerolinea':
 	df_resp = aeropuerto_demoras_aerolinea(df_rita) # Calculo de demoras en cada ruta
+elif process == 'aeropuerto_origen':
+	df_resp_origen = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
+elif process == 'aeropuerto_destino':
+	df_resp_destino = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
 else:
 	print('\n\n\tEl nombre del proceso no es válido.\n\n')
 
