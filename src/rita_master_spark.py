@@ -104,6 +104,38 @@ def aeropuerto_demoras_destino(df):
             F.avg('TAXI_OUT')
             )
     return df_resp
+
+def principales_rutas_fecha(df):
+    """Esta funcion calcula el retraso promedio en la salida, llegada y la duracion promedio para cada ruta.
+    Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
+    \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
+    # Obtencion de ruta por dia
+    df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID','ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
+        .agg(
+            F.count("FL_DATE"),
+            F.avg('ARR_DELAY'),
+            F.avg('DEP_DELAY'),
+            F.avg('ACTUAL_ELAPSED_TIME')
+            )\
+        .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))\
+        .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
+    
+    # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
+    df_resp = df_resp.rollup('ROUTE_MKT_ID', 'ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+        .agg(
+            F.grouping_id(), 
+            F.count("FL_DATE"), 
+            F.avg('ARR_DELAY'), 
+            F.avg('DEP_DELAY'), 
+            F.avg('ACTUAL_ELAPSED_TIME')
+            )\
+        .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
+        .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
+        .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
+        .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
+        .drop('ROUTE_AIRPORTS')\
+        .drop('ROUTE_MKT_ID')
+    return df_resp
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -119,6 +151,8 @@ elif process == 'aeropuerto_origen':
 	df_resp_origen = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
 elif process == 'aeropuerto_destino':
 	df_resp_destino = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
+elif process == 'rutas':
+	
 else:
 	print('\n\n\tEl nombre del proceso no es válido.\n\n')
 
