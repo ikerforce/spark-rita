@@ -112,10 +112,10 @@ def principales_rutas_fecha(df):
     # Obtencion de ruta por dia
     df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID','ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
         .agg(
-            F.count("FL_DATE"),
-            F.avg('ARR_DELAY'),
-            F.avg('DEP_DELAY'),
-            F.avg('ACTUAL_ELAPSED_TIME')
+            F.count("FL_DATE").alias("N_FLIGHTS"),
+            F.avg('ARR_DELAY').alias("ARR_DELAY"),
+            F.avg('DEP_DELAY').alias("DEP_DELAY"),
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
             )\
         .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))\
         .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
@@ -123,11 +123,10 @@ def principales_rutas_fecha(df):
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_MKT_ID', 'ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.grouping_id(), 
-            F.count("FL_DATE"), 
-            F.avg('ARR_DELAY'), 
-            F.avg('DEP_DELAY'), 
-            F.avg('ACTUAL_ELAPSED_TIME')
+            F.count("FL_DATE").alias("N_FLIGHTS"), 
+            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
+            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), 
+            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME")
             )\
         .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
         .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
@@ -136,23 +135,30 @@ def principales_rutas_fecha(df):
         .drop('ROUTE_AIRPORTS')\
         .drop('ROUTE_MKT_ID')
     return df_resp
+
+
+def tamano_flota_aerolinea(df):
+    # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
+    df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+        .agg(F.expr('COUNT(DISTINCT TAIL_NUM)').alias('TAIL_NUM'))
+    return df_resp
 # ----------------------------------------------------------------------------------------------------
 
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-try:
-	process = config['process']
-except:
-	print('\n\n\t\tNo se definió el proceso que se desea ejecutar.\n\n')
+process = config["results_table"]
+print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
 if process == 'aerolinea':
 	df_resp = aeropuerto_demoras_aerolinea(df_rita) # Calculo de demoras en cada ruta
 elif process == 'aeropuerto_origen':
 	df_resp_origen = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
 elif process == 'aeropuerto_destino':
 	df_resp_destino = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
-elif process == 'rutas':
-	
+elif process == 'demoras_ruta_spark':
+	df_resp = principales_rutas_fecha(df_rita) # Calculo de demoras en cada ruta
+elif process == 'flota':
+	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
 else:
 	print('\n\n\tEl nombre del proceso no es válido.\n\n')
 
@@ -184,4 +190,6 @@ df_time.write.format("jdbc")\
         password=creds["password"])\
     .mode(config["time_table_mode"])\
     .save()
+
+print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
 # ----------------------------------------------------------------------------------------------------
