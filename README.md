@@ -23,8 +23,21 @@ Además, ese necesario ingestar los datos de `https://www.transtats.bts.gov/DL_S
 
 La ejecución del archivo se hizo en modo local usando 4GB de memoria y 8 _cores_. 
 
-Para ejecutarlo debemos de usar el comando:
+Actualmente el proceso consiste de 5 procesos en Spark y 5 en Dask. Cada proceso en Spark tiene un proceso equivalente en Dask para poder comparar el rendimiento de cada uno de ellos.
+
+El siguiente comando es utilizado para ejecutar cada proceso de Spark:
 ```
-spark-submit --driver-memory 4g --master local[8] rita_spark_demoras_en_rutas.py --config /ruta/a/archivo_de_configuracion.json
+spark-submit src/rita_master_spark.py --creds /ruta/a/credenciales.json --conf ruta/a/archivos/de/configuracion.json
 ```
 
+Dependiendo del archivo de configuración se ejecutará un proceso distinto.
+
+__demoras_ruta_spark__ Este proceso calcula las retrasos de los aviones de acuerdo a la ruta que recorrió el vuelo.
+
+__demoras_aeropuerto_origen_spark__ Este proceso calcula las retrasos de los aviones respecto a su aeropuerto de origen y al market id de origen.
+
+__demoras_aeropuerto_destino_spark__ Este proceso calcula las retrasos de los aviones respecto a su aeropuerto de destino y al market id de destino.
+
+__demoras_aerolinea_spark__ Este proceso calcula las retrasos de los aviones respecto a la aerolínea a la que pertenece.
+
+__flota_spark__ Este proceso calcula el tamaño de la flota de una aerolínea.
