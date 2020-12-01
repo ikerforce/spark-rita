@@ -149,18 +149,18 @@ def tamano_flota_aerolinea(df):
 # ----------------------------------------------------------------------------------------------------
 process = config["results_table"]
 print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
-if process == 'aerolinea':
+if process == 'demoras_aerolinea_spark':
 	df_resp = aeropuerto_demoras_aerolinea(df_rita) # Calculo de demoras en cada ruta
-elif process == 'aeropuerto_origen':
-	df_resp_origen = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
-elif process == 'aeropuerto_destino':
-	df_resp_destino = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
+elif process == 'demoras_aeropuerto_origen_spark':
+	df_resp = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
+elif process == 'demoras_aeropuerto_destino_spark':
+	df_resp = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
 elif process == 'demoras_ruta_spark':
 	df_resp = principales_rutas_fecha(df_rita) # Calculo de demoras en cada ruta
-elif process == 'flota':
+elif process == 'flota_spark':
 	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
 else:
-	print('\n\n\tEl nombre del proceso no es válido.\n\n')
+	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
 
 df_resp.write.format("jdbc")\
     .options(
