@@ -1,0 +1,8 @@
+Notas:
+
+- Hay que poner la partición de Spark al leer.
+- Tengo que cambiar los nombres de la agregación por ruta.
+
+
+To do:
+- En luugar de hacer la ejecucuón por proceso mejor hacerla por la tabla en la que se escribe.
