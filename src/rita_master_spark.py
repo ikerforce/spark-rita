@@ -166,7 +166,7 @@ df_resp.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable=config["results_table"],
+        dbtable=process,
         user=creds["user"],
         password=creds["password"],
         numPartitions=config["db_numPartitions"])\
@@ -178,14 +178,14 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time = sc.parallelize([[t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"]]]) # Almacenamos infomracion de ejecucion en rdd
-df_time = rdd_time.toDF(['start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+rdd_time = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"]]]) # Almacenamos infomracion de ejecucion en rdd
+df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
     .withColumn("insertion_ts", F.current_timestamp())
 df_time.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable=config["time_table"],
+        dbtable="registro_de_tiempo",
         user=creds["user"],
         password=creds["password"])\
     .mode(config["time_table_mode"])\
