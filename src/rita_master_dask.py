@@ -38,10 +38,41 @@ df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partiti
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-process = config["results_table"] # Tabla en la que almaceno el resultado (resumen de flota por aerolinea)
-agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+process = config["results_table"]
+print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
 
-lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+
+elif process == 'demoras_ruta_spark':
+	df_resp = principales_rutas_fecha(df_rita) # Calculo de demoras en cada ruta
+elif process == 'flota_spark':
+	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
+else:
+	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
+
+process = config["results_table"] # Tabla en la que almaceno el resultado (resumen de flota por aerolinea)
+print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
+if process == 'demoras_aerolinea_dask':
+	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+	lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+elif process == 'demoras_aeropuerto_origen_dask':
+	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+	lista_df = utils.rollup(df, ['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+elif process == 'demoras_aeropuerto_destino_dask':
+	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+	lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+elif process == 'demoras_ruta_aeropuerto_dask':
+	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+	lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+elif process == 'demoras_ruta_mktid_dask':
+	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+	lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+elif process == 'flota_dask':
+	agregaciones = {'TAIL_NUM' : 'nunique'}
+	lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+else:
+	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
+
+
 
 lista_df[0].to_sql(process, uri, if_exists='replace', index=False) # En la primera escritura borro los resultados anteriores
 for resultado in lista_df[1:]:
