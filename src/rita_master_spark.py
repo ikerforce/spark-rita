@@ -185,7 +185,7 @@ df_time.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable="registro_de_tiempo",
+        dbtable="registro_de_tiempo_spark",
         user=creds["user"],
         password=creds["password"])\
     .mode(config["time_table_mode"])\
