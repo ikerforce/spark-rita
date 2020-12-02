@@ -38,17 +38,6 @@ df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partiti
 
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
-process = config["results_table"]
-print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
-
-
-elif process == 'demoras_ruta_spark':
-	df_resp = principales_rutas_fecha(df_rita) # Calculo de demoras en cada ruta
-elif process == 'flota_spark':
-	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
-else:
-	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
-
 process = config["results_table"] # Tabla en la que almaceno el resultado (resumen de flota por aerolinea)
 print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
 if process == 'demoras_aerolinea_dask':
