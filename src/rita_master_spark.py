@@ -105,23 +105,22 @@ def aeropuerto_demoras_destino(df):
             )
     return df_resp
 
-def principales_rutas_fecha(df):
+def principales_rutas_aeropuerto_fecha(df):
     """Esta funcion calcula el retraso promedio en la salida, llegada y la duracion promedio para cada ruta.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
-    df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID','ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
+    df_resp = df.groupBy('ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"),
             F.avg('ARR_DELAY').alias("ARR_DELAY"),
             F.avg('DEP_DELAY').alias("DEP_DELAY"),
             F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
             )\
-        .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))\
-        .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
+        .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
-    df_resp = df_resp.rollup('ROUTE_MKT_ID', 'ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+    df_resp = df_resp.rollup('ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"), 
             F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
@@ -130,9 +129,34 @@ def principales_rutas_fecha(df):
             )\
         .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
         .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
+        .drop('ROUTE_AIRPORTS')
+    return df_resp
+
+
+def principales_rutas_mktid_fecha(df):
+    """Esta funcion calcula el retraso promedio en la salida, llegada y la duracion promedio para cada ruta.
+    Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
+    \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
+    # Obtencion de ruta por dia
+    df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
+        .agg(
+            F.count("FL_DATE").alias("N_FLIGHTS"),
+            F.avg('ARR_DELAY').alias("ARR_DELAY"),
+            F.avg('DEP_DELAY').alias("DEP_DELAY"),
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
+            )\
+        .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
+    
+    # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
+    df_resp = df_resp.rollup('ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
+        .agg(
+            F.count("FL_DATE").alias("N_FLIGHTS"), 
+            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
+            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), 
+            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME")
+            )\
         .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
         .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
-        .drop('ROUTE_AIRPORTS')\
         .drop('ROUTE_MKT_ID')
     return df_resp
 
@@ -155,8 +179,10 @@ elif process == 'demoras_aeropuerto_origen_spark':
 	df_resp = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
 elif process == 'demoras_aeropuerto_destino_spark':
 	df_resp = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
-elif process == 'demoras_ruta_spark':
-	df_resp = principales_rutas_fecha(df_rita) # Calculo de demoras en cada ruta
+elif process == 'demoras_ruta_aeropuerto_spark':
+	df_resp = principales_rutas_aeropuerto_fecha(df_rita) # Calculo de demoras en cada ruta
+elif process == 'demoras_ruta_mktid_spark':
+    df_resp = principales_rutas_mktid_fecha(df_rita) # Calculo de demoras en cada ruta
 elif process == 'flota_spark':
 	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
 else:
