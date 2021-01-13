@@ -5,4 +5,9 @@ Notas:
 
 
 To do:
-- En luugar de hacer la ejecucuón por proceso mejor hacerla por la tabla en la que se escribe.
+- En lugar de hacer la ejecucuón por proceso mejor hacerla por la tabla en la que se escribe.
+- Falta en Dask hacer la agregación por MKID
+
+
+Dask desventajas:
+- Es más difícl escribir todos los resultados a MySQL (Hay que borrar para la primera y luego poner append)
