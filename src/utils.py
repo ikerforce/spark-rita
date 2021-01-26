@@ -14,6 +14,12 @@ def tiempo_ejecucion(t_inicial):
     tiempo['segundos'] = tiempo_segundos % 3600 % 60
     return tiempo
 
+def unir_columnas(df, col1, col2, col_resultante):
+    """Esta función recibe como argumento un dataframe y dos columnas (col1, col2) cuyos valores concatenará en una columna nueva cuyo resultado
+    corresponde al cuarto argumento. (col resultante)"""
+    df[col_resultante] = df[col1].astype(str) + '-' + df[col2].astype(str)
+    return df.drop(col1, axis=1).drop(col2, axis=1)
+
 def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregación total
     conjuntos = list(map(lambda x: columnas[0:x+1], range(len(columnas))))
     return conjuntos
