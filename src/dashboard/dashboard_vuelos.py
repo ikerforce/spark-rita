@@ -51,11 +51,11 @@ def update_graph(grpname):
     db_connection_str = 'mysql+pymysql://' + user + ':' + password + '@localhost:3306/' + database # String de conexion a MySQL
     db_connection = create_engine(db_connection_str) # Conectamos con la base de datos de MySQL
 
-    demoras_por_dia = pd.read_sql('SELECT * FROM demoras_por_dia ORDER BY FL_DATE DESC LIMIT 100', con=db_connection) # Lectura de datos de demoras diarias
-    demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_por_aerolinea ORDER BY n_vuelos LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
-    flota = pd.read_sql('SELECT * FROM flota ORDER BY N_AVIONES DESC LIMIT 20', con=db_connection) # Lectura del tamano de la flota de las aerolineas
-    destinos_fantasma = pd.read_sql('SELECT CONCAT("A", DEST_AIRPORT_ID) AS DEST_AIRPORT_ID, count FROM destinos_fantasma ORDER BY count DESC LIMIT 20', con=db_connection) # Lectura de los destinos con mas vuelos fantasma
-    vuelos_origen_demoras = pd.read_sql('SELECT * FROM vuelos_origen_demoras', con=db_connection) # Aeropuertos de origen con mas demoras
+    demoras_por_dia = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask ORDER BY FL_DATE DESC LIMIT 100', con=db_connection) # Lectura de datos de demoras diarias
+    demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
+    flota = pd.read_sql('SELECT * FROM flota_dask ORDER BY TAIL_NUM DESC LIMIT 20', con=db_connection) # Lectura del tamano de la flota de las aerolineas
+    # destinos_fantasma = pd.read_sql('SELECT CONCAT("A", DEST_AIRPORT_ID) AS DEST_AIRPORT_ID, count FROM destinos_fantasma ORDER BY count DESC LIMIT 20', con=db_connection) # Lectura de los destinos con mas vuelos fantasma
+    vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
 
     # Definicion de layout de dashboards
     fig = make_subplots(rows=7, cols=2,
@@ -68,9 +68,9 @@ def update_graph(grpname):
                                [None, None],
                               [None, None]])
 
-    fig.add_trace(go.Bar(x=flota.OP_UNIQUE_CARRIER, y=flota.N_AVIONES, marker=dict(color=Greens[4]), name='Flota'), row=1, col=1) # Grafico de tamano de las mayores flotas
+    fig.add_trace(go.Bar(x=flota.OP_UNIQUE_CARRIER, y=flota.TAIL_NUM, marker=dict(color=Greens[4]), name='Flota'), row=1, col=1) # Grafico de tamano de las mayores flotas
     
-    fig.add_trace(go.Bar(x=destinos_fantasma.DEST_AIRPORT_ID.astype(str), y=destinos_fantasma['count'], marker=dict(color=Greens[4]), showlegend=False), row=1, col=2) # Grafico de aeropuertos con mas vuelos fantasma
+    # fig.add_trace(go.Bar(x=destinos_fantasma.DEST_AIRPORT_ID.astype(str), y=destinos_fantasma['count'], marker=dict(color=Greens[4]), showlegend=False), row=1, col=2) # Grafico de aeropuertos con mas vuelos fantasma
 
     fig.add_trace(go.Scattergeo(
         lon = vuelos_origen_demoras['LONGITUDE'],
@@ -87,17 +87,17 @@ def update_graph(grpname):
     fig.update_layout(geo_scope='usa') # Cambio de layout para que el mapa de arriba sea solo de US
     
     # Grfico de barras que presenta el numero de vuelos, el numero de demoras en llegadas y el numero de demoras en salidas por aerolinea
-    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.n_vuelos, marker=dict(color=Greens[6]), name='vuelos_totales',showlegend=False), row=2, col=2)
-    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.n_dem_llegadas, marker=dict(color=Greens[4]), name='Demoras en llegadas', showlegend=False), row=2, col=2)
-    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.n_dem_salidas, marker=dict(color=Greens[2]), name='Demoras en salidas', showlegend=False), row=2, col=2)
+    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.FL_DATE, marker=dict(color=Greens[6]), name='vuelos_totales',showlegend=False), row=2, col=2)
+    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.ARR_DELAY, marker=dict(color=Greens[4]), name='Demoras en llegadas', showlegend=False), row=2, col=2)
+    fig.add_trace(go.Bar(x=demoras_por_aerolinea.OP_UNIQUE_CARRIER, y=demoras_por_aerolinea.DEP_DELAY, marker=dict(color=Greens[2]), name='Demoras en salidas', showlegend=False), row=2, col=2)
     
     # Demoras en llegadas vs numero de vuelos por dia del mes
-    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia.n_vuelos, mode='lines+markers', fill='tozeroy', name='Vuelos diarios', marker=dict(color=Greens[2]), showlegend=False), row=3, col=1)
-    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia.n_dem_llegadas, mode='lines+markers', fill='tozeroy', name='Llegadas con demora', marker=dict(color=Greens[2]), showlegend=False), row=3, col=1)
+    # fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia['count(FL_DATE)'], mode='lines+markers', fill='tozeroy', name='Vuelos diarios', marker=dict(color=Greens[2]), showlegend=False), row=3, col=1)
+    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia['ARR_DELAY'], mode='lines+markers', fill='tozeroy', name='Llegadas con demora', marker=dict(color=Greens[2]), showlegend=False), row=3, col=1)
 
     # Demoras en llegadas vs numero de vuelos por dia del mes
-    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia.n_vuelos, mode='lines+markers', fill='tozeroy', name='Vuelos diarios', marker=dict(color=Greens[2]), showlegend=False), row=4, col=1)
-    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia.n_dem_salidas, mode='lines+markers', fill='tozeroy', name='Salidas con demora', marker=dict(color=Greens[2]), showlegend=False), row=4, col=1)
+    # fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia['count(FL_DATE)'], mode='lines+markers', fill='tozeroy', name='Vuelos diarios', marker=dict(color=Greens[2]), showlegend=False), row=4, col=1)
+    fig.add_trace(go.Scatter(x=demoras_por_dia.FL_DATE, y=demoras_por_dia['DEP_DELAY'], mode='lines+markers', fill='tozeroy', name='Salidas con demora', marker=dict(color=Greens[2]), showlegend=False), row=4, col=1)
 
     # Ajuste de titulos del eje de los graficos
     fig.update_yaxes(title_text="Número de aviones", showgrid=False, row=1, col=1)
