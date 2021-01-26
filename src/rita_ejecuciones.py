@@ -34,7 +34,6 @@ rutas = lee_config("conf/base/paths_to_file.csv")
 # 1 es spark
 numero_de_ejecuciones = int(args.ejecs)
 procesos = list(rutas.keys())
-procesos.remove('mktid')
 pruebas_totales = dict(zip(list(rutas.keys()), [orden_pruebas(numero_de_ejecuciones) for i in range(len(rutas.keys()))]))
 
 print(rutas['origen']['dask'])
