@@ -44,7 +44,7 @@ while procesos != []:
     x = pruebas_totales[proceso].pop()
     if x == 1:
         print('\n\t' + proceso + ' spark\n')
-        os.system('/opt/spark/bin/spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['spark'])
+        os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['spark'])
     else:
         print('\n\t' + proceso + ' dask\n')
         os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['dask'])
