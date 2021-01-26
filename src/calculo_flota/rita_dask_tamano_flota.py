@@ -15,14 +15,17 @@ from src import utils # Estas son las funciones definidas por mi
 
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
+parser.add_argument("--config", help="Ruta hacia archivo de configuracion.")
+parser.add_argument("--creds", help="Ruta hacia archivo de credenciales.")
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
 with open(args.config) as json_file:
 	config = json.load(json_file)
-user = config["user"] # Usuario de mysql
-password = config["password"] # Password de mysql
-database = config["database"] # Base de datos en la que almaceno resultados y tiempo de ejecucion
+with open(args.creds) as json_file:
+	creds = json.load(json_file)
+user = creds["user"] # Usuario de mysql
+password = creds["password"] # Password de mysql
+database = creds["database"] # Base de datos en la que almaceno resultados y tiempo de ejecucion
 time_table = config["time_table"] # Tabla en la que almaceno el tiempo de ejecucion de la tarea
 results_table = config["results_table"] # Tabla en la que almaceno el resultado (resumen de flota por aerolinea)
 input_table = config["input_table"] # Tabla con los datos necesarios para la ejecucion del algoritmo
