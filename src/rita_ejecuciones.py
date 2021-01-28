@@ -34,7 +34,6 @@ rutas = lee_config("conf/base/paths_to_file.csv")
 # 1 es spark
 numero_de_ejecuciones = int(args.ejecs)
 procesos = list(rutas.keys())
-procesos.remove('mktid')
 pruebas_totales = dict(zip(list(rutas.keys()), [orden_pruebas(numero_de_ejecuciones) for i in range(len(rutas.keys()))]))
 
 print(rutas['origen']['dask'])
@@ -44,7 +43,7 @@ while procesos != []:
     x = pruebas_totales[proceso].pop()
     if x == 1:
         print('\n\t' + proceso + ' spark\n')
-        os.system('/opt/spark/bin/spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['spark'])
+        os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['spark'])
     else:
         print('\n\t' + proceso + ' dask\n')
         os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['dask'])

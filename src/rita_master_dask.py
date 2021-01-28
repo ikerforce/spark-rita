@@ -50,9 +50,11 @@ elif process == 'demoras_aeropuerto_destino_dask':
 	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 	lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 elif process == 'demoras_ruta_aeropuerto_dask':
+	df = utils.unir_columnas(df, "ORIGIN", "DEST", "ROUTE_AIRPORTS")
 	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 	lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 elif process == 'demoras_ruta_mktid_dask':
+	df = utils.unir_columnas(df, "ORIGIN_CITY_MARKET_ID", "DEST_CITY_MARKET_ID", "ROUTE_MKT_ID")
 	agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
 	lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
 elif process == 'flota_dask':
