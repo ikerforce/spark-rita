@@ -59,7 +59,7 @@ server = app.server
 # Se compone de 4 componentes independientes
 app.layout = html.Div([
     html.Div([
-        html.Div(className='two-cols',
+        html.Div(className='menus-desplegables',
             children=[
                 html.Div(className='ciudad',
                     children=[
@@ -69,7 +69,7 @@ app.layout = html.Div([
                                 {'label': 'TUL', 'value': 'TUL'},
                                 {'label': 'Dallas', 'value': 'DFW'},
                                 {'label': 'Dallas 2', 'value': 'DTW'}],
-                            value='NULL',
+                            value=None,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -81,7 +81,7 @@ app.layout = html.Div([
                                 {'label': '2015', 'value': '2015'},
                                 {'label': '2013', 'value': '2013'},
                                 {'label': '2014', 'value': '2014'}],
-                            value='2008',
+                            value=None,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -90,7 +90,7 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-month',
                             options=[{'label' : m , 'value' : str(index + 1)} for index, m in enumerate(meses)],
-                            value='2008',
+                            value=None,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -99,14 +99,14 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-day',
                             options=[{'label' : i + 1, 'value' : str(i + 1)} for i in range(31)],
-                            value='2008',
+                            value=None,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
                 ],
             style=dict(display='flex')
         ),
-        dcc.Graph('perfilamiento-hm', config={'displayModeBar': False}),
+        dcc.Graph('retraso-aeropuerto', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-edades', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-perc1', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-perc2', config={'displayModeBar': False}),
@@ -114,7 +114,7 @@ app.layout = html.Div([
 
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 @app.callback(
-    Output('perfilamiento-hm', 'figure'),
+    Output('retraso-aeropuerto', 'figure'),
     [Input('dropdown-ciudad', 'value')
     , Input('dropdown-year', 'value')
     , Input('dropdown-month', 'value')
@@ -127,18 +127,27 @@ def update_graph(ciudad, year, month, day):
         ciudad = "'" + ciudad + "'"
     else:
         ciudad = 'NULL'
+
     if year != None:
         year = "'" + year + "'"
     else:
-        year = 'NULL'
+        year = "'%%'"
+
     if month != None:
         month = "'" + month + "'"
     else:
-        month = 'NULL'
+        if year != 'NULL':
+            month = "'%%'"
+        else:
+            month = "'%%'"
+
     if day != None:
         day = "'" + day + "'"
     else:
-        day = 'NULL'
+        if month != 'NULL':
+            day = "'%%'"
+        else:
+            day = "'%%'"
 
     query= """SELECT CONCAT(
                         IFNULL(YEAR, ''), '-'
@@ -157,6 +166,8 @@ def update_graph(ciudad, year, month, day):
                 AND MONTH LIKE {month}
                 AND DAY_OF_MONTH LIKE {day}
                 ORDER BY FECHA""".format(ciudad=ciudad, year=year, month=month, day=day)
+
+    print(query)
 
     demoras_por_dia = pd.read_sql(query, con=db_connection) # Lectura de datos de demoras diarias
     demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
@@ -187,7 +198,7 @@ def update_graph(ciudad, year, month, day):
                             , marker=dict(color=Greens[6]))
                             , row=1
                             , col=1)
-    fig.update_layout(height=450, width=1500, template='plotly_dark', legend=dict(orientation="h", yanchor="bottom", y=-0.6, xanchor="left", x=0.415))
+    fig.update_layout(height=450, width=1500, template='plotly_dark', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
     fig.update_xaxes(title_text="Fecha", title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso promedio", showgrid=False, row=1, col=1)
     # Regresamos el bloque de graficos 
