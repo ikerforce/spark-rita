@@ -70,7 +70,7 @@ app.layout = html.Div([
                                 {'label': 'Dallas', 'value': 'DFW'},
                                 {'label': 'Dallas 2', 'value': 'DTW'}],
                             value='NULL',
-                            clearable=False)
+                            clearable=True)
                     ],
                     style=dict(width='10%')),
                 html.Div(className='year',
@@ -78,29 +78,29 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-year',
                             options=[
-                                {'label': '2018', 'value': '2018'},
-                                {'label': '2008', 'value': '2008'},
-                                {'label': '2010', 'value': '2010'}],
+                                {'label': '2015', 'value': '2015'},
+                                {'label': '2013', 'value': '2013'},
+                                {'label': '2014', 'value': '2014'}],
                             value='2008',
-                            clearable=False)
+                            clearable=True)
                     ],
                     style=dict(width='10%')),
                 html.Div(className='month',
                     children=[
                         dcc.Dropdown(
                             id='dropdown-month',
-                            options=[{'label' : m , 'value' : index + 1} for index, m in enumerate(meses)],
+                            options=[{'label' : m , 'value' : str(index + 1)} for index, m in enumerate(meses)],
                             value='2008',
-                            clearable=False)
+                            clearable=True)
                     ],
                     style=dict(width='10%')),
                 html.Div(className='day',
                     children=[
                         dcc.Dropdown(
                             id='dropdown-day',
-                            options=[{'label' : i + 1, 'value' : i + 1} for i in range(31)],
+                            options=[{'label' : i + 1, 'value' : str(i + 1)} for i in range(31)],
                             value='2008',
-                            clearable=False)
+                            clearable=True)
                     ],
                     style=dict(width='10%')),
                 ],
@@ -116,15 +116,29 @@ app.layout = html.Div([
 @app.callback(
     Output('perfilamiento-hm', 'figure'),
     [Input('dropdown-ciudad', 'value')
-    , Input('dropdown-year', 'value')])
+    , Input('dropdown-year', 'value')
+    , Input('dropdown-month', 'value')
+    , Input('dropdown-day', 'value')])
 
 # Este es el metodo que actualiza la informacion de MySQL y genera los dashboards de visitas y usuarios conectados por sexo
-def update_graph(ciudad, year):
-    print(year)
-    if ciudad != 'NULL':
+def update_graph(ciudad, year, month, day):
+
+    if ciudad != None:
         ciudad = "'" + ciudad + "'"
-    if year != 'NULL':
+    else:
+        ciudad = 'NULL'
+    if year != None:
         year = "'" + year + "'"
+    else:
+        year = 'NULL'
+    if month != None:
+        month = "'" + month + "'"
+    else:
+        month = 'NULL'
+    if day != None:
+        day = "'" + day + "'"
+    else:
+        day = 'NULL'
 
     query= """SELECT CONCAT(
                         IFNULL(YEAR, ''), '-'
@@ -140,9 +154,9 @@ def update_graph(ciudad, year):
                 OR ORIGIN = {ciudad}
                 AND YEAR LIKE {year}
                 AND QUARTER LIKE '%%'
-                AND MONTH LIKE '%%'
-                AND DAY_OF_MONTH LIKE '%%'
-                ORDER BY FECHA""".format(ciudad=ciudad, year=year)
+                AND MONTH LIKE {month}
+                AND DAY_OF_MONTH LIKE {day}
+                ORDER BY FECHA""".format(ciudad=ciudad, year=year, month=month, day=day)
 
     demoras_por_dia = pd.read_sql(query, con=db_connection) # Lectura de datos de demoras diarias
     demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
