@@ -21,7 +21,10 @@ import datetime # Libreria para conocer la fecha
 import os # Libreria para manipular el sistema operativo
 import argparse
 import json
-Greens = sequential.Blues
+Greens = sequential.Greens
+Blues = sequential.Blues
+
+meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
@@ -56,22 +59,53 @@ server = app.server
 # Se compone de 4 componentes independientes
 app.layout = html.Div([
     html.Div([
-        dcc.Dropdown(
-            id='demo-dropdown',
-            options=[
-                {'label': 'TUL', 'value': 'TUL'},
-                {'label': 'Dallas', 'value': 'DFW'},
-                {'label': 'Dallas 2', 'value': 'DTW'}],
-            value='NULL',
-            clearable=False),
-        dcc.Dropdown(
-            id='demo-dropdown2',
-            options=[
-                {'label': '2018', 'value': '2018'},
-                {'label': '2008', 'value': '2008'},
-                {'label': '2010', 'value': '2010'}],
-            value='2008',
-            clearable=False),
+        html.Div(className='two-cols',
+            children=[
+                html.Div(className='ciudad',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-ciudad',
+                            options=[
+                                {'label': 'TUL', 'value': 'TUL'},
+                                {'label': 'Dallas', 'value': 'DFW'},
+                                {'label': 'Dallas 2', 'value': 'DTW'}],
+                            value='NULL',
+                            clearable=False)
+                    ],
+                    style=dict(width='10%')),
+                html.Div(className='year',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-year',
+                            options=[
+                                {'label': '2018', 'value': '2018'},
+                                {'label': '2008', 'value': '2008'},
+                                {'label': '2010', 'value': '2010'}],
+                            value='2008',
+                            clearable=False)
+                    ],
+                    style=dict(width='10%')),
+                html.Div(className='month',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-month',
+                            options=[{'label' : m , 'value' : index + 1} for index, m in enumerate(meses)],
+                            value='2008',
+                            clearable=False)
+                    ],
+                    style=dict(width='10%')),
+                html.Div(className='day',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-day',
+                            options=[{'label' : i + 1, 'value' : i + 1} for i in range(31)],
+                            value='2008',
+                            clearable=False)
+                    ],
+                    style=dict(width='10%')),
+                ],
+            style=dict(display='flex')
+        ),
         dcc.Graph('perfilamiento-hm', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-edades', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-perc1', config={'displayModeBar': False}),
@@ -81,8 +115,8 @@ app.layout = html.Div([
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 @app.callback(
     Output('perfilamiento-hm', 'figure'),
-    [Input('demo-dropdown', 'value')
-    , Input('demo-dropdown2', 'value')])
+    [Input('dropdown-ciudad', 'value')
+    , Input('dropdown-year', 'value')])
 
 # Este es el metodo que actualiza la informacion de MySQL y genera los dashboards de visitas y usuarios conectados por sexo
 def update_graph(ciudad, year):
@@ -127,11 +161,19 @@ def update_graph(ciudad, year):
                             , y=demoras_por_dia.ARR_DELAY
                             , mode='lines+markers'
                             , fill='tozeroy'
-                            , name='75%'
+                            , name='Llegadas'
+                            , marker=dict(color=Blues[6]))
+                            , row=1
+                            , col=1)
+    fig.add_trace(go.Scatter(x=demoras_por_dia.FECHA
+                            , y=demoras_por_dia.DEP_DELAY
+                            , mode='lines+markers'
+                            , fill='tozeroy'
+                            , name='Salidas'
                             , marker=dict(color=Greens[6]))
                             , row=1
                             , col=1)
-    fig.update_layout(height=450, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.415))
+    fig.update_layout(height=450, width=1500, template='plotly_dark', legend=dict(orientation="h", yanchor="bottom", y=-0.6, xanchor="left", x=0.415))
     fig.update_xaxes(title_text="Fecha", title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso promedio", showgrid=False, row=1, col=1)
     # Regresamos el bloque de graficos 
