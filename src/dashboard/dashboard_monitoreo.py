@@ -80,7 +80,7 @@ app.layout = html.Div([
                     children=[
                         dcc.Dropdown(
                             id='dropdown-numero-registros',
-                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)],
+                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
                             value='20',
                             clearable=False)
                     ],
@@ -105,7 +105,7 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-ventana',
                             options=[{'label':1, 'value':0}] + [{'label':i, 'value':i-1} for i in range(5, 51, 5)],
-                            value='5',
+                            value='4',
                             clearable=False)
                     ],
                     style=dict(width='25%')),
@@ -113,7 +113,7 @@ app.layout = html.Div([
                     children=[
                         dcc.Dropdown(
                             id='dropdown-numero-registros-movil',
-                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)],
+                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
                             value='20',
                             clearable=False)
                     ],
@@ -167,7 +167,7 @@ def update_graph(proceso):
             x=tiempo_dask.process
             , y=tiempo_dask.avg_duration
             , error_y=dict(type='data', array=tiempo_dask.stddev_duration)
-            , marker=dict(color=Oranges[6])
+            , marker=dict(color=Oranges[4])
             , name='Dask'
             )
         , row=1
@@ -230,7 +230,7 @@ def update_graph(process, n_registros):
         go.Scatter(
             x=tiempo_dask.insertion_ts
             , y=tiempo_dask.duration
-            , marker=dict(color=Oranges[6])
+            , marker=dict(color=Oranges[4])
             , mode='lines+markers'
             , name='Dask'
             )
@@ -330,7 +330,7 @@ def update_graph(process, ventana, n_registros):
             , y=list(tiempo_dask.duration_high) + list(tiempo_dask.duration_low[::-1])
             , mode='lines'
             , fill='toself'
-            , fillcolor=Oranges[1]
+            , fillcolor=Oranges[2]
             , opacity=0.7
             , line=dict(width=0)
             , showlegend=False
@@ -343,7 +343,7 @@ def update_graph(process, ventana, n_registros):
             , x=tiempo_dask.insertion_ts
             , y=tiempo_dask.duration
             # , error_y=dict(type='data', array=tiempo_dask.stddev_duration)
-            , marker=dict(color=Oranges[6])
+            , marker=dict(color=Oranges[4])
             , mode='lines+markers'
             )
         , row=1
