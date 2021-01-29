@@ -115,8 +115,17 @@ app.layout = html.Div([
 # Este es el metodo que actualiza la informacion de MySQL y genera los dashboards de visitas y usuarios conectados por sexo
 def update_graph(proceso):
 
-    query_spark = """SELECT REPLACE(process, '_spark', '') as process, AVG(duration) as avg_duration, STDDEV(duration) as stddev_duration FROM registro_de_tiempo_spark GROUP BY process"""
-    query_dask = """SELECT REPLACE(process, '_dask', '') as process, AVG(duration) as avg_duration, STDDEV(duration) as stddev_duration FROM registro_de_tiempo_dask GROUP BY process"""
+    query_spark = """SELECT REPLACE(process, '_spark', '') as process
+                        , AVG(duration) as avg_duration
+                        , STDDEV(duration) as stddev_duration
+                    FROM registro_de_tiempo_spark
+                    GROUP BY process"""
+
+    query_dask = """SELECT REPLACE(process, '_dask', '') as process
+                        , AVG(duration) as avg_duration
+                        , STDDEV(duration) as stddev_duration
+                    FROM registro_de_tiempo_dask
+                    GROUP BY process"""
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
