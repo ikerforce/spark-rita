@@ -141,7 +141,7 @@ app.layout = html.Div([
         ),
         dcc.Graph('retraso-aeropuerto', config={'displayModeBar': False}),
         dcc.Graph('mapa-demoras', config={'displayModeBar': False}),
-        dcc.Graph('perfilamiento-perc1', config={'displayModeBar': False}),
+        dcc.Graph('mapa-rutas', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-perc2', config={'displayModeBar': False}),
         dcc.Interval(id='interval-component', interval=1*1000)])])
 
@@ -280,6 +280,62 @@ def update_graph(grpname):
     return fig
 
 # # -------------------------------------------------------------------------------------------
+
+
+@app.callback(
+    Output('mapa-rutas', 'figure'),
+    [Input('interval-component', 'interval')])
+
+# Este es el metodo que actualiza la informacion de MySQL y genera el dashboard de percentiles de desplazamientos entre APs
+def update_graph(grpname):
+        
+    vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
+    rutas = pd.read_sql('SELECT * FROM demoras_ruta_aeropuerto_spark_ubicacion WHERE MONTH IS NULL AND YEAR IS NOT NULL ORDER BY N_FLIGHTS', con=db_connection) # Aeropuertos de origen con mas demoras
+    # Definicion de layout de dashboards
+    fig = make_subplots(rows=3, cols=2,
+                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                               [None, None],
+                              [None, None]])
+
+    fig.add_trace(go.Scattergeo(
+        lon = vuelos_origen_demoras['LONGITUDE']
+        , lat = vuelos_origen_demoras['LATITUDE']
+        , mode = 'markers'
+        , marker_color=Blues[4])
+        , row=1
+        , col=1) # Mapa de aeropuertos de origen con mas demoras
+
+    for i in range(rutas.shape[0]):
+        fig.add_trace(
+            go.Scattergeo(
+                locationmode = 'USA-states',
+                lon = [rutas['origin_longitude'][i], rutas['dest_longitude'][i]],
+                lat = [rutas['origin_latitude'][i], rutas['dest_latitude'][i]],
+                mode = 'lines',
+                line = dict(width=1, color = Blues[2]),
+                opacity = float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max()),
+            )
+        )
+    
+    fig.update_layout(
+        title_text = 'Feb. 2011 American Airline flight paths<br>(Hover for airport names)',
+        showlegend = False,
+        geo = dict(
+            scope = 'north america',
+            projection_type = 'azimuthal equal area',
+            showland = True,
+            landcolor = 'rgb(243, 243, 243)',
+            countrycolor = 'rgb(204, 204, 204)',
+        ),
+    )
+
+    fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_xaxes(showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text="Retraso por ruta", showgrid=False, row=1, col=1)
+
+    # Regresamos el grafico
+    return fig
+
 
 # # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 # @app.callback(
