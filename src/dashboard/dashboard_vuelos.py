@@ -24,7 +24,18 @@ import json
 Greens = sequential.Greens
 Blues = sequential.Blues
 
+def crea_where(values, column):
+    where_string = ""
+    if values != None and values != []:
+        where_string = "AND ( "
+        for val in values:
+            where_string = where_string + "{column} LIKE '{val}' OR ".format(val=val, column=column)
+        return where_string[:-3] + ")"
+    else:
+        return where_string
+
 meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+quarters = ['Ene-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dic']
 
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
@@ -68,8 +79,9 @@ app.layout = html.Div([
                             options=[
                                 {'label': 'TUL', 'value': 'TUL'},
                                 {'label': 'Dallas', 'value': 'DFW'},
-                                {'label': 'Dallas 2', 'value': 'DTW'}],
+                                {'label': 'New York', 'value': 'JFK'}],
                             value=None,
+                            multi=True,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -82,6 +94,16 @@ app.layout = html.Div([
                                 {'label': '2013', 'value': '2013'},
                                 {'label': '2014', 'value': '2014'}],
                             value=None,
+                            multi=True,
+                            clearable=True)
+                    ],
+                    style=dict(width='10%')),
+                html.Div(className='quarter',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-quarter',
+                            options=[{'label' : m , 'value' : str(index + 1)} for index, m in enumerate(quarters)],
+                            value=None,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -91,6 +113,7 @@ app.layout = html.Div([
                             id='dropdown-month',
                             options=[{'label' : m , 'value' : str(index + 1)} for index, m in enumerate(meses)],
                             value=None,
+                            multi=True,
                             clearable=True)
                     ],
                     style=dict(width='10%')),
@@ -100,15 +123,25 @@ app.layout = html.Div([
                             id='dropdown-day',
                             options=[{'label' : i + 1, 'value' : str(i + 1)} for i in range(31)],
                             value=None,
+                            multi=True,
                             clearable=True)
+                    ],
+                    style=dict(width='10%')),
+                html.Div(className='limit',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-limit',
+                            options=[{'label' : i, 'value' : i} for i in range(5, 201, 20)],
+                            value=5,
+                            clearable=False)
                     ],
                     style=dict(width='10%')),
                 ],
             style=dict(display='flex')
         ),
         dcc.Graph('retraso-aeropuerto', config={'displayModeBar': False}),
-        dcc.Graph('perfilamiento-edades', config={'displayModeBar': False}),
-        dcc.Graph('perfilamiento-perc1', config={'displayModeBar': False}),
+        dcc.Graph('mapa-demoras', config={'displayModeBar': False}),
+        dcc.Graph('mapa-rutas', config={'displayModeBar': False}),
         dcc.Graph('perfilamiento-perc2', config={'displayModeBar': False}),
         dcc.Interval(id='interval-component', interval=1*1000)])])
 
@@ -117,37 +150,19 @@ app.layout = html.Div([
     Output('retraso-aeropuerto', 'figure'),
     [Input('dropdown-ciudad', 'value')
     , Input('dropdown-year', 'value')
+    , Input('dropdown-quarter', 'value')
     , Input('dropdown-month', 'value')
-    , Input('dropdown-day', 'value')])
+    , Input('dropdown-day', 'value')
+    , Input('dropdown-limit', 'value')])
 
 # Este es el metodo que actualiza la informacion de MySQL y genera los dashboards de visitas y usuarios conectados por sexo
-def update_graph(ciudad, year, month, day):
+def update_graph(cities, years, quarters, months, days, limit):
 
-    if ciudad != None:
-        ciudad = "'" + ciudad + "'"
-    else:
-        ciudad = 'NULL'
-
-    if year != None:
-        year = "'" + year + "'"
-    else:
-        year = "'%%'"
-
-    if month != None:
-        month = "'" + month + "'"
-    else:
-        if year != 'NULL':
-            month = "'%%'"
-        else:
-            month = "'%%'"
-
-    if day != None:
-        day = "'" + day + "'"
-    else:
-        if month != 'NULL':
-            day = "'%%'"
-        else:
-            day = "'%%'"
+    city_string = crea_where(cities, column='ORIGIN')
+    year_string = crea_where(years, column='YEAR')
+    quarter_string = crea_where(quarters, column='QUARTER')
+    month_string = crea_where(months, column='MONTH')
+    day_string = crea_where(days, column='DAY_OF_MONTH')
 
     query= """SELECT CONCAT(
                         IFNULL(YEAR, ''), '-'
@@ -159,13 +174,19 @@ def update_graph(ciudad, year, month, day):
                     , ARR_DELAY
                     , DEP_DELAY
                 FROM demoras_aeropuerto_origen_spark
-                WHERE 1 = 0
-                OR ORIGIN = {ciudad}
-                AND YEAR LIKE {year}
-                AND QUARTER LIKE '%%'
-                AND MONTH LIKE {month}
-                AND DAY_OF_MONTH LIKE {day}
-                ORDER BY FECHA""".format(ciudad=ciudad, year=year, month=month, day=day)
+                WHERE 1 = 1
+                {city_string}
+                {year_string}
+                {quarter_string}
+                {month_string}
+                {day_string}
+                ORDER BY FECHA
+                LIMIT {limit}""".format(city_string=city_string
+                                    , year_string=year_string
+                                    , quarter_string=quarter_string
+                                    , month_string=month_string
+                                    , day_string=day_string
+                                    , limit=limit)
 
     print(query)
 
@@ -198,7 +219,7 @@ def update_graph(ciudad, year, month, day):
                             , marker=dict(color=Greens[6]))
                             , row=1
                             , col=1)
-    fig.update_layout(height=450, width=1500, template='plotly_dark', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_layout(height=450, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
     fig.update_xaxes(title_text="Fecha", title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso promedio", showgrid=False, row=1, col=1)
     # Regresamos el bloque de graficos 
@@ -230,36 +251,91 @@ def update_graph(ciudad, year, month, day):
 # # -------------------------------------------------------------------------------------------
 
 # # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
-# @app.callback(
-#     Output('perfilamiento-perc1', 'figure'),
-#     [Input('interval-component', 'interval')])
+@app.callback(
+    Output('mapa-demoras', 'figure'),
+    [Input('interval-component', 'interval')])
 
-# # Este es el metodo que actualiza la informacion de MySQL y genera el dashboard de percentiles de desplazamientos entre APs
-# def update_graph(grpname):
+# Este es el metodo que actualiza la informacion de MySQL y genera el dashboard de percentiles de desplazamientos entre APs
+def update_graph(grpname):
         
-#     demoras_por_dia = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask WHERE DAY_OF_MONTH IS NOT NULL and ORIGIN = "TUL" ORDER BY YEAR, MONTH, DAY_OF_MONTH DESC LIMIT 365', con=db_connection) # Lectura de datos de demoras diarias
-#     demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
-#     flota = pd.read_sql('SELECT * FROM flota_dask ORDER BY TAIL_NUM DESC LIMIT 20', con=db_connection) # Lectura del tamano de la flota de las aerolineas
-#     # destinos_fantasma = pd.read_sql('SELECT CONCAT("A", DEST_AIRPORT_ID) AS DEST_AIRPORT_ID, count FROM destinos_fantasma ORDER BY count DESC LIMIT 20', con=db_connection) # Lectura de los destinos con mas vuelos fantasma
-#     vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
-#     demoras_por_dia['FECHA'] = demoras_por_dia.fillna('').apply(lambda row: row['YEAR'] + '-' + row['MONTH'] + '-' + row['DAY_OF_MONTH'], axis=1)
-#     # Definicion de layout de dashboards
-#     fig = make_subplots(rows=7, cols=2,
-#                         subplot_titles=("Flota por aerolínea", "Destinos fantasma", "Aeropuertos en Estados Unidos","Demoras por aerolínea", "Demoras en llegadas", "Demoras en salidas"),
-#                         specs=[[{"type":"bar"}, {"type": "bar"}],
-#                               [{"type":"scattergeo"}, {"type": "bar"}],
-#                               [{"type": "scatter", "colspan": 2}, None],
-#                               [{"type": "scatter", "colspan": 2}, None],
-#                               [{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
-#                                [None, None],
-#                               [None, None]])
+    vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
+    # Definicion de layout de dashboards
+    fig = make_subplots(rows=3, cols=2,
+                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                               [None, None],
+                              [None, None]])
 
-#     fig.add_trace(go.Bar(x=flota.OP_UNIQUE_CARRIER, y=flota.TAIL_NUM, marker=dict(color=Greens[4]), name='Flota'), row=1, col=1) # Grafico de tamano de las mayores flotas
-        
-#     # Regresamos el grafico
-#     return fig
+    fig.add_trace(go.Scattergeo(
+        lon = vuelos_origen_demoras['LONGITUDE'],
+        lat = vuelos_origen_demoras['LATITUDE'],
+        mode = 'markers', marker_color=vuelos_origen_demoras['COLOR_ARR_DELAY']), row=1, col=1) # Mapa de aeropuertos de origen con mas demoras
+    
+    fig.update_layout(geo_scope='usa') # Cambio de layout para que el mapa de arriba sea solo de US
+
+    fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_xaxes(showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text="Retraso por aeropuertos", showgrid=False, row=1, col=1)
+
+    # Regresamos el grafico
+    return fig
 
 # # -------------------------------------------------------------------------------------------
+
+
+@app.callback(
+    Output('mapa-rutas', 'figure'),
+    [Input('interval-component', 'interval')])
+
+# Este es el metodo que actualiza la informacion de MySQL y genera el dashboard de percentiles de desplazamientos entre APs
+def update_graph(grpname):
+        
+    vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
+    rutas = pd.read_sql('SELECT * FROM demoras_ruta_aeropuerto_spark_ubicacion WHERE MONTH IS NULL AND YEAR IS NOT NULL ORDER BY N_FLIGHTS', con=db_connection) # Aeropuertos de origen con mas demoras
+    # Definicion de layout de dashboards
+    fig = make_subplots(rows=3, cols=2,
+                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                               [None, None],
+                              [None, None]])
+
+    fig.add_trace(go.Scattergeo(
+        lon = vuelos_origen_demoras['LONGITUDE']
+        , lat = vuelos_origen_demoras['LATITUDE']
+        , mode = 'markers'
+        , marker_color=Blues[4])
+        , row=1
+        , col=1) # Mapa de aeropuertos de origen con mas demoras
+
+    for i in range(rutas.shape[0]):
+        fig.add_trace(
+            go.Scattergeo(
+                locationmode = 'USA-states',
+                lon = [rutas['origin_longitude'][i], rutas['dest_longitude'][i]],
+                lat = [rutas['origin_latitude'][i], rutas['dest_latitude'][i]],
+                mode = 'lines',
+                line = dict(width=1, color = Blues[2]),
+                opacity = float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max()),
+            )
+        )
+    
+    fig.update_layout(
+        title_text = 'Feb. 2011 American Airline flight paths<br>(Hover for airport names)',
+        showlegend = False,
+        geo = dict(
+            scope = 'north america',
+            projection_type = 'azimuthal equal area',
+            showland = True,
+            landcolor = 'rgb(243, 243, 243)',
+            countrycolor = 'rgb(204, 204, 204)',
+        ),
+    )
+
+    fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_xaxes(showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text="Retraso por ruta", showgrid=False, row=1, col=1)
+
+    # Regresamos el grafico
+    return fig
+
 
 # # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 # @app.callback(
