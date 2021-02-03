@@ -1,0 +1,10 @@
+{
+"time_table_mode":"append",
+"time_table":"registro_de_tiempo_dask",
+"results_table":"demoras_aerolinea_dask",
+"results_table_mode":"overwrite",
+"input_table":"RITA_20",
+"partition_column":"ID",
+"description":"Ejecucion de prueba en equipo local.",
+"resources":"DASK LOCAL DEFAULT"
+}
