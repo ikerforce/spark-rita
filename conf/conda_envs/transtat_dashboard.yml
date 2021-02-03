@@ -25,8 +25,8 @@ dependencies:
   - libcxx=10.0.0
   - libedit=3.1.20191231
   - libffi=3.3
-  - libgfortran=5.0.0
-  - libgfortran5=9.3.0
+  - libgfortran
+  - libgfortran5
   - liblapack=3.9.0
   - libopenblas=0.3.12
   - llvm-openmp=11.0.1
