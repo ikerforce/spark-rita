@@ -44,7 +44,7 @@ df_rita = spark.read.format("jdbc")\
         password=creds["password"])\
     .load()
 
-suma = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]
+infinity = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]
 
 df_rita = df_rita.groupBy('ORIGIN', 'DEST').agg(F.avg('ACTUAL_ELAPSED_TIME').alias('ACTUAL_ELAPSED_TIME'))
 
@@ -54,7 +54,7 @@ print('\n')
 
 df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME')\
     .withColumnRenamed('ACTUAL_ELAPSED_TIME', 'W')\
-    .withColumn('R_min', F.lit(suma))
+    .withColumn('R_min', F.lit(infinity))
 
 nodo_actual = args.origen
 
@@ -118,7 +118,8 @@ inicio = time.time()
 print('\nInicio del loop.')
 
 i = 0
-while i < n_nodos and nodo_actual != args.dest:
+minimo = 0
+while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
     i+=1
     # Agrego a los valores considerados los nodos conectados al nodo en el que estoy parado
     df_temp = df.filter(F.col('ORIGIN') == F.lit(nodo_actual)).union(df_temp)
@@ -138,7 +139,7 @@ while i < n_nodos and nodo_actual != args.dest:
     # Añado el nodo actual a la ruta optima
     ruta_optima.update({nodo_anterior : peso_actual})
 
-    print('\n\tNumero de ejecucion: {i}/{total}.\n\tNodo actual: {nodo_actual}.\n\tPeso actual: {peso_actual}.\n\tTiempo transcurrido: {tiempo}.\n'.format(i=i, total=n_nodos, nodo_actual=nodo_actual, peso_actual=peso_actual, tiempo=time.time()-inicio))
+    print('\n\tNumero de ejecucion: {i}/{total}.\n\tNodo actual: {nodo_actual}.\n\tPeso actual: {peso_actual}.\n\tTiempo transcurrido: {tiempo}.\n\tMinimo: {minimo}\n.'.format(i=i, total=n_nodos, nodo_actual=nodo_actual, peso_actual=peso_actual, tiempo=time.time()-inicio, minimo=minimo))
 
     # Actualizo el peso de las aristas al minimo posible
     df_temp = df_temp.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
