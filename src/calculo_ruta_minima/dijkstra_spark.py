@@ -29,12 +29,13 @@ with open(args.config) as json_file:
     config = json.load(json_file)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
+
+
+nodo_actual = args.origen # Empezamos a explorar en el nodo origen
 # ----------------------------------------------------------------------------------------------------
 
-
-t_inicio = time.time() # Inicia tiempo de ejecucion
-
 # Lectura de datos de MySQL
+# ----------------------------------------------------------------------------------------------------
 df_rita = spark.read.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
@@ -43,53 +44,41 @@ df_rita = spark.read.format("jdbc")\
         user=creds["user"],
         password=creds["password"])\
     .load()
+# ----------------------------------------------------------------------------------------------------
 
+
+# OBTENCION DE VALORES INICIALES
+# ----------------------------------------------------------------------------------------------------
+# Es el valor inicial de cada nodo. Es el valor mas alto posible.
 infinity = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]
 
-df_rita = df_rita.groupBy('ORIGIN', 'DEST').agg(F.avg('ACTUAL_ELAPSED_TIME').alias('ACTUAL_ELAPSED_TIME'))
-
-print('\n')
-print(df_rita.count())
-print('\n')
+df_rita = df_rita.groupBy('ORIGIN', 'DEST')\
+    .agg(F.avg('ACTUAL_ELAPSED_TIME').alias('ACTUAL_ELAPSED_TIME'))
 
 df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME')\
     .withColumnRenamed('ACTUAL_ELAPSED_TIME', 'W')\
     .withColumn('R_min', F.lit(infinity))
 
-nodo_actual = args.origen
-
-# df = df.union(sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min']))
-
+# Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
 
+# Este es el esquema que tendra el df
 schema = StructType([
   StructField('ORIGIN', StringType(), True),
   StructField('DEST', StringType(), True),
   StructField('W', FloatType(), True),
   StructField('R_min', FloatType(), True)])
 
-# Creacion de red
-# Cada elemento tiene la forma: [origen, destino, peso, peso_minimo, horario]
-# origenes = 'a,a,a,a,b,b,c,c,d,d,d,e,e,f,f,g,g,g,h,i'.split(',')
-# destinos = 'a,b,d,c,e,d,d,f,e,f,g,h,g,g,i,h,j,i,j,j'.split(',')
-# pesos = [0,4,8,5,12,3,1,11,9,4,10,10,6,5,11,3,15,5,14,8]
-# infinity = sum(pesos)
-# pesos_min = [0] + [infinity for i in range(len(pesos)-1)]
+# Este df almacena la informacion de los nodos cuyo peso ya se actualizo (no necesariamente es el peso minimo)
+df_temp = sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min'])
 
-# origenes = 'A,A,A,B,B,C,C,D,D,E,E,F,G'.split(',')
-# destinos = 'A,B,C,D,E,D,E,F,G,F,G,H,H'.split(',')
-# pesos = [0,5,6,7,8,5,6,8,9,6,7,13,11]
-# infinity = sum(pesos)
-# pesos_min = [0] + [infinity for i in range(len(pesos)-1)]
-
-# origenes = 'A,A,A,B,B,C,E'.split(',')
-# destinos = 'A,B,C,D,E,E,F'.split(',')
-# pesos = [0,5,7,2,3,8,4]
-# infinity = sum(pesos)
-# pesos_min = [0] + [infinity for i in range(len(pesos)-1)]
+ruta_optima = dict()
+# ----------------------------------------------------------------------------------------------------
 
 
+# DEFINICION DE FUNCION DE ACTUALIZACION DE PESO ACUMULADO
+# ----------------------------------------------------------------------------------------------------
 def actualiza_peso(nodo_actual, nodo_destino, peso_acumulado, peso_arista, peso_actual):
     '''Esta funcion actualiza el peso de la arista cuando es necesario.
     nodo_actual- El nodo desde el que se visita.
@@ -106,14 +95,11 @@ def actualiza_peso(nodo_actual, nodo_destino, peso_acumulado, peso_arista, peso_
         return float(peso_actual)
 
 udf_actualiza_peso = F.udf(actualiza_peso)
+# ----------------------------------------------------------------------------------------------------
 
-# nodos = set(origenes + destinos)
-# aristas = [x for x in zip(origenes, destinos, pesos, pesos_min)]
 
-df_temp = sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min'])
-
-ruta_optima = dict()
-
+# CALCULO DE RUTAS MINIMAS
+# ----------------------------------------------------------------------------------------------------
 inicio = time.time()
 print('\nInicio del loop.')
 
@@ -150,7 +136,11 @@ while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
     # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
     df = df.filter(F.col('DEST') != F.lit(nodo_actual))
     df.cache()
+# ----------------------------------------------------------------------------------------------------
 
+
+# RESULTADOS
+# ----------------------------------------------------------------------------------------------------
 peso_optimo = list(ruta_optima.values())[-1]
 ruta_optima = list(ruta_optima.keys()) + [nodo_actual]
 
@@ -162,3 +152,4 @@ ruta_optima_str = ruta_optima_str[:-3]
 resultado = print("\nLa ruta_optima es {ruta_optima_str} y su peso es de {peso_optimo}.\n".format(peso_optimo=peso_optimo, ruta_optima_str=ruta_optima_str))
 
 print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=time.time() - inicio))
+# ----------------------------------------------------------------------------------------------------
