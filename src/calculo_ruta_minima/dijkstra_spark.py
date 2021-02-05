@@ -33,12 +33,16 @@ def actualiza_peso(nodo_actual, nodo_destino, peso_acumulado, peso_arista, peso_
 udf_actualiza_peso = F.udf(actualiza_peso)
 
 # Creacion de red
-# Cada elemento tiene la forma: [origen, destino, peso, horario]
-# nodo_actual = 'a'
- #peso_actual = 0
-origenes = 'a,a,a,a,b,b,c,c,d,d,d,e,e,f,f,g,g,g,h,i'.split(',')
-destinos = 'a,b,d,c,e,d,d,f,e,f,g,h,g,g,i,h,j,i,j,j'.split(',')
-pesos = [0,4,8,5,12,3,1,11,9,4,10,10,6,5,11,3,15,5,14,8]
+# Cada elemento tiene la forma: [origen, destino, peso, peso_minimo, horario]
+# origenes = 'a,a,a,a,b,b,c,c,d,d,d,e,e,f,f,g,g,g,h,i'.split(',')
+# destinos = 'a,b,d,c,e,d,d,f,e,f,g,h,g,g,i,h,j,i,j,j'.split(',')
+# pesos = [0,4,8,5,12,3,1,11,9,4,10,10,6,5,11,3,15,5,14,8]
+# infinity = sum(pesos)
+# pesos_min = [0] + [infinity for i in range(len(pesos)-1)]
+
+origenes = 'A,A,A,B,B,C,C,D,D,E,E,F,G'.split(',')
+destinos = 'A,B,C,D,E,D,E,F,G,F,G,H,H'.split(',')
+pesos = [0,5,6,7,8,5,6,8,9,6,7,13,19]
 infinity = sum(pesos)
 pesos_min = [0] + [infinity for i in range(len(pesos)-1)]
 
@@ -47,13 +51,7 @@ aristas = [x for x in zip(origenes, destinos, pesos, pesos_min)]
 
 df = sc.parallelize(aristas).toDF(schema=schema)
 
-schema_minimal = StructType([
-    StructField("NODO_ANTERIOR", StringType(), True),
-    StructField("NODO", IntegerType(), False),
-    StructField('R_min', IntegerType(), False)])
-
-df_minimal = spark.createDataFrame([], schema_minimal)
-
+ruta_optima = dict()
 
 while df.count() > 0:
         # Calculo el valor minimo de los pesos para obtener el siguiente nodo
@@ -67,9 +65,7 @@ while df.count() > 0:
     nodo_actual = estado_actual[1]
     peso_actual = estado_actual[2]
 
-    df_minimal = df_minimal.union(sc.parallelize([[nodo_anterior, nodo_actual, peso_actual]]).toDF(['NODO_ANTERIOR', 'NODO', 'R_min']))
-
-    df_minimal.show()
+    ruta_optima.update({nodo_anterior : peso_actual})
 
     # Actualizo el peso de las aristas al minimo posible
     df = df.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
@@ -77,5 +73,12 @@ while df.count() > 0:
     # Elimino los registros que llevan al nodo en el que estoy parado
     df = df.filter(F.col('DEST') != F.lit(nodo_actual))
 
-# actual.show()
+peso_optimo = list(ruta_optima.values())[-1]
+ruta_optima = list(ruta_optima.keys()) + [nodo_actual]
 
+ruta_optima_str = ""
+for v in ruta_optima:
+    ruta_optima_str += v + " - "
+ruta_optima_str = ruta_optima_str[:-3]
+
+resultado = print("\nLa ruta_optima es {ruta_optima_str} y su peso es de {peso_optimo}.\n".format(peso_optimo=peso_optimo, ruta_optima_str=ruta_optima_str))
