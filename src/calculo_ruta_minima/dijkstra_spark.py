@@ -111,6 +111,10 @@ while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
     df_temp = df.filter(F.col('ORIGIN') == F.lit(nodo_actual)).union(df_temp)
     df_temp.cache()
 
+    # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
+    df = df.filter(F.col('ORIGIN') != F.lit(nodo_actual))
+    df.cache()
+
     # Calculo el valor minimo de los pesos para obtener el siguiente nodo a explorar
     minimo = df_temp.agg(F.min(F.expr('CAST(R_min AS float)')).alias('MIN')).collect()[0][0] # Obtenemos el vertice con el minimo valor
 
@@ -122,20 +126,26 @@ while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
     nodo_actual = estado_actual[1]
     peso_actual = estado_actual[2]
 
-    # Añado el nodo actual a la ruta optima
+    # Agrego el nodo actual a la ruta optima
     ruta_optima.update({nodo_anterior : peso_actual})
 
-    print('\n\tNumero de ejecucion: {i}/{total}.\n\tNodo actual: {nodo_actual}.\n\tPeso actual: {peso_actual}.\n\tTiempo transcurrido: {tiempo}.\n\tMinimo: {minimo}\n.'.format(i=i, total=n_nodos, nodo_actual=nodo_actual, peso_actual=peso_actual, tiempo=time.time()-inicio, minimo=minimo))
+    print('''\n\tNumero de ejecucion: {i}/{total}.
+            \tNodo actual: {nodo_actual}.
+            \tPeso actual: {peso_actual}.
+            \tTiempo transcurrido: {tiempo}.
+            \tMinimo: {minimo}.\n'''.format(i=i
+                                            , total=n_nodos
+                                            , nodo_actual=nodo_actual
+                                            , peso_actual=peso_actual
+                                            , tiempo=time.time()-inicio
+                                            , minimo=minimo)
+            )
 
     # Actualizo el peso de las aristas al minimo posible
     df_temp = df_temp.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
 
     # Elimino los registros que llevan al nodo en el que estoy parado de los nodos por explorar (ya tengo ruta optima a este nodo)
     df_temp = df_temp.filter(F.col('DEST') != F.lit(nodo_actual))
-
-    # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
-    df = df.filter(F.col('DEST') != F.lit(nodo_actual))
-    df.cache()
 # ----------------------------------------------------------------------------------------------------
 
 
