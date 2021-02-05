@@ -10,7 +10,7 @@ spark = SparkSession(sc)
 sqlContext = SQLContext(sc)
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
 
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
@@ -52,24 +52,22 @@ print('\n')
 print(df_rita.count())
 print('\n')
 
-df_rita.show()
-
 df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME')\
     .withColumnRenamed('ACTUAL_ELAPSED_TIME', 'W')\
     .withColumn('R_min', F.lit(suma))
 
-df = df.union(sc.parallelize([[args.origen, args.origen, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min']))
+nodo_actual = args.origen
+
+# df = df.union(sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min']))
 
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
 
-df.show()
-
 schema = StructType([
   StructField('ORIGIN', StringType(), True),
   StructField('DEST', StringType(), True),
-  StructField('W', IntegerType(), True),
-  StructField('R_min', IntegerType(), True)])
+  StructField('W', FloatType(), True),
+  StructField('R_min', FloatType(), True)])
 
 # Creacion de red
 # Cada elemento tiene la forma: [origen, destino, peso, peso_minimo, horario]
@@ -112,35 +110,45 @@ udf_actualiza_peso = F.udf(actualiza_peso)
 # nodos = set(origenes + destinos)
 # aristas = [x for x in zip(origenes, destinos, pesos, pesos_min)]
 
-# df = sc.parallelize(aristas).toDF(schema=schema)
+df_temp = sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min'])
 
 ruta_optima = dict()
 
 inicio = time.time()
 print('\nInicio del loop.')
 
-for i in range(n_nodos):
-# while df.count() > 0:
-    # Calculo el valor minimo de los pesos para obtener el siguiente nodo
-    minimo = df.agg(F.min(F.expr('CAST(R_min AS INT)')).alias('MIN')).collect()[0][0] # Obtenemos el vertice con el minimo valor
+i = 0
+while i < n_nodos and nodo_actual != args.dest:
+    i+=1
+    # Agrego a los valores considerados los nodos conectados al nodo en el que estoy parado
+    df_temp = df.filter(F.col('ORIGIN') == F.lit(nodo_actual)).union(df_temp)
+    df_temp.cache()
+
+    # Calculo el valor minimo de los pesos para obtener el siguiente nodo a explorar
+    minimo = df_temp.agg(F.min(F.expr('CAST(R_min AS float)')).alias('MIN')).collect()[0][0] # Obtenemos el vertice con el minimo valor
 
     # Obtenemos el nuevo nodo a explorar y el nodo que lleva a el con el peso minimo
-    estado_actual = df.filter(F.col('R_min').cast(IntegerType()) == F.lit(minimo).cast(IntegerType()))\
+    estado_actual = df_temp.filter(F.col('R_min').cast(FloatType()) == F.lit(minimo).cast(FloatType()))\
                         .select('ORIGIN', 'DEST', 'R_min')\
                         .collect()[0]
     nodo_anterior = estado_actual[0]
     nodo_actual = estado_actual[1]
     peso_actual = estado_actual[2]
 
+    # Añado el nodo actual a la ruta optima
     ruta_optima.update({nodo_anterior : peso_actual})
 
-    print('\n\tNumero de ejecucion: {i}/{total}.\n\tNodo actual: {nodo_actual}.\n\tPeso actual: {peso_actual}'.format(i=i, total=n_nodos, nodo_actual=nodo_actual, peso_actual=peso_actual))
+    print('\n\tNumero de ejecucion: {i}/{total}.\n\tNodo actual: {nodo_actual}.\n\tPeso actual: {peso_actual}.\n\tTiempo transcurrido: {tiempo}.\n'.format(i=i, total=n_nodos, nodo_actual=nodo_actual, peso_actual=peso_actual, tiempo=time.time()-inicio))
 
     # Actualizo el peso de las aristas al minimo posible
-    df = df.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
+    df_temp = df_temp.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
 
-    # Elimino los registros que llevan al nodo en el que estoy parado
+    # Elimino los registros que llevan al nodo en el que estoy parado de los nodos por explorar (ya tengo ruta optima a este nodo)
+    df_temp = df_temp.filter(F.col('DEST') != F.lit(nodo_actual))
+
+    # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
     df = df.filter(F.col('DEST') != F.lit(nodo_actual))
+    df.cache()
 
 peso_optimo = list(ruta_optima.values())[-1]
 ruta_optima = list(ruta_optima.keys()) + [nodo_actual]
