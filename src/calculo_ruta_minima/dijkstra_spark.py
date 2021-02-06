@@ -103,65 +103,80 @@ udf_actualiza_peso = F.udf(actualiza_peso)
 # CALCULO DE RUTAS MINIMAS
 # ----------------------------------------------------------------------------------------------------
 inicio = time.time()
-print('\nInicio del loop.')
 
-i = 0
-minimo = 0
-while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
-    i+=1
-    # Agrego a los valores considerados los nodos conectados al nodo en el que estoy parado
-    df_temp = df.filter(F.col('ORIGIN') == F.lit(nodo_actual)).union(df_temp)
-    df_temp.cache()
+# Primero busco si hay vuelo directo
+vuelo_directo = df.filter(F.col('ORIGIN') == F.lit(args.origen)).filter(F.col('DEST') == F.lit(args.dest))
+vuelo_directo.cache()
 
-    # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
-    df = df.filter(F.col('ORIGIN') != F.lit(nodo_actual))
-    df.cache()
+if vuelo_directo.count() > 0:
+    # Si hay vuelo directo lo regreso como ruta optima
+    estado_actual = vuelo_directo.select('ORIGIN', 'DEST', 'W').collect()[0]
+    peso_optimo = estado_actual[2]
+    ruta_optima = [estado_actual[0], estado_actual[1]]
+else:
+    # En otro caso uso Dijkstra para encontrar la ruta optima
+    print('\nInicio del loop.')
 
-    # Calculo el valor minimo de los pesos para obtener el siguiente nodo a explorar
-    minimo = df_temp.agg(F.min(F.expr('CAST(R_min AS float)')).alias('MIN')).collect()[0][0] # Obtenemos el vertice con el minimo valor
+    i = 0
+    minimo = 0
+    while i < n_nodos and nodo_actual != args.dest and minimo != infinity:
+        i+=1
+        # Agrego a los valores considerados los nodos conectados al nodo en el que estoy parado
+        df_temp = df.filter(F.col('ORIGIN') == F.lit(nodo_actual)).union(df_temp)
+        df_temp.cache()
 
-    # Obtenemos el nuevo nodo a explorar y el nodo que lleva a el con el peso minimo
-    estado_actual = df_temp.filter(F.col('R_min').cast(FloatType()) == F.lit(minimo).cast(FloatType()))\
-                        .select('ORIGIN', 'DEST', 'R_min')\
-                        .collect()[0]
-    nodo_anterior = estado_actual[0]
-    nodo_actual = estado_actual[1]
-    peso_actual = estado_actual[2]
+        # En el df de todos los vuelos tambien elimino las aristas que llevan al nodo actual
+        df = df.filter(F.col('ORIGIN') != F.lit(nodo_actual))
+        df.cache()
 
-    # Agrego el nodo actual a la ruta optima
-    ruta_optima.update({nodo_anterior : peso_actual})
+        # Calculo el valor minimo de los pesos para obtener el siguiente nodo a explorar
+        minimo = df_temp.agg(F.min(F.expr('CAST(R_min AS float)')).alias('MIN')).collect()[0][0] # Obtenemos el vertice con el minimo valor
 
-    print('''\n\tNumero de ejecucion: {i}/{total}.
-            \tNodo actual: {nodo_actual}.
-            \tPeso actual: {peso_actual}.
-            \tTiempo transcurrido: {tiempo}.
-            \tMinimo: {minimo}.\n'''.format(i=i
-                                            , total=n_nodos
-                                            , nodo_actual=nodo_actual
-                                            , peso_actual=peso_actual
-                                            , tiempo=time.time()-inicio
-                                            , minimo=minimo)
-            )
+        # Obtenemos el nuevo nodo a explorar y el nodo que lleva a el con el peso minimo
+        estado_actual = df_temp.filter(F.col('R_min').cast(FloatType()) == F.lit(minimo).cast(FloatType()))\
+                            .select('ORIGIN', 'DEST', 'R_min')\
+                            .collect()[0]
+        nodo_anterior = estado_actual[0]
+        nodo_actual = estado_actual[1]
+        peso_actual = estado_actual[2]
 
-    # Actualizo el peso de las aristas al minimo posible
-    df_temp = df_temp.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
+        # Agrego el nodo actual a la ruta optima
+        ruta_optima.update({nodo_anterior : peso_actual})
 
-    # Elimino los registros que llevan al nodo en el que estoy parado de los nodos por explorar (ya tengo ruta optima a este nodo)
-    df_temp = df_temp.filter(F.col('DEST') != F.lit(nodo_actual))
+        print('''\n\tNumero de ejecucion: {i}/{total}.
+                \tNodo actual: {nodo_actual}.
+                \tPeso actual: {peso_actual}.
+                \tTiempo transcurrido: {tiempo}.
+                \tMinimo: {minimo}.\n'''.format(i=i
+                                                , total=n_nodos
+                                                , nodo_actual=nodo_actual
+                                                , peso_actual=peso_actual
+                                                , tiempo=time.time()-inicio
+                                                , minimo=minimo)
+                )
+
+        # Actualizo el peso de las aristas al minimo posible
+        df_temp = df_temp.withColumn('R_min', udf_actualiza_peso(F.lit(nodo_actual), F.col('ORIGIN'), F.lit(peso_actual), F.col('W'), F.col('R_min')))
+
+        # Elimino los registros que llevan al nodo en el que estoy parado de los nodos por explorar (ya tengo ruta optima a este nodo)
+        df_temp = df_temp.filter(F.col('DEST') != F.lit(nodo_actual))
+    
+    peso_optimo = list(ruta_optima.values())[-1]
+    ruta_optima = list(ruta_optima.keys()) + [nodo_actual]
 # ----------------------------------------------------------------------------------------------------
 
 
 # RESULTADOS
 # ----------------------------------------------------------------------------------------------------
-peso_optimo = list(ruta_optima.values())[-1]
-ruta_optima = list(ruta_optima.keys()) + [nodo_actual]
+if float(peso_optimo) == float(infinity):
+    print('\n\tNo hay ruta entre {origen} y {destino}.'.format(origen=args.origen, destino=args.dest))
+else:
+    ruta_optima_str = ""
+    for v in ruta_optima:
+        ruta_optima_str += v + " - "
+    ruta_optima_str = ruta_optima_str[:-3]
 
-ruta_optima_str = ""
-for v in ruta_optima:
-    ruta_optima_str += v + " - "
-ruta_optima_str = ruta_optima_str[:-3]
-
-resultado = print("\nLa ruta_optima es {ruta_optima_str} y su peso es de {peso_optimo}.\n".format(peso_optimo=peso_optimo, ruta_optima_str=ruta_optima_str))
+    print("\n\tLa ruta_optima es {ruta_optima_str} y su peso es de {peso_optimo}.\n".format(peso_optimo=peso_optimo, ruta_optima_str=ruta_optima_str))
 
 print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=time.time() - inicio))
 # ----------------------------------------------------------------------------------------------------
