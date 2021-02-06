@@ -52,10 +52,10 @@ df_rita = spark.read.format("jdbc")\
 # Es el valor inicial de cada nodo. Es el valor mas alto posible.
 infinity = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]
 
-df_rita = df_rita.groupBy('ORIGIN', 'DEST')\
+df_rita = df_rita.groupBy('ORIGIN', 'DEST', 'DEP_TIME')\
     .agg(F.avg('ACTUAL_ELAPSED_TIME').alias('ACTUAL_ELAPSED_TIME'))
 
-df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME')\
+df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME', 'DEP_TIME')\
     .withColumnRenamed('ACTUAL_ELAPSED_TIME', 'W')\
     .withColumn('R_min', F.lit(infinity))
 
@@ -69,11 +69,12 @@ n_nodos = df.select('ORIGIN')\
 schema = StructType([
   StructField('ORIGIN', StringType(), True),
   StructField('DEST', StringType(), True),
+  StructField('DEP_TIME', IntegerType(), True),
   StructField('W', FloatType(), True),
   StructField('R_min', FloatType(), True)])
 
 # Este df almacena la informacion de los nodos cuyo peso ya se actualizo (no necesariamente es el peso minimo)
-df_temp = sc.parallelize([[nodo_actual, nodo_actual, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'W', 'R_min'])
+df_temp = sc.parallelize([[nodo_actual, nodo_actual, 0, 0.0, 0.0]]).toDF(['ORIGIN', 'DEST', 'DEP_TIME','W', 'R_min'])
 
 ruta_optima = dict()
 # ----------------------------------------------------------------------------------------------------
@@ -110,9 +111,10 @@ vuelo_directo.cache()
 
 if vuelo_directo.count() > 0:
     # Si hay vuelo directo lo regreso como ruta optima
-    estado_actual = vuelo_directo.select('ORIGIN', 'DEST', 'W').collect()[0]
+    estado_actual = vuelo_directo.select('ORIGIN', 'DEST', 'W', 'DEP_TIME').collect()[0]
     peso_optimo = estado_actual[2]
     ruta_optima = [estado_actual[0], estado_actual[1]]
+    horario = [estado_actual[3], '']
 else:
     # En otro caso uso Dijkstra para encontrar la ruta optima
     print('\nInicio del loop.')
@@ -172,8 +174,8 @@ if float(peso_optimo) == float(infinity):
     print('\n\tNo hay ruta entre {origen} y {destino}.'.format(origen=args.origen, destino=args.dest))
 else:
     ruta_optima_str = ""
-    for v in ruta_optima:
-        ruta_optima_str += v + " - "
+    for v in zip(ruta_optima, horario):
+        ruta_optima_str += v[0] + ':' + v[1] + " - "
     ruta_optima_str = ruta_optima_str[:-3]
 
     print("\n\tLa ruta_optima es {ruta_optima_str} y su peso es de {peso_optimo}.\n".format(peso_optimo=peso_optimo, ruta_optima_str=ruta_optima_str))
