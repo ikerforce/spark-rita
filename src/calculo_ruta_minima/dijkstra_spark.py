@@ -59,6 +59,8 @@ df = df_rita.select('ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME')\
     .withColumnRenamed('ACTUAL_ELAPSED_TIME', 'W')\
     .withColumn('R_min', F.lit(infinity))
 
+df = df.repartition("ORIGIN")
+
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
