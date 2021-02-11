@@ -82,12 +82,10 @@ udf_convierte_timestamp_a_epoch = F.udf(convierte_timestamp_a_epoch)
 # ----------------------------------------------------------------------------------------------------
 # Es el valor inicial de cada nodo. Es el valor mas alto posible.
 # infinity = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]}
-df_rita = df_rita.groupBy('FL_DATE', 'ARR_TIME', 'DEP_TIME', 'ORIGIN', 'DEST')\
-    .agg(F.avg('ACTUAL_ELAPSED_TIME').alias('ACTUAL_ELAPSED_TIME'))\
+df = df_rita\
     .withColumn('dep_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('DEP_TIME')))\
-    .withColumn('arr_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('ARR_TIME')))
-
-df = df_rita.select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')\
+    .withColumn('arr_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('ARR_TIME')))\
+    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')\
     .withColumn('t_acumulado', F.lit(0))
 
 df.show()
@@ -120,7 +118,6 @@ early_arr = 0
 frontera = df.filter(F.col('ORIGIN') == F.lit(args.origen)).filter(F.col('DEST') == F.lit(args.dest))\
                     .orderBy(F.asc('dep_epoch'))\
                     .limit(1)
-frontera.cache()
 
 if frontera.count() > 0:
     # Si hay vuelo directo lo regreso como ruta optima
@@ -141,8 +138,8 @@ else:
 
         # - Elimino los vuelos en los que DEST == `nodo_actual`.
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
-        df.write.format('parquet').mode('overwrite').save('df_vuelos')
-        df = spark.read.format('parquet').load('df_vuelos').cache()
+        df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos')
+        df = spark.read.format('parquet').load('temp_dir/df_vuelos').cache()
 
         # - Agrego los vuelos en los que ORIGEN == nodo_actual a la frontera.
         # t_conexion es el tiempo que transucrre entre que llega el avion y toma el siguiente vuelo
@@ -171,20 +168,20 @@ else:
             # La hora mas pronta a la que puedo salir del siguiente aeropuerto considerando 2 horas de conexion
             min_dep_epoch = float(vuelo_elegido[3]) + 7200
 
-            print('''\n\tNumero de ejecucion: {i}/{total}.
-                    \tNodo actual: {nodo_actual}.
-                    \tLlegada mas pronta: {early_arr}.
-                    \tMinimo horario de salida: {min_dep_epoch}.
-                    \tTamaño de frontera: {t_frontera}.
-                    \tTamaño de df: {t_dataset}.
-                    \tTiempo: {tiempo}\n'''.format(i=i
-                                                    , total=n_nodos
-                                                    , nodo_actual=nodo_actual
-                                                    , early_arr=early_arr
-                                                    , tiempo=time.time()-inicio
-                                                    , min_dep_epoch=min_dep_epoch
-                                                    , t_frontera=frontera.count()
-                                                    , t_dataset=df.count()))
+            # print('''\n\tNumero de ejecucion: {i}/{total}.
+            #         \tNodo actual: {nodo_actual}.
+            #         \tLlegada mas pronta: {early_arr}.
+            #         \tMinimo horario de salida: {min_dep_epoch}.
+            #         \tTamaño de frontera: {t_frontera}.
+            #         \tTamaño de df: {t_dataset}.
+            #         \tTiempo: {tiempo}\n'''.format(i=i
+            #                                         , total=n_nodos
+            #                                         , nodo_actual=nodo_actual
+            #                                         , early_arr=early_arr
+            #                                         , tiempo=time.time()-inicio
+            #                                         , min_dep_epoch=min_dep_epoch
+            #                                         , t_frontera=frontera.count()
+            #                                         , t_dataset=df.count()))
 
 
             # - Hago `t_acumulado` = `t_acumulado + V.ELAPSED_TIME + 2h`
@@ -207,7 +204,7 @@ if encontro_ruta == True:
                     ORIGEN:  {origen}
                       Salida:  {salida}
                     DESTINO: {destino}
-                      Llegada: {llegada}\n'''.format(origen=visitados[args.dest]['origen']
+                      Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
                                                     , destino=args.dest
                                                     , salida=time.ctime(visitados[args.dest]['salida'])
                                                     , llegada=time.ctime(visitados[args.dest]['llegada'])
@@ -224,9 +221,10 @@ if encontro_ruta == True:
                                                     , llegada=time.ctime(visitados[x]['llegada'])
                                                     ) + ruta_optima_str
         salida = visitados[x]['salida']
+        print(salida)
         x = visitados[x]['origen']
 
-    print("\n\tLa ruta óptima es:\n{ruta_optima_str}.\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
+    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
 
     print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=time.time() - inicio))
 # ----------------------------------------------------------------------------------------------------
