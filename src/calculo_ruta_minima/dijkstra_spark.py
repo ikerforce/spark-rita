@@ -88,10 +88,6 @@ df = df_rita\
     .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')\
     .withColumn('t_acumulado', F.lit(0))
 
-df.show()
-
-# df = df.repartition("ORIGIN")
-
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
@@ -134,7 +130,7 @@ else:
     print('\nNo hay vuelo directo. Buscando ruta óptima.')
     i = 0
     while i < n_nodos and nodo_actual != args.dest:
-        i+=1
+        i += 1
 
         # - Elimino los vuelos en los que DEST == `nodo_actual`.
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
@@ -156,8 +152,7 @@ else:
         
         # - Obtengo `V`, el vuelo de la frontera que llega más pronto a su destino (`MIN(dep_epoch + ELAPSED_TIME)`).
         try:
-            vuelo_elegido = frontera.orderBy(F.asc('t_acumulado')).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado').collect()[0]
-
+            vuelo_elegido = frontera.orderBy(F.asc('t_acumulado')).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado').limit(1).collect()[0]
             # - Hago `nodo_actual` =  `V.DEST`.
             # Es el aeropuerto al que llego al tomar el vuelo elegido
             nodo_anterior = vuelo_elegido[0] # No es el nodo anterior explorado, sino el nodo del que se cumple la ruta minima
@@ -210,6 +205,7 @@ if encontro_ruta == True:
                                                     , llegada=time.ctime(visitados[args.dest]['llegada'])
                                                     )
     x = visitados[args.dest]['origen']
+    early_arr = visitados[args.dest]['llegada']
     while x != args.origen:
         ruta_optima_str =  '''
                     ORIGEN:  {origen}
@@ -221,7 +217,6 @@ if encontro_ruta == True:
                                                     , llegada=time.ctime(visitados[x]['llegada'])
                                                     ) + ruta_optima_str
         salida = visitados[x]['salida']
-        print(salida)
         x = visitados[x]['origen']
 
     print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
