@@ -33,8 +33,9 @@ with open(args.config) as json_file:
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
-inicio = time.time()
+t_inicio = time.time()
 
+process = config['results_table']
 nodo_actual = args.origen # Empezamos a explorar en el nodo origen
 visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
 # ----------------------------------------------------------------------------------------------------
@@ -71,11 +72,18 @@ udf_actualiza_peso = F.udf(actualiza_peso)
 
 
 def convierte_timestamp_a_epoch(fl_date, dep_time):
-        fl_date = str(fl_date).split('-')
-        dt = datetime.datetime(int(fl_date[0]), int(fl_date[1]), int(fl_date[2]), int(dep_time[:2]) % 24, int(dep_time[2:4]))
-        return time.mktime(dt.timetuple())
+    fl_date = str(fl_date).split('-')
+    dt = datetime.datetime(int(fl_date[0]), int(fl_date[1]), int(fl_date[2]), int(dep_time[:2]) % 24, int(dep_time[2:4]))
+    return time.mktime(dt.timetuple())
 
 udf_convierte_timestamp_a_epoch = F.udf(convierte_timestamp_a_epoch)
+
+
+def convierte_dict_en_lista(diccionario):
+    '''Recibe un diccionario de la forma {'key1':{'subkey1': value1, 'subkey2', value2, 'subkey3':value3}, ... , 'keyN':{'subkey1':value1_1, 'subkey2', value2, 'subkey3':value3}}
+    y regresa una lista de listas de la forma: [['key1', value1, value2, value3], ... , ['keyN', value1, value2, value3]]'''
+    lista_dict = list(map(lambda x: [x] + [diccionario[x][k] for k in diccionario[x].keys()], diccionario.keys()))
+    return lista_dict
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -176,6 +184,8 @@ if encontro_ruta == True:
                                                     , salida=time.ctime(visitados[args.dest]['salida'])
                                                     , llegada=time.ctime(visitados[args.dest]['llegada'])
                                                     )
+    solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
+    solo_optimo[args.dest] = visitados[args.dest]
     x = visitados[args.dest]['origen']
     early_arr = visitados[args.dest]['llegada']
     while x != args.origen:
@@ -189,9 +199,44 @@ if encontro_ruta == True:
                                                     , llegada=time.ctime(visitados[x]['llegada'])
                                                     ) + ruta_optima_str
         salida = visitados[x]['salida']
+        solo_optimo[x] = visitados[x]
         x = visitados[x]['origen']
 
+    df_resp = sc.parallelize(convierte_dict_en_lista(solo_optimo)).toDF(['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME']).select('ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME')
+
+    df_resp.write.format("jdbc")\
+        .options(
+            url=creds["db_url"] + creds["database"],
+            driver=creds["db_driver"],
+            dbtable=process,
+            user=creds["user"],
+            password=creds["password"],
+            numPartitions=config["db_numPartitions"])\
+        .mode(config["results_table_mode"])\
+        .save()
+
+    t_final = time.time() # Tiempo de finalizacion de la ejecucion
     print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
 
-    print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=time.time() - inicio))
+    print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+# ----------------------------------------------------------------------------------------------------
+
+
+
+    # REGISTRO DE TIEMPO
+# ----------------------------------------------------------------------------------------------------
+rdd_time = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"]]]) # Almacenamos infomracion de ejecucion en rdd
+df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+    .withColumn("insertion_ts", F.current_timestamp())
+df_time.write.format("jdbc")\
+    .options(
+        url=creds["db_url"] + creds["database"],
+        driver=creds["db_driver"],
+        dbtable="registro_de_tiempo_spark",
+        user=creds["user"],
+        password=creds["password"])\
+    .mode(config["time_table_mode"])\
+    .save()
+
+print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
 # ----------------------------------------------------------------------------------------------------
