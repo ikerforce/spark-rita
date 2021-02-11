@@ -26,6 +26,7 @@ parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la b
 parser.add_argument("--origen", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
 args = parser.parse_args()
+
 # Leemos las credenciales de la ruta especificada
 with open(args.config) as json_file:
     config = json.load(json_file)
@@ -80,8 +81,6 @@ udf_convierte_timestamp_a_epoch = F.udf(convierte_timestamp_a_epoch)
 
 # OBTENCION DE VALORES INICIALES
 # ----------------------------------------------------------------------------------------------------
-# Es el valor inicial de cada nodo. Es el valor mas alto posible.
-# infinity = df_rita.agg(F.sum('ACTUAL_ELAPSED_TIME')).collect()[0][0]}
 df = df_rita\
     .withColumn('dep_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('DEP_TIME')))\
     .withColumn('arr_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('ARR_TIME')))\
@@ -91,17 +90,6 @@ df = df_rita\
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
-
-# Este es el esquema que tendra el df
-# schema = StructType([
-#   StructField('ORIGIN', StringType(), True),
-#   StructField('DEST', StringType(), True),
-#   StructField('dep_epoch', FloatType(), True),
-#   StructField('arr_epoch', FloatType(), True),
-#   StructField('t_conexion', FloatType(), True),
-#   StructField('t_acumulado', FloatType(), True)])
-
-# frontera = spark.createDataFrame([], schema)
 
 encontro_ruta = True
 early_arr = 0
@@ -162,22 +150,6 @@ else:
             # - Hago `next_dep_epoch` = `V.arr_epoch + 2 hrs`.
             # La hora mas pronta a la que puedo salir del siguiente aeropuerto considerando 2 horas de conexion
             min_dep_epoch = float(vuelo_elegido[3]) + 7200
-
-            # print('''\n\tNumero de ejecucion: {i}/{total}.
-            #         \tNodo actual: {nodo_actual}.
-            #         \tLlegada mas pronta: {early_arr}.
-            #         \tMinimo horario de salida: {min_dep_epoch}.
-            #         \tTamaño de frontera: {t_frontera}.
-            #         \tTamaño de df: {t_dataset}.
-            #         \tTiempo: {tiempo}\n'''.format(i=i
-            #                                         , total=n_nodos
-            #                                         , nodo_actual=nodo_actual
-            #                                         , early_arr=early_arr
-            #                                         , tiempo=time.time()-inicio
-            #                                         , min_dep_epoch=min_dep_epoch
-            #                                         , t_frontera=frontera.count()
-            #                                         , t_dataset=df.count()))
-
 
             # - Hago `t_acumulado` = `t_acumulado + V.ELAPSED_TIME + 2h`
             # - Elimino de la frontera los vuelos en los que V.DEST = nodo_actual y con `MIN(dep_epoch + ELAPSED_TIME)` > dep_epoch + ELAPSED_TIME.
