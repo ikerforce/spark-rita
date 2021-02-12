@@ -142,7 +142,7 @@ app.layout = html.Div([
         dcc.Graph('retraso-aeropuerto', config={'displayModeBar': False}),
         dcc.Graph('mapa-demoras', config={'displayModeBar': False}),
         dcc.Graph('mapa-rutas', config={'displayModeBar': False}),
-        dcc.Graph('perfilamiento-perc2', config={'displayModeBar': False}),
+        dcc.Graph('ruta-optima', config={'displayModeBar': False}),
         dcc.Interval(id='interval-component', interval=1*1000)])])
 
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
@@ -318,7 +318,7 @@ def update_graph(grpname):
         )
     
     fig.update_layout(
-        title_text = 'Feb. 2011 American Airline flight paths<br>(Hover for airport names)',
+        title_text = 'Rutas con mayor número de demoras.',
         showlegend = False,
         geo = dict(
             scope = 'north america',
@@ -336,39 +336,48 @@ def update_graph(grpname):
     # Regresamos el grafico
     return fig
 
-
-# # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
-# @app.callback(
-#     Output('perfilamiento-perc2', 'figure'),
-#     [Input('interval-component', 'interval')])
-
-# # Este es el metodo que actualiza la informacion de MySQL y genera el dashboard de percentiles de usuarios detectados en APs
-# def update_graph(grpname):
-
-#     demoras_por_dia = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask WHERE DAY_OF_MONTH IS NOT NULL and ORIGIN = "TUL" ORDER BY YEAR, MONTH, DAY_OF_MONTH DESC LIMIT 365', con=db_connection) # Lectura de datos de demoras diarias
-#     demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
-#     flota = pd.read_sql('SELECT * FROM flota_dask ORDER BY TAIL_NUM DESC LIMIT 20', con=db_connection) # Lectura del tamano de la flota de las aerolineas
-#     # destinos_fantasma = pd.read_sql('SELECT CONCAT("A", DEST_AIRPORT_ID) AS DEST_AIRPORT_ID, count FROM destinos_fantasma ORDER BY count DESC LIMIT 20', con=db_connection) # Lectura de los destinos con mas vuelos fantasma
-#     vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
-#     demoras_por_dia['FECHA'] = demoras_por_dia.fillna('').apply(lambda row: row['YEAR'] + '-' + row['MONTH'] + '-' + row['DAY_OF_MONTH'], axis=1)
-#     # Definicion de layout de dashboards
-#     fig = make_subplots(rows=7, cols=2,
-#                         subplot_titles=("Flota por aerolínea", "Destinos fantasma", "Aeropuertos en Estados Unidos","Demoras por aerolínea", "Demoras en llegadas", "Demoras en salidas"),
-#                         specs=[[{"type":"bar"}, {"type": "bar"}],
-#                               [{"type":"scattergeo"}, {"type": "bar"}],
-#                               [{"type": "scatter", "colspan": 2}, None],
-#                               [{"type": "scatter", "colspan": 2}, None],
-#                               [{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
-#                                [None, None],
-#                               [None, None]])
-
-#     fig.add_trace(go.Bar(x=flota.OP_UNIQUE_CARRIER, y=flota.TAIL_NUM, marker=dict(color=Greens[4]), name='Flota'), row=1, col=1) # Grafico de tamano de las mayores flotas
+@app.callback(
+    Output('ruta-optima', 'figure'),
+    [Input('interval-component', 'interval')])
+def update_graph(grpname):
         
-#     # Regresamos el grafico
-#     return fig
+    # vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
+    ruta_opt = pd.read_sql('SELECT * FROM dijkstra_spark_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
+    # Definicion de layout de dashboards
+    fig = make_subplots(rows=3, cols=2,
+                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                               [None, None],
+                              [None, None]])
 
-# # -------------------------------------------------------------------------------------------
+    fig.add_trace(go.Scattergeo(
+        lon = ruta_opt['origin_longitude'] # + ruta_opt['dest_longitude']
+        , lat = ruta_opt['origin_latitude'] # + ruta_opt['dest_latitude']
+        , mode = 'markers'
+        , marker_color=Blues[4])
+        , row=1
+        , col=1) # Mapa de aeropuertos de origen con mas demoras
 
+    for i in range(ruta_opt.shape[0]):
+        fig.add_trace(
+            go.Scattergeo(name = '',
+                locationmode = 'USA-states',
+                lon = [ruta_opt['origin_longitude'][i], ruta_opt['dest_longitude'][i]],
+                lat = [ruta_opt['origin_latitude'][i], ruta_opt['dest_latitude'][i]],
+                mode = 'lines',
+                line = dict(width=2
+                    , color = Blues[2])
+                    , opacity = 1 # float(ruta_opt['N_FLIGHTS'][i]) / float(ruta_opt['N_FLIGHTS'].max()),
+            )
+        )
+    
+    fig.update_layout(geo_scope='usa') # Cambio de layout para que el mapa de arriba sea solo de US
+
+    fig.update_layout(height=900, width=1500, template='plotly_white') # , legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_xaxes(showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text="Retraso por ruta", showgrid=False, row=1, col=1)
+
+    # Regresamos el grafico
+    return fig
 
 if __name__ == '__main__':
         app.run_server(debug=True, port=9093)
