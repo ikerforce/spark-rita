@@ -47,7 +47,7 @@ df_rita = spark.read.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable="(SELECT * FROM " + 'vuelos_conectados' + " LIMIT 10000) df_rita",
+        dbtable="(SELECT ORIGIN, DEST, ACTUAL_ELAPSED_TIME, FL_DATE, DEP_TIME, ARR_TIME FROM " + config['input_table'] + " LIMIT 10000) df_rita",
         user=creds["user"],
         password=creds["password"])\
     .load().na.drop('any')
