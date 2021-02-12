@@ -54,6 +54,13 @@ time.tzset() # Ponemos la zona horaria correcta
 # -----------------------------------------------------------------------------------
 
 
+# Configuracion de token de mapbox
+# -----------------------------------------------------------------------------------
+mapbox_access_token = open("conf/.mapbox_token").read()
+px.set_mapbox_access_token(mapbox_access_token)
+# -----------------------------------------------------------------------------------
+
+
 # Conexion a base de datos
 # ---------------------------------------------------------------------------------
 db_connection_str = 'mysql+pymysql://' + user + ':' + password + '@localhost:3306/' + database # String de conexion a MySQL
@@ -188,8 +195,6 @@ def update_graph(cities, years, quarters, months, days, limit):
                                     , day_string=day_string
                                     , limit=limit)
 
-    print(query)
-
     demoras_por_dia = pd.read_sql(query, con=db_connection) # Lectura de datos de demoras diarias
     demoras_por_aerolinea = pd.read_sql('SELECT * FROM demoras_aerolinea_dask ORDER BY FL_DATE LIMIT 20', con=db_connection) # Lectura de datos de demoras por aerolinea
     flota = pd.read_sql('SELECT * FROM flota_dask ORDER BY TAIL_NUM DESC LIMIT 20', con=db_connection) # Lectura del tamano de la flota de las aerolineas
@@ -261,20 +266,50 @@ def update_graph(grpname):
     vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
     # Definicion de layout de dashboards
     fig = make_subplots(rows=3, cols=2,
-                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                        specs=[[{"type": "mapbox", "colspan": 2, "rowspan":3}, None],
                                [None, None],
                               [None, None]])
 
-    fig.add_trace(go.Scattergeo(
-        lon = vuelos_origen_demoras['LONGITUDE'],
-        lat = vuelos_origen_demoras['LATITUDE'],
-        mode = 'markers', marker_color=vuelos_origen_demoras['COLOR_ARR_DELAY']), row=1, col=1) # Mapa de aeropuertos de origen con mas demoras
-    
-    fig.update_layout(geo_scope='usa') # Cambio de layout para que el mapa de arriba sea solo de US
+    print(vuelos_origen_demoras.columns)
 
-    fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
-    fig.update_xaxes(showgrid=False, row=1, col=1)
-    fig.update_yaxes(title_text="Retraso por aeropuertos", showgrid=False, row=1, col=1)
+    fig.add_trace(go.Scattermapbox(
+            lon = vuelos_origen_demoras['LONGITUDE'],
+            lat = vuelos_origen_demoras['LATITUDE'],
+            mode = 'markers',
+            marker=dict(
+                colorscale="jet",
+                opacity=0.7,
+                size=7,
+                color=np.log(1 + vuelos_origen_demoras['DEP_DELAY']),
+                showscale=True
+                #symbol='marker' # Does not seem compatible with color
+            ),
+            hovertext=vuelos_origen_demoras['ORIGIN'],
+        )
+        , row=1
+        , col=1) # Mapa de aeropuertos de origen con mas demoras
+
+    # Tipos de mapas: open-street-map, white-bg, carto-positron, carto-darkmatter, stamen-terrain, stamen-toner, stamen-watercolor
+    
+    fig.update_layout(mapbox_style="light",
+        autosize=False,
+        height=900,
+        width=1500,
+        hovermode='closest',
+        showlegend=True,
+        margin={'t':30, 'b':10},
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            # center=center,
+            pitch=0,
+            # zoom=zoom,
+        ),
+    )
+
+    # fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    # fig.update_xaxes(showgrid=False, row=1, col=1)
+    # fig.update_yaxes(title_text="Retraso por aeropuertos", showgrid=False, row=1, col=1)
 
     # Regresamos el grafico
     return fig
@@ -297,13 +332,15 @@ def update_graph(grpname):
                                [None, None],
                               [None, None]])
 
-    fig.add_trace(go.Scattergeo(
-        lon = vuelos_origen_demoras['LONGITUDE']
-        , lat = vuelos_origen_demoras['LATITUDE']
-        , mode = 'markers'
-        , marker_color=Blues[4])
-        , row=1
-        , col=1) # Mapa de aeropuertos de origen con mas demoras
+    # fig.add_trace(go.Scattergeo(
+    #     lon = vuelos_origen_demoras['LONGITUDE']
+    #     , lat = vuelos_origen_demoras['LATITUDE']
+    #     , mode = 'markers'
+    #     , marker_color=Blues[4])
+    #     , row=1
+    #     , col=1) # Mapa de aeropuertos de origen con mas demoras
+
+    print(rutas.columns)
 
     for i in range(rutas.shape[0]):
         fig.add_trace(
@@ -311,8 +348,9 @@ def update_graph(grpname):
                 locationmode = 'USA-states',
                 lon = [rutas['origin_longitude'][i], rutas['dest_longitude'][i]],
                 lat = [rutas['origin_latitude'][i], rutas['dest_latitude'][i]],
-                mode = 'lines',
-                line = dict(width=1, color = Blues[2]),
+                mode = 'markers+lines',
+                line = dict(width=1,
+                color = Blues[2]),
                 opacity = float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max()),
             )
         )
@@ -349,13 +387,13 @@ def update_graph(grpname):
                                [None, None],
                               [None, None]])
 
-    fig.add_trace(go.Scattergeo(
-        lon = ruta_opt['origin_longitude'] # + ruta_opt['dest_longitude']
-        , lat = ruta_opt['origin_latitude'] # + ruta_opt['dest_latitude']
-        , mode = 'markers'
-        , marker_color=Blues[4])
-        , row=1
-        , col=1) # Mapa de aeropuertos de origen con mas demoras
+    # fig.add_trace(go.Scattergeo(
+    #     lon = ruta_opt['origin_longitude'] # + ruta_opt['dest_longitude']
+    #     , lat = ruta_opt['origin_latitude'] # + ruta_opt['dest_latitude']
+    #     , mode = 'markers'
+    #     , marker_color=Blues[4])
+    #     , row=1
+    #     , col=1) # Mapa de aeropuertos de origen con mas demoras
 
     for i in range(ruta_opt.shape[0]):
         fig.add_trace(
@@ -364,6 +402,7 @@ def update_graph(grpname):
                 lon = [ruta_opt['origin_longitude'][i], ruta_opt['dest_longitude'][i]],
                 lat = [ruta_opt['origin_latitude'][i], ruta_opt['dest_latitude'][i]],
                 mode = 'lines',
+                showlegend = False,
                 line = dict(width=2
                     , color = Blues[2])
                     , opacity = 1 # float(ruta_opt['N_FLIGHTS'][i]) / float(ruta_opt['N_FLIGHTS'].max()),
