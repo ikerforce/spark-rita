@@ -1,3 +1,4 @@
+-- Cracion de tabla con muestra de 10000 regitstos
 CREATE TABLE `RITA_20` AS
 SELECT CAST(`YEAR` AS UNSIGNED) AS YEAR
   , CAST(`QUARTER` AS UNSIGNED) AS QUARTER
