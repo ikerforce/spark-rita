@@ -23,6 +23,7 @@ import argparse
 import json
 Greens = sequential.Greens
 Blues = sequential.Blues
+Greys = sequential.Greys
 
 def crea_where(values, column):
     where_string = ""
@@ -224,7 +225,15 @@ def update_graph(cities, years, quarters, months, days, limit):
                             , marker=dict(color=Greens[6]))
                             , row=1
                             , col=1)
-    fig.update_layout(height=450, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
+    fig.update_layout(autosize = True
+            , height=450
+            # , width=1500
+            , template='plotly_white'
+            , legend=dict(orientation="h"
+            , yanchor="bottom"
+            , y=-0.8
+            , xanchor="left"
+            , x=0.415))
     fig.update_xaxes(title_text="Fecha", title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso promedio", showgrid=False, row=1, col=1)
     # Regresamos el bloque de graficos 
@@ -270,8 +279,6 @@ def update_graph(grpname):
                                [None, None],
                               [None, None]])
 
-    print(vuelos_origen_demoras.columns)
-
     fig.add_trace(go.Scattermapbox(
             lon = vuelos_origen_demoras['LONGITUDE'],
             lat = vuelos_origen_demoras['LATITUDE'],
@@ -292,18 +299,18 @@ def update_graph(grpname):
     # Tipos de mapas: open-street-map, white-bg, carto-positron, carto-darkmatter, stamen-terrain, stamen-toner, stamen-watercolor
     
     fig.update_layout(mapbox_style="light",
-        autosize=False,
+        autosize=True,
         height=900,
-        width=1500,
+        # width=1500,
         hovermode='closest',
         showlegend=True,
-        margin={'t':30, 'b':10},
+        margin={'t':5, 'b':5},
         mapbox=dict(
             accesstoken=mapbox_access_token,
             bearing=0,
-            # center=center,
+            center=dict(lat=40.78, lon=-111.97),
             pitch=0,
-            # zoom=zoom,
+            zoom=3,
         ),
     )
 
@@ -325,10 +332,10 @@ def update_graph(grpname):
 def update_graph(grpname):
         
     vuelos_origen_demoras = pd.read_sql('SELECT * FROM demoras_aeropuerto_origen_dask_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
-    rutas = pd.read_sql('SELECT * FROM demoras_ruta_aeropuerto_spark_ubicacion WHERE MONTH IS NULL AND YEAR IS NOT NULL ORDER BY N_FLIGHTS', con=db_connection) # Aeropuertos de origen con mas demoras
+    rutas = pd.read_sql('SELECT *, CONCAT(ORIGIN, "-", DEST) as ruta FROM demoras_ruta_aeropuerto_spark_ubicacion WHERE MONTH IS NULL AND YEAR IS NOT NULL ORDER BY N_FLIGHTS DESC LIMIT 100', con=db_connection) # Aeropuertos de origen con mas demoras
     # Definicion de layout de dashboards
     fig = make_subplots(rows=3, cols=2,
-                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                        specs=[[{"type": "mapbox", "colspan": 2, "rowspan":3}, None],
                                [None, None],
                               [None, None]])
 
@@ -340,34 +347,43 @@ def update_graph(grpname):
     #     , row=1
     #     , col=1) # Mapa de aeropuertos de origen con mas demoras
 
-    print(rutas.columns)
-
     for i in range(rutas.shape[0]):
         fig.add_trace(
-            go.Scattergeo(
-                locationmode = 'USA-states',
+            go.Scattermapbox(name=rutas['ruta'][i],
                 lon = [rutas['origin_longitude'][i], rutas['dest_longitude'][i]],
                 lat = [rutas['origin_latitude'][i], rutas['dest_latitude'][i]],
                 mode = 'markers+lines',
-                line = dict(width=1,
-                color = Blues[2]),
-                opacity = float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max()),
+                line=dict(width=3*np.log(1 + float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max())),
+                        color=Greys[8], # np.log(1 + float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max())),
+                        # colorscale="jet",
+                ),
+                marker=dict(
+                    # colorscale="jet",
+                    size=7,
+                    color=Greys[8],
+                    # opacity = float(rutas['N_FLIGHTS'][i]) / float(rutas['N_FLIGHTS'].max())
+                    # showscale=True
+                    #symbol='marker' # Does not seem compatible with color
+                ),
             )
         )
     
-    fig.update_layout(
-        title_text = 'Rutas con mayor número de demoras.',
-        showlegend = False,
-        geo = dict(
-            scope = 'north america',
-            projection_type = 'azimuthal equal area',
-            showland = True,
-            landcolor = 'rgb(243, 243, 243)',
-            countrycolor = 'rgb(204, 204, 204)',
+    fig.update_layout(mapbox_style="light",
+        autosize=True,
+        height=900,
+        # width=1500,
+        hovermode='closest',
+        showlegend=True,
+        margin={'t':5, 'b':5},
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            center=dict(lat=40.78, lon=-111.97),
+            pitch=0,
+            zoom=3,
         ),
     )
 
-    fig.update_layout(height=900, width=1500, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
     fig.update_xaxes(showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso por ruta", showgrid=False, row=1, col=1)
 
@@ -383,7 +399,7 @@ def update_graph(grpname):
     ruta_opt = pd.read_sql('SELECT * FROM dijkstra_spark_ubicacion', con=db_connection) # Aeropuertos de origen con mas demoras
     # Definicion de layout de dashboards
     fig = make_subplots(rows=3, cols=2,
-                        specs=[[{"type": "scattergeo", "colspan": 2, "rowspan":3}, None],
+                        specs=[[{"type": "mapbox", "colspan": 2, "rowspan":3}, None],
                                [None, None],
                               [None, None]])
 
@@ -397,21 +413,42 @@ def update_graph(grpname):
 
     for i in range(ruta_opt.shape[0]):
         fig.add_trace(
-            go.Scattergeo(name = '',
-                locationmode = 'USA-states',
+            go.Scattermapbox(name = '',
                 lon = [ruta_opt['origin_longitude'][i], ruta_opt['dest_longitude'][i]],
                 lat = [ruta_opt['origin_latitude'][i], ruta_opt['dest_latitude'][i]],
-                mode = 'lines',
+                mode = 'markers+lines',
+                marker=dict(
+                    colorscale="jet",
+                    opacity=0.7,
+                    size=7,
+                    color=Blues[4],
+                    # showscale=True
+                    #symbol='marker' # Does not seem compatible with color
+                ),
+                # hovertext=ruta_opt['ORIGIN'][i],
                 showlegend = False,
                 line = dict(width=2
-                    , color = Blues[2])
+                    , color = Blues[5])
                     , opacity = 1 # float(ruta_opt['N_FLIGHTS'][i]) / float(ruta_opt['N_FLIGHTS'].max()),
             )
         )
     
-    fig.update_layout(geo_scope='usa') # Cambio de layout para que el mapa de arriba sea solo de US
+    fig.update_layout(mapbox_style="light",
+        autosize=True,
+        height=900,
+        # width=1500,
+        hovermode='closest',
+        showlegend=True,
+        margin={'t':5, 'b':5},
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            center=dict(lat=40.78, lon=-111.97),
+            pitch=0,
+            zoom=3,
+        ),
+    )
 
-    fig.update_layout(height=900, width=1500, template='plotly_white') # , legend=dict(orientation="h", yanchor="bottom", y=-0.8, xanchor="left", x=0.415))
     fig.update_xaxes(showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text="Retraso por ruta", showgrid=False, row=1, col=1)
 
