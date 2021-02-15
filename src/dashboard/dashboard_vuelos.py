@@ -371,7 +371,7 @@ def update_graph(grpname):
     fig.update_layout(mapbox_style="light",
         autosize=True,
         height=900,
-        # width=1500,
+        # width=1200,
         hovermode='closest',
         showlegend=True,
         margin={'t':5, 'b':5},
