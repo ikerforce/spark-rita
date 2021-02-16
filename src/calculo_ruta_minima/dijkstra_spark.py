@@ -114,7 +114,7 @@ frontera = df.filter(F.col('ORIGIN') == F.lit(args.origen)).filter(F.col('DEST')
 
 if frontera.count() > 0:
     # Si hay vuelo directo lo regreso como ruta optima
-    vuelo_elegido = frontera.orderBy(F.asc('t_acumulado')).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME').collect()[0]
+    vuelo_elegido = frontera.select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME').collect()[0]
     nodo_anterior = vuelo_elegido[0] # Origen del vuelo directo
     nodo_actual = vuelo_elegido[1] # Destino del vuelo directo
     visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido[2]), 'llegada': float(vuelo_elegido[3])}
@@ -152,11 +152,14 @@ else:
             # Es el aeropuerto al que llego al tomar el vuelo elegido
             nodo_anterior = vuelo_elegido[0] # No es el nodo anterior explorado, sino el nodo del que se cumple la ruta minima
             nodo_actual = vuelo_elegido[1]
+            print(nodo_actual)
             visitados[nodo_actual] = {'origen':nodo_anterior, 'salida': float(vuelo_elegido[2]), 'llegada': float(vuelo_elegido[3])}
             early_arr = vuelo_elegido[4]
             # - Hago `next_dep_epoch` = `V.arr_epoch + 2 hrs`.
             # La hora mas pronta a la que puedo salir del siguiente aeropuerto considerando 2 horas de conexion
             min_dep_epoch = float(vuelo_elegido[3]) + 7200
+
+            print('\n\nEarly arrival {early_arr}'.format(early_arr=early_arr))
 
             # - Hago `t_acumulado` = `t_acumulado + V.ELAPSED_TIME + 2h`
             # - Elimino de la frontera los vuelos en los que V.DEST = nodo_actual y con `MIN(dep_epoch + ELAPSED_TIME)` > dep_epoch + ELAPSED_TIME.
