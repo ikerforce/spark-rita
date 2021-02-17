@@ -204,7 +204,7 @@ if encontro_ruta == True:
         #                                             ) + ruta_optima_str
         x = visitados[x]['origen']
 
-    df_resp = sc.parallelize(convierte_dict_en_lista(solo_optimo)).toDF(['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME'])
+    df_resp = sc.parallelize(convierte_dict_en_lista(solo_optimo)).toDF(['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME']).select('ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME')
 
     df_resp.write.format("jdbc")\
         .options(
