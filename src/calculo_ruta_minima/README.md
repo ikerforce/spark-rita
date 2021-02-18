@@ -34,10 +34,11 @@ El algoritmo se ejecuta con el siguiente comando y utiliza el archivo de configu
 
 ```
 spark-submit \
-	--driver-memory=4g \
+	--driver-memory=8g \
 	src/calculo_ruta_minima/dijkstra_spark.py \
 	--conf src/transtat_config_spark_dijkstra.json \
 	--creds conf/mysql_creds.json \
-	--origen <codigo_del_aeropuerto_origen> \
-	--dest <codigo_del_aeropuerto_destino>
+	--origin <codigo_del_aeropuerto_origen> \
+	--dest <codigo_del_aeropuerto_destino> \
+	--dep_date <AAAA-MM-DD>
 ```
