@@ -23,8 +23,9 @@ import datetime
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
-parser.add_argument("--origen", help="Clave del aeropuerto de origen.")
+parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
+parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
 args = parser.parse_args()
 
 # Leemos las credenciales de la ruta especificada
@@ -36,21 +37,28 @@ with open(args.creds) as json_file:
 t_inicio = time.time()
 
 process = config['results_table']
-nodo_actual = args.origen # Empezamos a explorar en el nodo origen
+nodo_actual = args.origin # Empezamos a explorar en el nodo origen
 visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
 # ----------------------------------------------------------------------------------------------------
 
 
 # Lectura de datos de MySQL
 # ----------------------------------------------------------------------------------------------------
-df_rita = spark.read.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable="(SELECT ORIGIN, DEST, ACTUAL_ELAPSED_TIME, FL_DATE, DEP_TIME, ARR_TIME FROM " + config['input_table'] + " LIMIT 10000) df_rita",
-        user=creds["user"],
-        password=creds["password"])\
-    .load().na.drop('any')
+# df_rita = spark.read.format("jdbc")\
+#     .options(
+#         url=creds["db_url"] + creds["database"],
+#         driver=creds["db_driver"],
+#         dbtable="(SELECT ORIGIN, DEST, ACTUAL_ELAPSED_TIME, FL_DATE, DEP_TIME, ARR_TIME FROM " + config['input_table'] + " LIMIT 10000) df_rita",
+#         user=creds["user"],
+#         password=creds["password"])\
+#     .load().na.drop('any')
+
+date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
+max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
+
+df_rita = spark.read.format('parquet').load('/home/ikerforce/Documents/Tesis/spark-rita/data')\
+    .filter('''FL_DATE >= "{dep_date}" AND FL_DATE <= "{max_arr_date}"'''.format(dep_date=args.dep_date, max_arr_date=max_arr_date))\
+    .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -107,7 +115,7 @@ early_arr = 0
 # CALCULO DE RUTAS MINIMAS
 # ----------------------------------------------------------------------------------------------------
 # Primero busco si hay vuelo directo
-frontera = df.filter(F.col('ORIGIN') == F.lit(args.origen)).filter(F.col('DEST') == F.lit(args.dest))\
+frontera = df.filter(F.col('ORIGIN') == F.lit(args.origin)).filter(F.col('DEST') == F.lit(args.dest))\
                     .orderBy(F.asc('dep_epoch'))\
                     .withColumn('t_conexion', F.lit(0))\
                     .limit(1)
@@ -119,7 +127,7 @@ if frontera.count() > 0:
     nodo_actual = vuelo_elegido[1] # Destino del vuelo directo
     visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido[2]), 'llegada': float(vuelo_elegido[3])}
     salida = float(vuelo_elegido[2])
-    early_arr = salida + float(vuelo_elegido[4]) # Duracion del trayecto
+    early_arr = float(vuelo_elegido[4]) # Duracion del trayecto
 else:
 
     # En otro caso uso Dijkstra para encontrar la ruta optima
@@ -127,7 +135,6 @@ else:
     i = 0
     while i < n_nodos and nodo_actual != args.dest:
         i += 1
-
         # - Elimino los vuelos en los que DEST == `nodo_actual`.
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
 
@@ -159,13 +166,15 @@ else:
             # La hora mas pronta a la que puedo salir del siguiente aeropuerto considerando 2 horas de conexion
             min_dep_epoch = float(vuelo_elegido[3]) + 7200
 
+            print('Iteracion: {i} / {n_nodos}\nNodo actual: {nodo_actual}\nTiempo: {tiempo}\nEARLY_ARR: {early_arr}'.format(i=i, n_nodos=n_nodos, nodo_actual=nodo_actual, tiempo=time.time()-t_inicio, early_arr=early_arr))
+
             # - Hago `t_acumulado` = `t_acumulado + V.ELAPSED_TIME + 2h`
             # - Elimino de la frontera los vuelos en los que V.DEST = nodo_actual y con `MIN(dep_epoch + ELAPSED_TIME)` > dep_epoch + ELAPSED_TIME.
             frontera = frontera.filter('DEST != "{nodo_actual}" OR t_acumulado < {early_arr}'.format(nodo_actual=nodo_actual, early_arr=early_arr))
             # - Elimino de los vuelos totales los vuelos con dep_epoch < min_dep_epoch y ORIGEN == nodo_actual.
             df = df.filter('dep_epoch > {min_dep_epoch} OR ORIGIN != "{nodo_actual}"'.format(nodo_actual=nodo_actual, min_dep_epoch=min_dep_epoch))
         except:
-            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origen, destino=args.dest))
+            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
             encontro_ruta = False
             break;
 # # ----------------------------------------------------------------------------------------------------
@@ -188,9 +197,9 @@ if encontro_ruta == True:
     solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
     solo_optimo[args.dest] = visitados[args.dest]
     x = visitados[args.dest]['origen']
-    early_arr = visitados[args.dest]['llegada']
+    # early_arr = visitados[args.dest]['llegada']
 
-    while x != args.origen:
+    while x != args.origin:
         salida = visitados[x]['salida']
         solo_optimo[x] = visitados[x]
         # ruta_optima_str =  '''
@@ -216,9 +225,11 @@ if encontro_ruta == True:
             numPartitions=config["db_numPartitions"])\
         .mode(config["results_table_mode"])\
         .save()
-
+    ruta_optima_str = float(visitados[args.dest]['llegada']) - float(salida)
+    # print(early_arr - float(salida))
+    # print(salida)
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
-    # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
+    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr))), ruta_optima_str=ruta_optima_str))
 
     # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
