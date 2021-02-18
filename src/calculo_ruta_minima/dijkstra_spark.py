@@ -100,8 +100,7 @@ def convierte_dict_en_lista(diccionario):
 df = df_rita\
     .withColumn('dep_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('DEP_TIME')))\
     .withColumn('arr_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('ARR_TIME')))\
-    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')\
-    .withColumn('t_acumulado', F.lit(0))
+    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')
 
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
@@ -117,7 +116,6 @@ early_arr = 0
 # Primero busco si hay vuelo directo
 frontera = df.filter(F.col('ORIGIN') == F.lit(args.origin)).filter(F.col('DEST') == F.lit(args.dest))\
                     .orderBy(F.asc('dep_epoch'))\
-                    .withColumn('t_conexion', F.lit(0))\
                     .limit(1)
 
 if frontera.count() > 0:
@@ -147,8 +145,9 @@ else:
         frontera = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
                     .withColumn('t_conexion', F.col('dep_epoch').cast('float') - F.lit(early_arr).cast('float'))\
                     .filter('t_conexion > 7200')\
-                    .union(frontera)\
-                    .withColumn('t_acumulado', F.col('t_acumulado').cast('float') + F.col('t_conexion').cast('float') + F.col('ACTUAL_ELAPSED_TIME').cast('float'))
+                    .withColumn('t_acumulado', F.lit(early_arr) + F.col('t_conexion').cast('float') + F.col('ACTUAL_ELAPSED_TIME').cast('float'))\
+                    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado')\
+                    .union(frontera)
 
         frontera.write.format('parquet').mode('overwrite').save('temp_dir/frontera_spark')
         frontera = spark.read.format('parquet').load('temp_dir/frontera_spark').cache()
@@ -229,7 +228,7 @@ if encontro_ruta == True:
     # print(early_arr - float(salida))
     # print(salida)
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
-    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr))), ruta_optima_str=ruta_optima_str))
+    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
 
     # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
