@@ -4,3 +4,4 @@ origen|src/transtat_config_dask_aeropuerto_origen.json|src/transtat_config_spark
 flota|src/transtat_config_dask_flota.json|src/transtat_config_spark_flota.json
 ruta|src/transtat_config_dask_ruta_aeropuerto.json|src/transtat_config_spark_ruta_aeropuerto.json
 mktid|src/transtat_config_dask_ruta_mktid.json|src/transtat_config_spark_ruta_mktid.json
+dijkstra|src/transtat_config_dask_dijkstra.json|src/transtat_config_spark_dijkstra.json
