@@ -46,7 +46,7 @@ t_inicio = time.time() # Inicia tiempo de ejecucion
 
 df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
-
+df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'] * 60
 
 # date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
 # max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
@@ -98,12 +98,13 @@ df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TI
 df['dep_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['DEP_TIME']), axis=1, meta='float')
 df['arr_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['ARR_TIME']), axis=1, meta='float')
 df = df[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
-df['t_acumulado'] = 0
 
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
+
 encontro_ruta = True
 early_arr = 0
+t_acumulado = 0
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -111,8 +112,7 @@ early_arr = 0
 # ----------------------------------------------------------------------------------------------------
 # Primero busco si hay vuelo directo
 frontera = df[(df['ORIGIN'] == args.origin) & (df['DEST'] == args.dest)]\
-            .nsmallest(1, columns=['dep_epoch'])
-frontera['t_conexion'] = 0
+            .nsmallest(1, columns=['dep_epoch'])[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
 
 if frontera['ORIGIN'].count().compute() > 0:
     # Si hay vuelo directo lo regreso como ruta optima
@@ -121,15 +121,63 @@ if frontera['ORIGIN'].count().compute() > 0:
     nodo_actual = vuelo_elegido['DEST'].values[0] # Destino del vuelo directo
     visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido['dep_epoch']), 'llegada': float(vuelo_elegido['arr_epoch'])}
     salida = float(vuelo_elegido['dep_epoch'])
-    early_arr = salida + float(vuelo_elegido['ACTUAL_ELAPSED_TIME']) # Duracion del trayecto
+    t_acumulado = float(vuelo_elegido['ACTUAL_ELAPSED_TIME']) # Duracion del trayecto
 else:
+
+    # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
+    df = df[(df['DEST'] != nodo_actual)]
+
+    df.to_parquet('temp_dir/df_vuelos_dask')
+    df = dd.read_parquet('temp_dir/df_vuelos_dask')
+
+    # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tipo de conexion mayor a 7200 minutos
+    frontera_nueva = df[(df['ORIGIN'] == nodo_actual)]
+    frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['ACTUAL_ELAPSED_TIME']
+    frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
+    # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
+    frontera = dd.concat([frontera, frontera_nueva], axis=0)
+    
+    print('\n\tFRONTERA NUEVA\n')
+    print(frontera.compute().head())
+
     # En otro caso uso Dijkstra para encontrar la ruta optima
     # print('\nNo hay vuelo directo. Buscando ruta óptima.')
-    i = 0
+    i = 1
     while i < n_nodos and nodo_actual != args.dest:
-        i += 1
+        i += 1 
 
-        # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
+        try:
+
+            vuelo_elegido = frontera[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']].nsmallest(1, columns=['t_acumulado']).reset_index().compute()
+            
+            print(vuelo_elegido)
+
+            nodo_anterior = vuelo_elegido['ORIGIN'].values[0] # Origen del vuelo elegido
+            nodo_actual = vuelo_elegido['DEST'].values[0] # Destino del vuelo elegido
+            visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido['dep_epoch']), 'llegada': float(vuelo_elegido['arr_epoch'])}
+            early_arr = float(vuelo_elegido['arr_epoch']) # Duracion del trayecto
+            t_acumulado = float(vuelo_elegido['t_acumulado'])
+            print(t_acumulado)
+            min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
+            
+            print(''' Iteracion {i} / {n_nodos}
+                    Nodo actual = {nodo_actual}
+                    Early arr = {early_arr}'''.format(i = i
+                                        , n_nodos = n_nodos
+                                        , nodo_actual = nodo_actual
+                                        , early_arr = early_arr))
+
+            frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
+
+            df = df[(df['dep_epoch'] > min_dep_epoch) | (df['ORIGIN'] != nodo_actual)]
+
+        except Exception as e:
+            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
+            encontro_ruta = False
+            print(e)
+            break;
+
+                # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
         df = df[(df['DEST'] != nodo_actual)]
 
         df.to_parquet('temp_dir/df_vuelos_dask')
@@ -143,59 +191,27 @@ else:
         frontera_nueva['t_conexion'] = frontera_nueva['dep_epoch'] - early_arr
         frontera_nueva = frontera_nueva[frontera_nueva['t_conexion'] > 7200]
         # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
-        frontera = dd.concat([frontera, frontera_nueva], axis=0)
         # Agrego al tiempo acumulado el tiempo de conexion y la duracion de cada vuelo
-        frontera['t_acumulado'] = frontera['t_acumulado'] + frontera['t_conexion'] + frontera['ACTUAL_ELAPSED_TIME']
-        # print('\n\tFRONTERA NUEVA\n')
-        # print(frontera.compute().head())
+        frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['t_conexion'] + frontera_nueva['ACTUAL_ELAPSED_TIME']
+        frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
+        frontera = dd.concat([frontera, frontera_nueva], axis=0)
 
         frontera.to_parquet('temp_dir/frontera_dask')
-        frontera = dd.read_parquet('temp_dir/frontera_dask')        
-
-        try:
-
-            vuelo_elegido = frontera[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']].nsmallest(1, columns=['t_acumulado']).reset_index().compute()
-            nodo_anterior = vuelo_elegido['ORIGIN'].values[0] # Origen del vuelo elegido
-            nodo_actual = vuelo_elegido['DEST'].values[0] # Destino del vuelo elegido
-            visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido['dep_epoch']), 'llegada': float(vuelo_elegido['arr_epoch'])}
-            early_arr = float(vuelo_elegido['t_acumulado']) # Duracion del trayecto
-            min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
-            
-            # print(''' Iteracion {i} / {n_nodos}
-            #         Número de registros en frontera = {n_frontera}.
-            #         Número de registros en df = {n_df}.
-            #         Nodo actual = {nodo_actual}
-            #         Early arr = {early_arr}'''.format(i = i
-            #                                                     , n_nodos = n_nodos
-            #                                                     , n_frontera = int(frontera['t_acumulado'].count().compute())
-            #                                                     , n_df = int(df['t_acumulado'].count().compute())
-            #                                                     , nodo_actual = nodo_actual
-            #                                                     , early_arr = early_arr))
-
-            frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < early_arr)]
-
-            df = df[(df['dep_epoch'] > min_dep_epoch) | (df['ORIGIN'] != nodo_actual)]
-
-        except Exception as e:
-            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
-            encontro_ruta = False
-            print(e)
-            break;
-
+        frontera = dd.read_parquet('temp_dir/frontera_dask')
 
 # RESULTADOS
 # ----------------------------------------------------------------------------------------------------
 # Obtencion de la ruta a partir del diccinario
 if encontro_ruta == True:
-    # ruta_optima_str = '''
-    #                 ORIGEN:  {origen}
-    #                   Salida:  {salida}
-    #                 DESTINO: {destino}
-    #                   Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
-    #                                                 , destino=args.dest
-    #                                                 , salida=time.ctime(visitados[args.dest]['salida'])
-    #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
-    #                                                 )
+    ruta_optima_str = '''
+                    ORIGEN:  {origen}
+                      Salida:  {salida}
+                    DESTINO: {destino}
+                      Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
+                                                    , destino=args.dest
+                                                    , salida=time.ctime(visitados[args.dest]['salida'])
+                                                    , llegada=time.ctime(visitados[args.dest]['llegada'])
+                                                    )
 
     solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
     solo_optimo[args.dest] = visitados[args.dest]
@@ -205,15 +221,15 @@ if encontro_ruta == True:
     while x != args.origin:
         salida = visitados[x]['salida']
         solo_optimo[x] = visitados[x]
-        # ruta_optima_str =  '''
-        #             ORIGEN:  {origen}
-        #               Salida:  {salida}
-        #             DESTINO: {destino}
-        #               Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
-        #                                             , destino=x
-        #                                             , salida=time.ctime(visitados[x]['salida'])
-        #                                             , llegada=time.ctime(visitados[x]['llegada'])
-        #                                             ) + ruta_optima_str
+        ruta_optima_str =  '''
+                    ORIGEN:  {origen}
+                      Salida:  {salida}
+                    DESTINO: {destino}
+                      Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
+                                                    , destino=x
+                                                    , salida=time.ctime(visitados[x]['salida'])
+                                                    , llegada=time.ctime(visitados[x]['llegada'])
+                                                    ) + ruta_optima_str
         x = visitados[x]['origen']
 
     df_resp = pd.DataFrame(data=convierte_dict_en_lista(solo_optimo), columns=['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME'])[['ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME']]
@@ -232,7 +248,7 @@ if encontro_ruta == True:
     #     .save()
 
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
-    # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(early_arr)-salida)), ruta_optima_str=ruta_optima_str))
+    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
     # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
