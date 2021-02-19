@@ -20,8 +20,9 @@ from src import utils # Estas son las funciones definidas por mi
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
-parser.add_argument("--origen", help="Clave del aeropuerto de origen.")
+parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
+parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
 with open(args.config) as json_file:
@@ -34,7 +35,7 @@ t_inicio = time.time()
 uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
 
 process = config['results_table']
-nodo_actual = args.origen # Empezamos a explorar en el nodo origen
+nodo_actual = args.origin # Empezamos a explorar en el nodo origen
 visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
 # ----------------------------------------------------------------------------------------------------
 
@@ -45,6 +46,21 @@ t_inicio = time.time() # Inicia tiempo de ejecucion
 
 df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
+
+
+# date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
+# max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
+
+# y_min, m_min, d_min = args.dep_date.split('-')
+# y_max, m_max, d_max = max_arr_date.split('-')
+
+# df = dd.read_parquet('data')\
+#     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
+# df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) < int(y_max))]
+# df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) < int(m_max))]
+# df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) < int(d_max))]
+# print('CONTEO:')
+# print(df.count().compute())
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -94,7 +110,7 @@ early_arr = 0
 # CALCULO DE RUTAS MINIMAS
 # ----------------------------------------------------------------------------------------------------
 # Primero busco si hay vuelo directo
-frontera = df[(df['ORIGIN'] == args.origen) & (df['DEST'] == args.dest)]\
+frontera = df[(df['ORIGIN'] == args.origin) & (df['DEST'] == args.dest)]\
             .nsmallest(1, columns=['dep_epoch'])
 frontera['t_conexion'] = 0
 
@@ -161,7 +177,7 @@ else:
             df = df[(df['dep_epoch'] > min_dep_epoch) | (df['ORIGIN'] != nodo_actual)]
 
         except Exception as e:
-            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origen, destino=args.dest))
+            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
             encontro_ruta = False
             print(e)
             break;
@@ -186,7 +202,7 @@ if encontro_ruta == True:
     x = visitados[args.dest]['origen']
     early_arr = visitados[args.dest]['llegada']
 
-    while x != args.origen:
+    while x != args.origin:
         salida = visitados[x]['salida']
         solo_optimo[x] = visitados[x]
         # ruta_optima_str =  '''
