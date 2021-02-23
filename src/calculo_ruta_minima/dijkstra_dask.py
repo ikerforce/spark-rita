@@ -62,17 +62,24 @@ if __name__ == '__main__':
     y_min, m_min, d_min = args.dep_date.split('-')
     y_max, m_max, d_max = max_arr_date.split('-')
 
-    print(y_min, m_min, d_min)
-    print(y_max, m_max, d_max)
-
-    df = dd.read_parquet('data_dask', infer_divisions=False, engine='pyarrow', columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])\
+    df = dd.read_parquet('data_dask'
+            , infer_divisions=False
+            , engine='pyarrow'
+            , gather_statistics=False
+            , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
+            , filter=[[('YEAR', '>=', y_min)
+                        , ('MONTH', '>=', m_min)
+                        , ('DAY_OF_MONTH', '>=', d_min)
+                        , ('YEAR', '<=', y_max)
+                        , ('MONTH', '<=', m_max)
+                        , ('DAY_OF_MONTH', '<=', d_max)]]
+        )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
     df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
-    print('CONTEO:')
-    print(df['FL_DATE'].count().compute())
+    df = client.persist(df)
     # ----------------------------------------------------------------------------------------------------
 
 
@@ -126,6 +133,8 @@ if __name__ == '__main__':
     frontera = df[(df['ORIGIN'] == args.origin) & (df['DEST'] == args.dest)]\
                 .nsmallest(1, columns=['dep_epoch'])[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
 
+    print('PRIMERA_FRONTERA' + str(time.time() - t_inicio))
+
     if frontera['ORIGIN'].count().compute() > 0:
         # Si hay vuelo directo lo regreso como ruta optima
         vuelo_elegido = frontera[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']].reset_index().compute()
@@ -139,12 +148,14 @@ if __name__ == '__main__':
         # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
         df = df[(df['DEST'] != nodo_actual)]
 
+        df = df.repartition(100)
         df.to_parquet('temp_dir/df_vuelos_dask')
+        del df
         df = dd.read_parquet('temp_dir/df_vuelos_dask')
 
         # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tipo de conexion mayor a 7200 minutos
         frontera_nueva = df[(df['ORIGIN'] == nodo_actual)]
-        frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['ACTUAL_ELAPSED_TIME']
+        frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['ACTUAL_ELAPSED_TIME'].astype(float)
         frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
         # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
         frontera = dd.concat([frontera, frontera_nueva], axis=0)
@@ -172,10 +183,12 @@ if __name__ == '__main__':
                 
                 print(''' Iteracion {i} / {n_nodos}
                         Nodo actual = {nodo_actual}
-                        Early arr = {early_arr}'''.format(i = i
+                        Early arr = {early_arr}
+                        Transcurrido = {transcurrido}'''.format(i = i
                                             , n_nodos = n_nodos
                                             , nodo_actual = nodo_actual
-                                            , early_arr = early_arr))
+                                            , early_arr = early_arr
+                                            , transcurrido=time.time()-t_inicio))
 
                 frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
@@ -191,7 +204,9 @@ if __name__ == '__main__':
             df = df[(df['DEST'] != nodo_actual)]
 
             df.to_parquet('temp_dir/df_vuelos_dask')
+            del df
             df = dd.read_parquet('temp_dir/df_vuelos_dask')
+            df = client.persist(df)
 
             # print(frontera.compute().head())
 
@@ -202,12 +217,14 @@ if __name__ == '__main__':
             frontera_nueva = frontera_nueva[frontera_nueva['t_conexion'] > 7200]
             # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
             # Agrego al tiempo acumulado el tiempo de conexion y la duracion de cada vuelo
-            frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['t_conexion'] + frontera_nueva['ACTUAL_ELAPSED_TIME']
+            frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['t_conexion'] + frontera_nueva['ACTUAL_ELAPSED_TIME'].astype(float)
             frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
             frontera = dd.concat([frontera, frontera_nueva], axis=0)
 
             frontera.to_parquet('temp_dir/frontera_dask')
+            del frontera
             frontera = dd.read_parquet('temp_dir/frontera_dask')
+            frontera = client.persist(frontera)
 
     # RESULTADOS
     # ----------------------------------------------------------------------------------------------------
@@ -260,7 +277,7 @@ if __name__ == '__main__':
         t_final = time.time() # Tiempo de finalizacion de la ejecucion
         # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
-        # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+        print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
     # ----------------------------------------------------------------------------------------------------
 
 
