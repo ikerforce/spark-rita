@@ -52,24 +52,27 @@ if __name__ == '__main__':
     # ----------------------------------------------------------------------------------------------------
     t_inicio = time.time() # Inicia tiempo de ejecucion
 
-    df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
-        .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
-    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'] * 60
-
-    # date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
-    # max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
-
-    # y_min, m_min, d_min = args.dep_date.split('-')
-    # y_max, m_max, d_max = max_arr_date.split('-')
-
-    # df = dd.read_parquet('data', infer_divisions=False)\
+    # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
     #     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
-    # df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) < int(y_max))]
-    # df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) < int(m_max))]
-    # df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) < int(d_max))]
-    # df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
-    # print('CONTEO:')
-    # print(df['FL_DATE'].count().compute())
+    # df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'] * 60
+
+    date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
+    max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
+
+    y_min, m_min, d_min = args.dep_date.split('-')
+    y_max, m_max, d_max = max_arr_date.split('-')
+
+    print(y_min, m_min, d_min)
+    print(y_max, m_max, d_max)
+
+    df = dd.read_parquet('data_dask', infer_divisions=False, engine='pyarrow', columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])\
+        .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
+    df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
+    df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
+    df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
+    df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
+    print('CONTEO:')
+    print(df['FL_DATE'].count().compute())
     # ----------------------------------------------------------------------------------------------------
 
 
@@ -167,12 +170,12 @@ if __name__ == '__main__':
                 # print(t_acumulado)
                 min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
                 
-                # print(''' Iteracion {i} / {n_nodos}
-                #         Nodo actual = {nodo_actual}
-                #         Early arr = {early_arr}'''.format(i = i
-                #                             , n_nodos = n_nodos
-                #                             , nodo_actual = nodo_actual
-                #                             , early_arr = early_arr))
+                print(''' Iteracion {i} / {n_nodos}
+                        Nodo actual = {nodo_actual}
+                        Early arr = {early_arr}'''.format(i = i
+                                            , n_nodos = n_nodos
+                                            , nodo_actual = nodo_actual
+                                            , early_arr = early_arr))
 
                 frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
