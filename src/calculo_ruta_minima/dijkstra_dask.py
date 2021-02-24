@@ -16,8 +16,8 @@ if __name__ == '__main__':
     from sqlalchemy import create_engine
     import datetime
     import sys # Ayuda a agregar archivos al path
-    from os import getcwdb # Nos permite conocer el directorio actual
-    curr_path = getcwdb().decode() # Obtenemos el directorio actual
+    import os # Nos permite conocer el directorio actual
+    curr_path = os.getcwdb().decode() # Obtenemos el directorio actual
     sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
     from src import utils # Estas son las funciones definidas por mi
 
@@ -65,14 +65,14 @@ if __name__ == '__main__':
     df = dd.read_parquet('data_dask'
             , infer_divisions=False
             , engine='pyarrow'
-            , gather_statistics=False
-            , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
+            # , gather_statistics=False
             , filter=[[('YEAR', '>=', y_min)
                         , ('MONTH', '>=', m_min)
                         , ('DAY_OF_MONTH', '>=', d_min)
                         , ('YEAR', '<=', y_max)
                         , ('MONTH', '<=', m_max)
                         , ('DAY_OF_MONTH', '<=', d_max)]]
+            , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
         )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         df = df[(df['DEST'] != nodo_actual)]
 
         df = df.repartition(100)
-        df.to_parquet('temp_dir/df_vuelos_dask')
+        df.to_parquet('temp_dir/df_vuelos_dask', overwrite=True)
         del df
         df = dd.read_parquet('temp_dir/df_vuelos_dask')
 
@@ -204,9 +204,10 @@ if __name__ == '__main__':
             df = df[(df['DEST'] != nodo_actual)]
 
             df.to_parquet('temp_dir/df_vuelos_dask')
-            del df
+            # del df
+            client.cancel(df)
             df = dd.read_parquet('temp_dir/df_vuelos_dask')
-            df = client.persist(df)
+            # df = client.persist(df)
 
             # print(frontera.compute().head())
 
@@ -222,9 +223,10 @@ if __name__ == '__main__':
             frontera = dd.concat([frontera, frontera_nueva], axis=0)
 
             frontera.to_parquet('temp_dir/frontera_dask')
-            del frontera
+            # del frontera
+            client.cancel(frontera)
             frontera = dd.read_parquet('temp_dir/frontera_dask')
-            frontera = client.persist(frontera)
+            # frontera = client.persist(frontera)
 
     # RESULTADOS
     # ----------------------------------------------------------------------------------------------------
