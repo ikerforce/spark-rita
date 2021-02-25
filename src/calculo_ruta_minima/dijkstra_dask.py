@@ -3,7 +3,7 @@
 from dask.distributed import Client
 
 if __name__ == '__main__':
-    client = Client()
+    client = Client(n_workers=10)
     # user code follows
 
     # PREPARACION DE AMBIENTE
@@ -66,12 +66,12 @@ if __name__ == '__main__':
             , infer_divisions=False
             , engine='pyarrow'
             # , gather_statistics=False
-            , filter=[[('YEAR', '>=', y_min)
-                        , ('MONTH', '>=', m_min)
-                        , ('DAY_OF_MONTH', '>=', d_min)
-                        , ('YEAR', '<=', y_max)
-                        , ('MONTH', '<=', m_max)
-                        , ('DAY_OF_MONTH', '<=', d_max)]]
+            # , filter=[[('YEAR', '>=', y_min)
+            #             , ('MONTH', '>=', m_min)
+            #             , ('DAY_OF_MONTH', '>=', d_min)
+            #             , ('YEAR', '<=', y_max)
+            #             , ('MONTH', '<=', m_max)
+            #             , ('DAY_OF_MONTH', '<=', d_max)]]
             , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
         )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
@@ -181,15 +181,18 @@ if __name__ == '__main__':
                 # print(t_acumulado)
                 min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
                 
-                print(''' Iteracion {i} / {n_nodos}
-                        Nodo actual = {nodo_actual}
-                        Early arr = {early_arr}
-                        Transcurrido = {transcurrido}'''.format(i = i
-                                            , n_nodos = n_nodos
-                                            , nodo_actual = nodo_actual
-                                            , early_arr = early_arr
-                                            , transcurrido=time.time()-t_inicio))
+                # print(''' Iteration {i} / {n_nodos}
+                #         Nodo actual = {nodo_actual}
+                #         Early arr = {early_arr}
+                #         Transcurrido = {transcurrido}'''.format(i = i
+                #                             , n_nodos = n_nodos
+                #                             , nodo_actual = nodo_actual
+                #                             , early_arr = early_arr
+                #                             , transcurrido=time.time()-t_inicio))
 
+                print(''' Iteration {i} / {n_nodos}. Elapsed time: {transcurrido}'''.format(i = i
+                                            , n_nodos = n_nodos
+                                            , transcurrido=time.time()-t_inicio))
                 frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
                 df = df[(df['dep_epoch'] > min_dep_epoch) | (df['ORIGIN'] != nodo_actual)]
@@ -203,11 +206,11 @@ if __name__ == '__main__':
                     # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
             df = df[(df['DEST'] != nodo_actual)]
 
-            df.to_parquet('temp_dir/df_vuelos_dask')
+            # df.to_parquet('temp_dir/df_vuelos_dask')
             # del df
-            client.cancel(df)
-            df = dd.read_parquet('temp_dir/df_vuelos_dask')
-            # df = client.persist(df)
+            # client.cancel(df)
+            # df = dd.read_parquet('temp_dir/df_vuelos_dask')
+            df = client.persist(df)
 
             # print(frontera.compute().head())
 
@@ -222,11 +225,11 @@ if __name__ == '__main__':
             frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
             frontera = dd.concat([frontera, frontera_nueva], axis=0)
 
-            frontera.to_parquet('temp_dir/frontera_dask')
+            # frontera.to_parquet('temp_dir/frontera_dask')
             # del frontera
-            client.cancel(frontera)
-            frontera = dd.read_parquet('temp_dir/frontera_dask')
-            # frontera = client.persist(frontera)
+            client.cancel(frontera_nueva)
+            # frontera = dd.read_parquet('temp_dir/frontera_dask')
+            frontera = client.persist(frontera)
 
     # RESULTADOS
     # ----------------------------------------------------------------------------------------------------
