@@ -5,7 +5,6 @@
 # Importaciones de PySpark
 from pyspark import SparkContext
 sc = SparkContext()
-import datetime
 from pyspark.sql import SparkSession, SQLContext
 spark = SparkSession(sc)
 sqlContext = SQLContext(sc)
@@ -44,16 +43,16 @@ visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los 
 
 # Lectura de datos de MySQL
 # ----------------------------------------------------------------------------------------------------
-df_rita = spark.read.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable="(SELECT ORIGIN, DEST, ACTUAL_ELAPSED_TIME, FL_DATE, DEP_TIME, ARR_TIME FROM " + config['input_table'] + " LIMIT 10000) df_rita",
-        user=creds["user"],
-        password=creds["password"])\
-    .load()\
-    .na.drop('any')\
-    .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60)
+# df_rita = spark.read.format("jdbc")\
+#     .options(
+#         url=creds["db_url"] + creds["database"],
+#         driver=creds["db_driver"],
+#         dbtable="(SELECT ORIGIN, DEST, ACTUAL_ELAPSED_TIME, FL_DATE, DEP_TIME, ARR_TIME FROM " + config['input_table'] + " LIMIT 10000) df_rita",
+#         user=creds["user"],
+#         password=creds["password"])\
+#     .load()\
+#     .na.drop('any')\
+#     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60)
 
 date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
 max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
@@ -62,20 +61,20 @@ y_min, m_min, d_min = args.dep_date.split('-')
 y_max, m_max, d_max = max_arr_date.split('-')
 
 
-# df_rita = spark.read.format('parquet').load('/home/ikerforce/Documents/Tesis/spark-rita/data')\
-#     .filter('''CAST(YEAR AS INT) >= {y_min}
-#         AND CAST(YEAR AS INT) <= {y_max}
-#         AND CAST(MONTH AS INT) >= {m_min}
-#         AND CAST(MONTH AS INT) <= {m_max}
-#         AND CAST(DAY_OF_MONTH AS INT) >= {d_min}
-#         AND CAST(DAY_OF_MONTH AS INT) <= {d_max}'''.format(y_min=int(y_min)
-#                                                             , y_max=int(y_max)
-#                                                             , m_min=int(m_min)
-#                                                             , m_max=int(m_max)
-#                                                             , d_min=int(d_min)
-#                                                             , d_max=int(d_max)))\
-#     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
-#     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60)
+df_rita = spark.read.format('parquet').load('/home/ikerforce/Documents/Tesis/spark-rita/data')\
+    .filter('''CAST(YEAR AS INT) >= {y_min}
+        AND CAST(YEAR AS INT) <= {y_max}
+        AND CAST(MONTH AS INT) >= {m_min}
+        AND CAST(MONTH AS INT) <= {m_max}
+        AND CAST(DAY_OF_MONTH AS INT) >= {d_min}
+        AND CAST(DAY_OF_MONTH AS INT) <= {d_max}'''.format(y_min=int(y_min)
+                                                            , y_max=int(y_max)
+                                                            , m_min=int(m_min)
+                                                            , m_max=int(m_max)
+                                                            , d_min=int(d_min)
+                                                            , d_max=int(d_max)))\
+    .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
+    .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60)
 # ----------------------------------------------------------------------------------------------------
 
 
