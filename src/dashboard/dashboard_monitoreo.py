@@ -29,7 +29,8 @@ flota
 demoras_aeropuerto_destino
 demoras_aeropuerto_origen
 demoras_ruta_mktid
-demoras_ruta_aeropuerto""".split("\n")
+demoras_ruta_aeropuerto
+dijkstra""".split("\n")
 
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
@@ -64,6 +65,20 @@ server = app.server
 # Se compone de 4 componentes independientes
 app.layout = html.Div([
     html.Div([
+        html.Div(className='dropdown-barras',
+            children=[
+                html.Div(className='barras',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-fecha-barras',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                ],
+            style=dict(display='flex')
+        ),
         dcc.Graph('resumen-duracion', config={'displayModeBar': False}),
         html.Div(className='menus-desplegables',
             children=[
@@ -177,7 +192,19 @@ def update_graph(proceso):
     fig.update_xaxes(title_text='Proceso', title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
     # Actualizamos el tamano y titulo del grafico y ubicacion de los titulos y posicion del bloque
-    fig.update_layout(title_text="Resumen", title_font={'size':25}, title_x=0.5, height=500, width=1400, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.45))
+    fig.update_layout(title_text="Resumen"
+        , title_font={'size':25}
+        , title_x=0.5
+        , height=500
+        , autosize=True
+        # , width=1400
+        , template='plotly_white'
+        , legend=dict(orientation="h"
+            , yanchor="bottom"
+            , y=-0.3
+            , xanchor="left"
+            , x=0.45)
+        )
 
     # Regresamos el bloque de graficos 
     return fig
@@ -241,7 +268,18 @@ def update_graph(process, n_registros):
     fig.update_xaxes(title_text='Fecha de ejecución', title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
     # Actualizamos el tamano y titulo del grafico y ubicacion de los titulos y posicion del bloque
-    fig.update_layout(title_text="Duración del proceso", title_font={'size':25}, title_x=0.5, height=500, width=1400, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.45))
+    fig.update_layout(title_text="Duración del proceso"
+        , title_font={'size':25}
+        , title_x=0.5
+        , height=500
+        , autosize=True
+        # , width=1400
+        , template='plotly_white'
+        , legend=dict(orientation="h"
+            , yanchor="bottom"
+            , y=-0.3
+            , xanchor="left"
+            , x=0.45))
 
     # Regresamos el bloque de graficos 
     return fig
@@ -356,7 +394,20 @@ def update_graph(process, ventana, n_registros):
         registros = "registros"
     else:
         registros = "registro"
-    fig.update_layout(title_text="Promedio móvil de la duración del proceso (en ventana de {ventana} {registros})".format(ventana=int(ventana)+1, registros=registros), title_font={'size':25}, title_x=0.5, height=500, width=1400, template='plotly_white', legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.45))
+
+    fig.update_layout(title_text="Promedio móvil de la duración del proceso (en ventana de {ventana} {registros})".format(ventana=int(ventana)+1, registros=registros)
+        , title_font={'size':25}
+        , title_x=0.5
+        , autosize=True
+        , height=500
+        # , width=1400
+        , template='plotly_white'
+        , legend=dict(orientation="h"
+            , yanchor="bottom"
+            , y=-0.3
+            , xanchor="left"
+            , x=0.45)
+        )
 
     # Regresamos el bloque de graficos 
     return fig
