@@ -11,3 +11,10 @@ To do:
 
 Dask desventajas:
 - Es más difícl escribir todos los resultados a MySQL (Hay que borrar para la primera y luego poner append)
+
+
+Dask parquet:
+- Leyendo con pyarrow y usando metadata el tiempo es: 1892.0462560653687 con 80345298 registros.
+- Leer, contar, hacer repartition de 4960 a 50 particiones: 1648.80868601799 con 80345298 registros.
+- 
+
