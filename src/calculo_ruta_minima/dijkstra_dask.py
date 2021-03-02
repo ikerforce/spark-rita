@@ -4,7 +4,6 @@ from dask.distributed import Client
 
 if __name__ == '__main__':
     client = Client(n_workers=10)
-    # user code follows
 
     # PREPARACION DE AMBIENTE
     # ----------------------------------------------------------------------------------------------------
@@ -51,6 +50,7 @@ if __name__ == '__main__':
     # LECTURA DE DATOS
     # ----------------------------------------------------------------------------------------------------
     t_inicio = time.time() # Inicia tiempo de ejecucion
+    t_ant = t_inicio
 
     # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
     #     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
@@ -62,7 +62,8 @@ if __name__ == '__main__':
     y_min, m_min, d_min = args.dep_date.split('-')
     y_max, m_max, d_max = max_arr_date.split('-')
 
-    df = dd.read_parquet('data_dask'
+    # df = dd.read_parquet('data_dask'
+    df = dd.read_parquet('data_dask_ch'
             , infer_divisions=False
             , engine='pyarrow'
             # , gather_statistics=False
@@ -73,13 +74,14 @@ if __name__ == '__main__':
             #             , ('MONTH', '<=', m_max)
             #             , ('DAY_OF_MONTH', '<=', d_max)]]
             , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
+            , dtype={'ACTUAL_ELAPSED_TIME' : float}
         )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
     df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
-    df = client.persist(df)
+    # df = client.persist(df)
     # ----------------------------------------------------------------------------------------------------
 
 
@@ -113,11 +115,11 @@ if __name__ == '__main__':
 
     # OBTENCION DE VALORES INICIALES
     # ----------------------------------------------------------------------------------------------------
-    df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
     df['dep_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['DEP_TIME']), axis=1, meta='float')
     df['arr_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['ARR_TIME']), axis=1, meta='float')
+    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
     df = df[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
-
+    df = client.persist(df)
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
 
@@ -149,13 +151,14 @@ if __name__ == '__main__':
         df = df[(df['DEST'] != nodo_actual)]
 
         df = df.repartition(100)
-        df.to_parquet('temp_dir/df_vuelos_dask', overwrite=True)
-        del df
-        df = dd.read_parquet('temp_dir/df_vuelos_dask')
+        # df.to_parquet('temp_dir/df_vuelos_dask', overwrite=True)
+        # del df
+        # df = dd.read_parquet('temp_dir/df_vuelos_dask')
+        df = client.persist(df)
 
         # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tipo de conexion mayor a 7200 minutos
         frontera_nueva = df[(df['ORIGIN'] == nodo_actual)]
-        frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['ACTUAL_ELAPSED_TIME'].astype(float)
+        frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['ACTUAL_ELAPSED_TIME']
         frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
         # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
         frontera = dd.concat([frontera, frontera_nueva], axis=0)
@@ -190,9 +193,9 @@ if __name__ == '__main__':
                 #                             , early_arr = early_arr
                 #                             , transcurrido=time.time()-t_inicio))
 
-                print(''' Iteration {i} / {n_nodos}. Elapsed time: {transcurrido}'''.format(i = i
-                                            , n_nodos = n_nodos
-                                            , transcurrido=time.time()-t_inicio))
+                # print(''' Iteration {i} / {n_nodos}. Elapsed time: {transcurrido}'''.format(i = i
+                #                             , n_nodos = n_nodos
+                #                             , transcurrido=time.time()-t_inicio))
                 frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
                 df = df[(df['dep_epoch'] > min_dep_epoch) | (df['ORIGIN'] != nodo_actual)]
@@ -221,15 +224,19 @@ if __name__ == '__main__':
             frontera_nueva = frontera_nueva[frontera_nueva['t_conexion'] > 7200]
             # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
             # Agrego al tiempo acumulado el tiempo de conexion y la duracion de cada vuelo
-            frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['t_conexion'] + frontera_nueva['ACTUAL_ELAPSED_TIME'].astype(float)
+            frontera_nueva['t_acumulado'] = t_acumulado + frontera_nueva['t_conexion'] + frontera_nueva['ACTUAL_ELAPSED_TIME'] # .astype(float)
             frontera_nueva = frontera_nueva[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado']]
             frontera = dd.concat([frontera, frontera_nueva], axis=0)
-
             # frontera.to_parquet('temp_dir/frontera_dask')
-            # del frontera
-            client.cancel(frontera_nueva)
+            # del frontera_nueva
             # frontera = dd.read_parquet('temp_dir/frontera_dask')
             frontera = client.persist(frontera)
+
+            conteo = df['ORIGIN'].count().compute()
+            conteo_f = frontera['ORIGIN'].count().compute()
+            t_actual = time.time() - t_ant
+            t_ant = time.time()
+            print('Iteracion: ' + str(i) + '\n\tTiempo: ' + str(t_actual) + '\n\tConteo: ' + str(conteo) + '\n\tTranscurrido: ' + str(t_ant - t_inicio) + '\n\tConteo_f: ' + str(conteo_f))
 
     # RESULTADOS
     # ----------------------------------------------------------------------------------------------------
