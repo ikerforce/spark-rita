@@ -266,7 +266,7 @@ if encontro_ruta == True:
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
     # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
-    # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+    print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
 
 
