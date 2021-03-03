@@ -42,3 +42,40 @@ spark-submit \
 	--dest <codigo_del_aeropuerto_destino> \
 	--dep_date <AAAA-MM-DD>
 ```
+
+Ejemplo:
+
+```
+spark-submit \
+	--driver-memory=8g \
+	src/calculo_ruta_minima/dijkstra_spark.py \
+	--conf src/transtat_config_spark_dijkstra.json \
+	--creds conf/mysql_creds.json \
+	--origin SFO \
+	--dest SJC \
+	--dep_date 2008-10-10
+```
+
+
+## Ejecución en Dask
+
+El algoritmo se ejecuta con el siguiente comando y utiliza el archivo de configuración: `src/`.
+```
+python src/calculo_ruta_minima/dijkstra_dask.py \
+	--config src/transtat_config_dask_dijkstra.json \
+	--creds conf/mysql_creds.json \
+	--origin <codigo_del_aeropuerto_origen> \
+	--dest <codigo_del_aeropuerto_destino> \
+	--dep_date <AAAA-MM-DD>
+```
+
+Ejemplo: 
+
+```
+python src/calculo_ruta_minima/dijkstra_dask.py \
+	--config src/transtat_config_dask_dijkstra.json \
+	--creds conf/mysql_creds.json \
+	--origin SFO \
+	--dest SJC \
+	--dep_date 2008-10-10
+```
