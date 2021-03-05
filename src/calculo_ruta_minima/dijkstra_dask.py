@@ -74,7 +74,7 @@ if __name__ == '__main__':
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
-    df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
+    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float) * 60
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -98,7 +98,6 @@ if __name__ == '__main__':
 # ----------------------------------------------------------------------------------------------------
     df['dep_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['DEP_TIME']), axis=1, meta='float')
     df['arr_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['ARR_TIME']), axis=1, meta='float')
-    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
     df = df[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
     
     df = client.persist(df)
