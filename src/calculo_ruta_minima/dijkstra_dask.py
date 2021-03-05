@@ -1,30 +1,29 @@
 # Algoritmo para calcular la ruta minima entre un par de aeropuertos dentro de EU
 
+# PREPARACION DE AMBIENTE
+# ----------------------------------------------------------------------------------------------------
+# Inicio de cliente dask distributed
 from dask.distributed import Client
 
 if __name__ == '__main__':
 
     client = Client(n_workers=10)
 
-    # PREPARACION DE AMBIENTE
-    # ----------------------------------------------------------------------------------------------------
     # Importaciones de Python
     import argparse # Utilizado para leer archivo de configuracion
     import json # Utilizado para leer archivo de configuracion
     import time # Utilizado para medir el timpo de ejecucion
-    import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL
+    import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL y para el dataframe frontera
     from sqlalchemy import create_engine
-    import datetime
+    import datetime # Utilizado para el parseo de fecha de salida
     import sys # Ayuda a agregar archivos al path
     import os # Nos permite conocer el directorio actual
     curr_path = os.getcwdb().decode() # Obtenemos el directorio actual
     sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
     from src import utils # Estas son las funciones definidas por mi
-
-    # Configuracion de dask
     import dask.dataframe as dd # Utilizado para el procesamiento de los datos
 
-    # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
+    # Definicion y lectura de los argumentos que se le pasan a la funcion
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
     parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
@@ -40,30 +39,20 @@ if __name__ == '__main__':
 
     t_inicio = time.time()
 
-    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
-
     process = config['results_table']
     nodo_actual = args.origin # Empezamos a explorar en el nodo origen
     visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
-    # ----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------
 
 
-    # LECTURA DE DATOS
-    # ----------------------------------------------------------------------------------------------------
-    t_inicio = time.time() # Inicia tiempo de ejecucion
-    t_ant = t_inicio
-
-    # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])\
-    #     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
-    # df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'] * 60
-
+# LECTURA DE DATOS
+# ----------------------------------------------------------------------------------------------------
     date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
     max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
 
     y_min, m_min, d_min = args.dep_date.split('-')
     y_max, m_max, d_max = max_arr_date.split('-')
 
-    # df = dd.read_parquet('data_dask'
     df = dd.read_parquet('data_dask_50'
             , infer_divisions=False
             , engine='pyarrow'
@@ -83,7 +72,6 @@ if __name__ == '__main__':
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
     df = df[['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']]
-    # df = client.persist(df)
     # ----------------------------------------------------------------------------------------------------
 
 
@@ -109,7 +97,9 @@ if __name__ == '__main__':
     df['arr_epoch'] = df.apply(lambda row: convierte_timestamp_a_epoch(row['FL_DATE'], row['ARR_TIME']), axis=1, meta='float')
     df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
     df = df[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']]
+    
     df = client.persist(df)
+    
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
     print(time.time() - t_inicio)
@@ -288,6 +278,7 @@ if __name__ == '__main__':
 
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
+    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
     info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
     df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
