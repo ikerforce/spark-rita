@@ -118,6 +118,10 @@ df = df_rita\
     .withColumn('arr_epoch', udf_convierte_timestamp_a_epoch(F.col('FL_DATE'), F.col('ARR_TIME')))\
     .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')
 
+df.cache()
+
+print(time.time() - t_inicio)
+
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()

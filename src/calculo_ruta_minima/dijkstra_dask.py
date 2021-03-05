@@ -124,6 +124,7 @@ if __name__ == '__main__':
     df = client.persist(df)
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
+    print(time.time() - t_inicio)
 
     encontro_ruta = True
     early_arr = 0
