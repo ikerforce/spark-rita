@@ -63,7 +63,7 @@ df_rita = spark.read.format('parquet').load('/home/ikerforce/Documents/Tesis/spa
                                                             , d_min=int(d_min)
                                                             , d_max=int(d_max)))\
     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
-    .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60)
+    .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60.0)
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -98,7 +98,7 @@ df.cache()
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
 
-print(time.time() - t_inicio)
+t_intermedio = time.time()
 
 encontro_ruta = True
 early_arr = 0
@@ -155,14 +155,14 @@ else:
             t_acumulado = vuelo_elegido[4]
             min_dep_epoch = float(vuelo_elegido[3]) + 7200
 
-            print('''\nIteration {i} / {n_nodos}
-                        Nodo actual = {nodo_actual}
-                        Weight = {w}
-                        Transcurrido = {transcurrido}'''.format(i = i
-                                            , n_nodos = n_nodos
-                                            , nodo_actual = nodo_actual
-                                            , w = t_acumulado
-                                            , transcurrido=time.time()-t_inicio))
+            # print('''\nIteration {i} / {n_nodos}
+            #             Nodo actual = {nodo_actual}
+            #             Weight = {w}
+            #             Transcurrido = {transcurrido}'''.format(i = i
+            #                                 , n_nodos = n_nodos
+            #                                 , nodo_actual = nodo_actual
+            #                                 , w = t_acumulado
+            #                                 , transcurrido=time.time()-t_inicio))
 
             frontera = frontera.filter('DEST != "{nodo_actual}" OR t_acumulado < {t_acumulado}'.format(nodo_actual=nodo_actual, t_acumulado=t_acumulado))
 
@@ -197,15 +197,15 @@ else:
 # ----------------------------------------------------------------------------------------------------
 # Obtencion de la ruta a partir del diccinario
 if encontro_ruta == True:
-    ruta_optima_str = '''
-                    ORIGEN:  {origen}
-                      Salida:  {salida}
-                    DESTINO: {destino}
-                      Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
-                                                    , destino=args.dest
-                                                    , salida=time.ctime(visitados[args.dest]['salida'])
-                                                    , llegada=time.ctime(visitados[args.dest]['llegada'])
-                                                    )
+    # ruta_optima_str = '''
+    #                 ORIGEN:  {origen}
+    #                   Salida:  {salida}
+    #                 DESTINO: {destino}
+    #                   Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
+    #                                                 , destino=args.dest
+    #                                                 , salida=time.ctime(visitados[args.dest]['salida'])
+    #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
+    #                                                 )
 
     solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
     solo_optimo[args.dest] = visitados[args.dest]
@@ -215,15 +215,15 @@ if encontro_ruta == True:
     while x != args.origin:
         salida = visitados[x]['salida']
         solo_optimo[x] = visitados[x]
-        ruta_optima_str =  '''
-                    ORIGEN:  {origen}
-                      Salida:  {salida}
-                    DESTINO: {destino}
-                      Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
-                                                    , destino=x
-                                                    , salida=time.ctime(visitados[x]['salida'])
-                                                    , llegada=time.ctime(visitados[x]['llegada'])
-                                                    ) + ruta_optima_str
+        # ruta_optima_str =  '''
+        #             ORIGEN:  {origen}
+        #               Salida:  {salida}
+        #             DESTINO: {destino}
+        #               Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
+        #                                             , destino=x
+        #                                             , salida=time.ctime(visitados[x]['salida'])
+        #                                             , llegada=time.ctime(visitados[x]['llegada'])
+        #                                             ) + ruta_optima_str
         x = visitados[x]['origen']
 
     df_resp = sc.parallelize(convierte_dict_en_lista(solo_optimo)).toDF(['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME']).select('ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME')
@@ -241,19 +241,22 @@ if encontro_ruta == True:
 
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
-    print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
+    # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
-    print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+    # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
 
 
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"]]]) # Almacenamos informacion de ejecucion en rdd
-df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"]]])
+rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"]]]) # Almacenamos informacion de ejecucion en rdd
+df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
     .withColumn("insertion_ts", F.current_timestamp())
-df_time.write.format("jdbc")\
+df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+    .withColumn("insertion_ts", F.current_timestamp())
+df_time_1.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
@@ -263,5 +266,15 @@ df_time.write.format("jdbc")\
     .mode(config["time_table_mode"])\
     .save()
 
-print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+df_time_2.write.format("jdbc")\
+    .options(
+        url=creds["db_url"] + creds["database"],
+        driver=creds["db_driver"],
+        dbtable="registro_de_tiempo_spark",
+        user=creds["user"],
+        password=creds["password"])\
+    .mode(config["time_table_mode"])\
+    .save()
+
+# print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
 # ----------------------------------------------------------------------------------------------------
