@@ -89,18 +89,6 @@ if __name__ == '__main__':
 
     # DEFINICION DE FUNCION DE ACTUALIZACION DE PESO ACUMULADO
     # ----------------------------------------------------------------------------------------------------
-    def actualiza_peso(nodo_actual, nodo_destino, peso_arista, peso_actual):
-        '''Esta funcion actualiza el peso de la arista cuando es necesario.
-        nodo_actual- El nodo desde el que se visita.
-        nodo_destino - El nodo que se visita.
-        peso_acumulado - Peso acumulado hasta el nodo_actual.
-        peso_arista - Peso correspondiente a la arista (nodo_actual nodo_destino).
-        peso_actual - El peso actual del nodo inicial hasta el nodo destino.'''
-        if nodo_actual == nodo_destino:
-            return float(peso_arista)
-        else:
-            return float(peso_actual)
-
     def convierte_timestamp_a_epoch(fl_date, dep_time):
             fl_date = str(fl_date).split('-')
             dt = datetime.datetime(int(fl_date[0]), int(fl_date[1]), int(fl_date[2]), int(dep_time[:2]) % 24, int(dep_time[2:4]))
