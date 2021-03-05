@@ -74,7 +74,7 @@ if __name__ == '__main__':
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
-    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float) * 60
+    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float) * 60.0
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
     
-    print(time.time() - t_inicio)
+    t_intermedio = time.time()
 
     encontro_ruta = True
     early_arr = 0
@@ -160,14 +160,14 @@ if __name__ == '__main__':
                 t_acumulado = float(vuelo_elegido['t_acumulado'])
                 min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
                 
-                print('''\nIteration {i} / {n_nodos}
-                        Nodo actual = {nodo_actual}
-                        Weight = {w}
-                        Transcurrido = {transcurrido}'''.format(i = i
-                                            , n_nodos = n_nodos
-                                            , nodo_actual = nodo_actual
-                                            , w = t_acumulado
-                                            , transcurrido=time.time()-t_inicio))
+                # print('''\nIteration {i} / {n_nodos}
+                #         Nodo actual = {nodo_actual}
+                #         Weight = {w}
+                #         Transcurrido = {transcurrido}'''.format(i = i
+                #                             , n_nodos = n_nodos
+                #                             , nodo_actual = nodo_actual
+                #                             , w = t_acumulado
+                #                             , transcurrido=time.time()-t_inicio))
 
                 frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
@@ -199,15 +199,15 @@ if __name__ == '__main__':
 # ----------------------------------------------------------------------------------------------------
     # Obtencion de la ruta a partir del diccinario
     if encontro_ruta == True:
-        ruta_optima_str = '''
-                        ORIGEN:  {origen}
-                          Salida:  {salida}
-                        DESTINO: {destino}
-                          Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
-                                                        , destino=args.dest
-                                                        , salida=time.ctime(visitados[args.dest]['salida'])
-                                                        , llegada=time.ctime(visitados[args.dest]['llegada'])
-                                                        )
+        # ruta_optima_str = '''
+        #                 ORIGEN:  {origen}
+        #                   Salida:  {salida}
+        #                 DESTINO: {destino}
+        #                   Llegada: {llegada}.\n'''.format(origen=visitados[args.dest]['origen']
+        #                                                 , destino=args.dest
+        #                                                 , salida=time.ctime(visitados[args.dest]['salida'])
+        #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
+        #                                                 )
 
         solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
         solo_optimo[args.dest] = visitados[args.dest]
@@ -217,15 +217,15 @@ if __name__ == '__main__':
         while x != args.origin:
             salida = visitados[x]['salida']
             solo_optimo[x] = visitados[x]
-            ruta_optima_str =  '''
-                        ORIGEN:  {origen}
-                          Salida:  {salida}
-                        DESTINO: {destino}
-                          Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
-                                                        , destino=x
-                                                        , salida=time.ctime(visitados[x]['salida'])
-                                                        , llegada=time.ctime(visitados[x]['llegada'])
-                                                        ) + ruta_optima_str
+            # ruta_optima_str =  '''
+            #             ORIGEN:  {origen}
+            #               Salida:  {salida}
+            #             DESTINO: {destino}
+            #               Llegada: {llegada}\n'''.format(origen=visitados[x]['origen']
+            #                                             , destino=x
+            #                                             , salida=time.ctime(visitados[x]['salida'])
+            #                                             , llegada=time.ctime(visitados[x]['llegada'])
+            #                                             ) + ruta_optima_str
             x = visitados[x]['origen']
 
         df_resp = pd.DataFrame(data=convierte_dict_en_lista(solo_optimo), columns=['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME'])[['ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME']]
@@ -234,18 +234,21 @@ if __name__ == '__main__':
 
         t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
-        print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
+        # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
-        print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+        # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
     # ----------------------------------------------------------------------------------------------------
 
 
 
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
-    info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
-    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
-    df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
+    info_tiempo_1 = [[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
+    info_tiempo_2 = [[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
+    df_tiempo_1 = pd.DataFrame(data=info_tiempo_1, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
+    df_tiempo_2 = pd.DataFrame(data=info_tiempo_2, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
+    df_tiempo_1.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
+    df_tiempo_2.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
 
-    print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+    # print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
     # # ----------------------------------------------------------------------------------------------------
