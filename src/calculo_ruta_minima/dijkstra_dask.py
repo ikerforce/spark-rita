@@ -37,6 +37,9 @@ if __name__ == '__main__':
     with open(args.creds) as json_file:
         creds = json.load(json_file)
 
+    # Cadena de conexion a base de datos (para escrbir los resultados)
+    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
+
     t_inicio = time.time()
 
     process = config['results_table']
@@ -215,10 +218,6 @@ if __name__ == '__main__':
 
             conteo = df['ORIGIN'].count().compute()
             conteo_f = frontera['ORIGIN'].shape[0]
-            t_actual = time.time() - t_ant
-            t_ant = time.time()
-            print(nodo_actual)
-            print('Iteracion: ' + str(i) + '\n\tTiempo: ' + str(t_actual) + '\n\tConteo: ' + str(conteo) + '\n\tTranscurrido: ' + str(t_ant - t_inicio) + '\n\tConteo_f: ' + str(conteo_f))
 
     # RESULTADOS
     # ----------------------------------------------------------------------------------------------------
@@ -278,7 +277,6 @@ if __name__ == '__main__':
 
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
-    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
     info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
     df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
