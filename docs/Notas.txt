@@ -18,3 +18,13 @@ Dask parquet:
 - Leer, contar, hacer repartition de 4960 a 50 particiones: 1648.80868601799 con 80345298 registros.
 - 
 
+Muestras:
+
+Para el experimento utilizaré 5 muestras de los siguientes tamaños:
+
+- 10K: 10,000 registros y 8MB de tamaño.
+- 100K: 100,000 registros y 16MB de tamaño.
+- 1M: 1,000,000 de registros y 71MB de tamaño.
+- 10M: 10,000,000 de registros y 2281MB de tamaño.
+- Total: ~80,000,000 de registros y 4774MB de tamaño.
+
