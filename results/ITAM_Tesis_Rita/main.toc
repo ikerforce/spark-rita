@@ -1,0 +1,31 @@
+\babel@toc {spanish}{}
+\contentsline {chapter}{Introducción}{1}{chapter*.9}%
+\contentsline {chapter}{\numberline {1}Revisión de literatura}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Modelos teóricos}{3}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Hechos estilizados}{3}{subsection.1.1.1}%
+\contentsline {chapter}{\numberline {2}Marco teórico}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Conducta e instituciones}{5}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Cambios cerebrales y genéticos}{5}{subsection.2.1.1}%
+\contentsline {chapter}{\numberline {3}Metodología}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Frameworks}{8}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Dask}{8}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Spark}{8}{subsection.3.1.2}%
+\contentsline {section}{\numberline {3.2}Procesos para comparación de desempeño}{8}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Proceso 1: Cálculo del tamaño de la flota por aerolínea}{9}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Proceso 2: Demoras por aerolínea}{10}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Proceso 3 y 4: Demoras por aeropuerto de origen y destino}{10}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Procesos 5 y 6: Demoras por ruta de aeropuerto y \textit {market id}}{11}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.5}Proceso 7: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit {Dijkstra}}{11}{subsection.3.2.5}%
+\contentsline {subsection}{\numberline {3.2.6}Registro de tiempo y resultados}{12}{subsection.3.2.6}%
+\contentsline {section}{\numberline {3.3}Infraestructura}{13}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Ambiente local}{13}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Ambiente en la nube}{14}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Datos}{15}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Tratamiento de los datos}{15}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Muestras de datos}{16}{subsection.3.4.2}%
+\contentsline {chapter}{\numberline {4}Resultados}{18}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Dimensión nacional}{19}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}¿Por qué no crecemos?}{19}{subsection.4.1.1}%
+\contentsline {chapter}{Conclusiones}{20}{chapter*.13}%
+\contentsline {chapter}{\numberline {A}Cuadros anexos}{21}{appendix.Alph1}%
+\contentsline {chapter}{Referencias}{22}{appendix*.14}%

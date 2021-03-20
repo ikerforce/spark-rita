@@ -1,0 +1,228 @@
+\chapter{Metodología}
+
+\noindent Este capítulo describe el proceso seguido para realizar la comparación entre Dask y Spark bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas bajo diferentes circunstancias, se crearon 7 procesos distintos que consisten en filtración, agrupación conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos en PySpark y Dask utilizando funciones equivalentes en ambos \textit{frameworks} de forma independiente. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\newpage
+
+\section{Frameworks}
+
+Para hacer la comparación se eligieron los \textit{frameworks} Dask y Apache Spark que funcionan como herramientas para cómputo en paralelo sobre grandes volúmenes de datos. Las siguientes secciones detallan las características de cada uno y las versiones utilizadas.
+
+\subsection{Dask}
+
+Dask es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas}. 
+
+\subsection{Spark}
+
+\textit{Spark} es un sistema de cómputo en 
+
+\section{Procesos para comparación de desempeño}
+
+Para contrastar el desempeño de los herramientas, se implementaron 7 procesos que realizan distintas operaciones sobre el conjunto de datos. Cada uno busca responder una pregunta distinta sobre los vuelos en Estados Unidos, cuya respuesta requiere de distintas operaciones. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
+
+Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos:
+
+\begin{algorithm}[H]
+\caption{Ejecución de procesos}\label{ejecucion_procesos}
+\begin{algorithmic}[1]
+\Procedure{Ejecuciones}{}
+\State $\textit{n} \gets \text{número de ejecuciones a realizar}$
+\State $\textit{procesos} \gets \text{lista de procesos que se van a ejecutar}$
+\For{\texttt{\textit{proceso} in \textit{procesos}}}
+	\State $\textit{framework} \gets \text{lista de 0 y 1 en orden aleatorio de longitud 2\textit{n}}$
+	\For{\texttt{\textit{x} in \textit{framework}}}
+		\If {\texttt{\textit{x} = 1}}
+		\State \texttt{Ejecutar el \textit{proceso} en \textit{Spark}}
+		\Else
+		\State \texttt{Ejecutar el \textit{proceso} en \textit{Dask}}
+		\EndIf
+	\EndFor
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre Spark y Dask se alternan debido a que la lista \textit{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube de con los mismos tamaños de muestra. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
+
+\subsection{Proceso 1: Cálculo del tamaño de la flota por aerolínea}
+
+Este proceso calcula el número de aviones activos con el que cuenta una aerolínea en un tiempo específico. La agregación se hace por día, mes, trimestre y año. Para obtener el número de equipos únicos se cuenta el número de matrículas distintas correspondientes a cada aerolínea. El proceso se compone de las siguientes operaciones:
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Borrado de duplicados.
+	\item Conteo.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Proceso 2: Demoras por aerolínea}
+
+Este proceso tiene como objetivo obtener estadísticas sobre las demoras de cada aerolínea. Este proceso realiza las siguientes operaciones principales:
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Conteo.
+	\item Cálculo de promedio.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Proceso 3 y 4: Demoras por aeropuerto de origen y destino}
+
+Estos procesos son muy similares ya que ambos calculan estadísticas de demoras de vuelos de acuerdo al aeropuerto. El proceso 3 hace el cálculo agrupando por el aeropuerto de orgien mientras que el 4 hace la agregación respecto al aeropuerto de destino. Los procesos ejecutan las siguientes operaciones:
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Conteo.
+	\item Cálculo de promedio.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Procesos 5 y 6: Demoras por ruta de aeropuerto y \textit{market id}}
+
+Estos procesos tienen como objetivo obtener información sobre las rutas recorridas entre aeropuertos y ciudades identificadas por el \textit{market id}. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular las estadísticas correspondientes. El proceso 5 calcula la ruta de acuerdo al aeropuerto de origen y destino y el 6 lo hace de acuerdo al \textit{market id}.
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Concatenación de columnas.
+	\item Conteo.
+	\item Cálculo de promedio.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Proceso 7: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
+
+El último proceso consiste en calcular la ruta mínima (minimizando el tiempo de vuelo) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación de \textit{Dijkstra} con algunas variaciones que permiten descartar vuelos que dejan de ser factibles por el horario. Además el algoritmo considera que debe existir un tiempo mayor a 2 horas cuando se requiera hacer una conexión entre vuelos. Para calcular la ruta mínima se requiere un aeropuerto de salida, uno de llegada y una fecha deseada de salida. La ruta resultante, en caso de que exista, se buscará dentro de un periodo de una semana a partir del día especificado por el usuario.   
+
+El proceso se compone de las siguientes operaciones principales:
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Filtrado de datos.
+	\item Conteo de datos.
+	\item Borrado de duplicados.
+	\item Cálculo de registro mínimo
+	\item Ordenamiento de datos.
+	\item Suma de columnas a un escalar.
+	\item Concatenación de \textit{DataFrames}.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Registro de tiempo y resultados}
+
+Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos SQL junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
+
+\begin{center}
+\begin{tabular}{|c|c|}
+ \hline
+  process & demoras\_ruta\_mktid\_dask \\ 
+  start\_ts & 1615231907.4139209 \\
+  end\_ts & 1615231916.5688508 \\ 
+  duration & 9.154929876327515 \\ 
+  description & Ejecucion de prueba en equipo local. \\
+  resources & 16 GB y 12 nucleos. \\
+  insertion\_ts & 2021-03-08 13:31:56 \\
+  \hline
+\end{tabular}
+\end{center}
+
+
+La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobre escribe cada que finaliza la ejecución de ese proceso. 
+
+\section{Infraestructura}
+
+Los \textit{frameworks} fueron comparados en dos ambientes distintos para probar su funcionamiento en modo \textit{standalone} y distribuido en un clúster. El primer ambiente es el local y el segundo el clúster en la nube. Las siguientes secciones explicarán las características de los ambientes y las ejecuciones en ellas.
+
+\subsection{Ambiente local}
+
+A pesar de que las computadoras personales se quedan cortas para realizar grandes cargas de trabajo de \textit{Big Data}, siguen siendo una herramienta importante para hacer análisis previo y realizar cargas de trabajo no muy grandes. Tanto \textit{Dask} como \textit{Spark} tienen la capacidad de funcionar en una sola máquina y aprovechar los recursos para realizar las cargas de trabajo de forma más rápida que otras herramientas. Por esta razón fue importante probar ambos \textit{frameworks} en un ambiente local. 
+
+Para ello se utilizó un equipo con las siguientes características:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+ \hline
+  Procesador & Intel Core i7-10750H CPU @ 2.60GHz \\ 
+  Núcleos & 12 \\
+  Memoria & 15.5 GiB \\ 
+  Almacenamiento & 1.1 TB \\ 
+  Sistema Operativo & Ubuntu 20.04.2 LTS \\
+  \hline
+\end{tabular}
+\end{center}
+
+Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos en MySQL.
+
+Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} 3.8.5. Este ambiente se utilizó para las ejecuciones con la versión 2021.1.1 de \textit{Dask} y la versión 2.4.7 de \textit{Spark}. 
+
+\subsection{Ambiente en la nube}
+
+El ambiente en la nube tiene como objetivo probar el desempeño de \textit{Dask} y \textit{Spark} en un ambiente distribuido. Para esto, se utilizaron instancias \textbf{X} con las siguientes características:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+ \hline
+  Procesador & X \\ 
+  Núcleos & X \\
+  Memoria & X \\ 
+  Almacenamiento & X \\ 
+  Sistema Operativo & X \\
+  \hline
+\end{tabular}
+\end{center}
+
+\section{Datos}
+
+Todas las operaciones se hicieron sobre la base de datos: 
+\textit{Reporting Carrier On-Time Performance (1987-present)}, disponible en \cite{linktranstat}. Este conjunto de datos está compuesto de 109 columnas que contienen información de demoras de vuelos dentro de Estados Unidos en el que cada registro corresponde a un vuelo único. Los datos tienen las siguientes columnas:
+
+\begin{itemize}
+	\item YEAR: (Entero) Año en el que sucedió el vuelo.
+	\item QUARTER: (Entero entre 1 y 4) Trimestre en el que sucedió el vuelo.
+	\item MONTH: (Entero entre 1 y 12) Mes en el que sucedió el vuelo.
+	\item DAY\_OF\_MONTH: (Entero entre 1 y 31) Día en el que sucedió el vuelo.
+	\item DAY\_OF\_WEEK: (Entero entre 1 y 7) Día de la semana en en el que sucedió el vuelo. El 1 corresponde al Lunes.
+	\item FL\_DATE: (\textit{string} en formato \textit{yyyy-mm-dd}) Fecha en la que sucedió el vuelo.
+	\item \LARGE X...X
+\end{itemize}
+
+Los datos utilizados corresponden al periodo del $1^{ro}$ de enero de 2008 al 30 de Noviembre de 2020 y se componen de 80,345,298 registros. 
+
+\subsection{Tratamiento de los datos}
+
+Estos datos fueron obtenidos en formato \texttt{csv} y convertidos a \texttt{parquet} para reducir su dimensión y acelerar el tiempo de consulta para ambos \textit{frameworks} . Una vez almacenado en 4096 \textit{parquets}, los datos tienen un tamaño de 4.774 GB.
+
+Para evitar que la partición de los datos beneficiara a alguno de las herramientas, se crearon dos copias de los datos y cada una fue particionada y almacenada de acuerdo a los lineamientos especificados en la documentación de la herramienta correspondiente.
+
+En el caso de Dask, se siguieron los siguientes lineamientos que se especifican en \cite{daskbestpractices}:
+\begin{itemize}
+	\item Las particiones deben caber en memoria, preferiblemente ser menores a 1 GB.
+	\item Se deben tener pocas particiones.
+	\item Las particiones deben tener un tamaño aproximado de 100 MB.
+\end{itemize}
+
+Además, se creó el archivo \texttt{\_metadata} que permite acelerar la lectura de los archivos.
+
+Por otro lado, para Spark, el conjunto de datos fue almacenado particionado por año y mes para acelerar la consulta sobre estos periodos.
+
+\subsection{Muestras de datos}
+
+Para contrastar las herramientas bajo distintas condiciones, los procesos fueron ejecutados en 5 muestras de datos de los siguientes tamaños:\\
+
+\begin{center}
+\begin{tabular}{|ccc|}
+  \hline
+ Muestra & Número de registros & Tamaño (MB) \\ 
+  \hline
+  10K & 10,000 & 8 \\ 
+  100K & 100,000 & 16 \\ 
+  1M & 1,000,000 & 71 \\ 
+  10M & 10,000,000 & 2281 \\ 
+  Total & 80,345,298 & 4774 \\ 
+   \hline
+\end{tabular}
+\end{center}
+
+La obtención de las muestras se realizó utilizando la función \texttt{sample} de \textit{Spark} sin reemplazo y con la semilla aleatoria 22102001.
