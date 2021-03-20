@@ -28,3 +28,79 @@ Para el experimento utilizaré 5 muestras de los siguientes tamaños:
 - 10M: 10,000,000 de registros y 2281MB de tamaño.
 - Total: ~80,000,000 de registros y 4774MB de tamaño.
 
+
+Sobre Dask:
+
+Whenever you want Dask to compute the result of your work, you need to call the
+.compute() method of the DataFrame. This tells Dask to go ahead and run the com-
+putation and display the results. You may sometimes see this referred to as materializing
+results, because the DAG that Dask creates to run the computation is a logical repre-
+sentation of the results, but the actual results aren’t calculated (that is, materialized)
+until you explicitly compute them.
+
+- ProgressBar es uno de las herramientas para diagnosticar el proceso de ejecucion.
+
+- Puedes combinar objetos de pandas con dask porque los de dask son pandas particionados. Al usuarlo en cluster, el df de pandas es serializado y enviado a todos los nodos.
+
+- Si dask necesita espacio usado por un persist lo va a eliminar de meoria y calcular después. Pero solo va a descartar algunas particiones y las recalcula después.
+
+- Unlike relational database systems,
+Dask does not predetermine the precise runtime location of each task before the work
+begins. Instead, the task scheduler dynamically assesses what work has been completed,
+what work is left to do, and what resources are free to accept additional work in real
+time. This allows Dask to gracefully handle a host of issues that arise in distributed
+computing, including recovery from worker failure, network unreliability, and workers
+completing work at different speeds. Hay que considerar que hardware más lento crea cuellos de botella y un dynamic scheduler permite solucionar esto.
+
+- Dask ayuda con el tuning: For example, when reading in data using the read_csv method
+of Dask DataFrames, the default partition size is 64 MB each (this is also known as the
+default blocksize). While 64 MB might seem quite small given that modern servers tend
+to have tens of gigabytes of RAM, it is an amount of data that is small enough that it can
+be quickly transported over the network if necessary, but large enough to minimize the
+likelihood that a machine will run out of things to do while waiting for the next partition
+to arrive.
+
+	- Shuffling: n distributed computing, the shuffle is the pro-
+		cess of broadcasting all partitions to all workers. Shuffling the data is necessary when51
+		Dask and Pandas
+		performing sorting, grouping, and indexing operations, because each row needs to be
+		compared to every other row in the entire DataFrame to determine its correct relative
+		position. This is a time-expensive operation, because it necessitates transferring large
+		amounts of data over the network. Let’s see what this might look like.
+
+- sorting the data in a source system,
+such as a relational database, can be faster and more efficient than sorting the data in a
+distributed system. (p 51)
+
+- Dask no es lo mejor en operaciones como join/merge, groupby y rolling. (p 52).
+- Si voy a indexar es mejor que el dataset esté preordenado.
+
+- Dask DataFrames use explicit typing rather than duck typing. This means that all val-
+ues contained in a column must conform to the same datatype.
+
+- It might not be immediately obvious why this is, but it’s because the
+argument comes from Pandas. Since each partition of a Dask DataFrame is a Pandas
+DataFrame, you can pass along any Pandas arguments through the *args and **kwargs
+interfaces and they will control the underlying Pandas DataFrames that make up each
+partition.
+
+- The most important thing to be aware
+of is that when using Dask in a multi-node cluster, your client machine is not the only
+machine that will need access to the database. Each worker node needs to be able to
+access the database server, so it’s important to install the correct software and config-
+ure each node in the cluster to be able to do so.
+
+- Dask will automat-
+ically infer boundaries and partition the data based on a 256 MB block size (which is
+larger than read_csv ’s 64 MB block size). However, if the index_col is not a numeric or
+date/time datatype, you must either specify the number of partitions or the boundaries
+to partition the data by. (ESTO PARA LEER DE BASES SQL)
+
+Dask y Spark:
+
+. Si uso repartition en dask con un menor número de particiones, el comportamiento default es concatenar las particiones existentes (creo que es como coalesce)
+
+Sobre parquet:
+
+- Incrementa velocidad porque soporta explicit data types
+- Ver pagina 75 del libro de dask
