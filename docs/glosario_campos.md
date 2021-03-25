@@ -20,7 +20,7 @@ El primer paso será entender qué datos contiene cada una de las columnas, por 
 12. ORIGIN_AIRPORT_ID: (Int) Número que identifica de forma única al aeropuerto de origen. 
 13. ORIGIN_AIRPORT_SEQ_ID: (Int) Número que identifica de forma única a un aeropuerto de origen en un tiempo determinado. Este código se puede reutilizar a través del tiempo o puede cambiar para un aeropuerto determinado.
 14. ORIGIN_CITY_MARKET_ID: (Int) Número que identifica de forma única la ciudad mercado de un aeropuerto de origen. Sirve para unir aeropuertos que sirven al mismo mercado de ciudades.
-15. ORIGIN: (String) Código de 3 lestras que identifica a cada aeropuerto de orgien.
+15. ORIGIN: (String) Código de 3 letras que identifica a cada aeropuerto de origen.
 16. ORIGIN_CITY_NAME: (String) Ciudad de origen del vuelo.
 17. ORIGIN_STATE_ABR: (String) Código en letras del estado origen del vuelo.
 18. ORIGIN_STATE_FIPS: (String) Código en número del estado de origen del vuelo.
