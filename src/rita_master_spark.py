@@ -32,14 +32,7 @@ with open(args.creds) as json_file:
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
 # Lectura de datos de MySQL
-df_rita = spark.read.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable="(SELECT * FROM " + config["input_table"] + " LIMIT 10000) df_rita",
-        user=creds["user"],
-        password=creds["password"])\
-    .load()
+df_rita = spark.read.format('parquet').load('samples/data_10K')
 # ----------------------------------------------------------------------------------------------------
 
 

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     #     .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
     # df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'] * 60
 
-    df = dd.read_parquet('data_dask'
+    df = dd.read_parquet('samples/data_10K'
             , engine='pyarrow'
             , gather_statistics=False
             # , columns=['ACTUAL_ELAPSED_TIME', 'ORIGIN', 'DEST']
@@ -54,6 +54,6 @@ if __name__ == '__main__':
 
     # print(df.count().compute())
 
-    df.repartition(1000).to_parquet('data_dask_1000', engine='pyarrow')
+    df.repartition(1).to_parquet('samples/data_dask_10K', engine='pyarrow')
 
     print(time.time()-t_inicio)
