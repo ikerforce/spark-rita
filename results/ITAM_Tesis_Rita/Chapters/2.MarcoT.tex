@@ -1,10 +1,24 @@
 \chapter{Marco teórico}
 
-\noindent El objetivo de este análisis es introducir al cómputo en paralelo y distribuido y describir las capacidades principales de los \textit{frameworks}  de \{Big Data}: \textit{Spark} y \textit{Dask}.
+\noindent El objetivo de este análisis es introducir al cómputo en paralelo y distribuido y describir las capacidades principales de los \textit{frameworks}  de \textit{Big Data}: \textit{Spark} y \textit{Dask}.
 
 \newpage
 
 \section{Introducción al cómputo en paralelo}
+
+\section{Apache Spark}
+
+Apache Spark es un motor de cómputo unificado con bibliotecas para procesamiento de datos en paralelo en clústeres de computadoras. Spark soporta múltiples lenguajes de programación como Python, Java, Scala y R. Entre sus aplicaciones más compunes están trabajos de SQL, \textit{streaming} y \textit{machine learning}.\cite{sparkguide}
+
+\section{Arquitectura de Spark}
+
+Una aplicación de Spark consiste de un proceso \textit{driver} y un conjunto de procesos llamados \textit{executor}. Ambos tipos de procesos trabajan en conjunto durante la ejecución de la aplicación. El proceso \textit{driver} es la parte central de la aplicación, ya que se encarga de mantener información sobre la aplicación, responder a las instrucciones del usuario y analizar, distribuir y calendarizar el trabajo entre los ejecutores. Este proceso existe en uno solo de los nodos y está en constante comunicación con los demás. \cite{sparkguide}. Los \textit{executors}, por otra parte, tienen el objetivo de realizar el trabajo que el \textit{driver} les asigna. Estos se encargan de ejecutan el trabajo y guardan datos para la aplicación \cite{sparkclusteroverview}.
+
+La abstracción de datos principal en Spark son los \textit{Resilient Distributed Datasets (RDDs)} que son colecciones de objetos particionadas en un clúster y que se pueden manipular en paralelo a través de transformaciones. Además, estas transformaciones tienen un \textit{lazy evaluation}, es decir que no realizan la acción inmediatamente, sino que la añaden a un plan eficiente de ejecución. Al llamar una acción, que es una instrucción para calcular un resultado a partir de las transformaciones del plan \cite{sparkguide}.  
+
+\section{Dask}
+
+Dask es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas}. 
 
 \subsection{Cambios cerebrales y genéticos}
 

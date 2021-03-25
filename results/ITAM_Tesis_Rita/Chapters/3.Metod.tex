@@ -1,19 +1,7 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para realizar la comparación entre Dask y Spark bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas bajo diferentes circunstancias, se crearon 7 procesos distintos que consisten en filtración, agrupación conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos en PySpark y Dask utilizando funciones equivalentes en ambos \textit{frameworks} de forma independiente. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas en distintos escenarios, se crearon 7 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
 \newpage
-
-\section{Frameworks}
-
-Para hacer la comparación se eligieron los \textit{frameworks} Dask y Apache Spark que funcionan como herramientas para cómputo en paralelo sobre grandes volúmenes de datos. Las siguientes secciones detallan las características de cada uno y las versiones utilizadas.
-
-\subsection{Dask}
-
-Dask es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas}. 
-
-\subsection{Spark}
-
-\textit{Spark} es un sistema de cómputo en 
 
 \section{Procesos para comparación de desempeño}
 
@@ -41,7 +29,7 @@ Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proce
 \end{algorithmic}
 \end{algorithm}
 
-De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre Spark y Dask se alternan debido a que la lista \textit{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube de con los mismos tamaños de muestra. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
+De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \textit{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube de con los mismos tamaños de muestra. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
 
 \subsection{Proceso 1: Cálculo del tamaño de la flota por aerolínea}
 
@@ -147,7 +135,7 @@ Para ello se utilizó un equipo con las siguientes características:
   Procesador & Intel Core i7-10750H CPU @ 2.60GHz \\ 
   Núcleos & 12 \\
   Memoria & 15.5 GiB \\ 
-  Almacenamiento & 1.1 TB \\ 
+  Almacenamiento & 128 GB (SSD) + 1 TB (HDD) \\ 
   Sistema Operativo & Ubuntu 20.04.2 LTS \\
   \hline
 \end{tabular}
