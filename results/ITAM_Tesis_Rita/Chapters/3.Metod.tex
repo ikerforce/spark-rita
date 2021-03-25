@@ -164,19 +164,30 @@ El ambiente en la nube tiene como objetivo probar el desempeño de \textit{Dask}
 \section{Datos}
 
 Todas las operaciones se hicieron sobre la base de datos: 
-\textit{Reporting Carrier On-Time Performance (1987-present)}, disponible en \cite{linktranstat}. Este conjunto de datos está compuesto de 109 columnas que contienen información de demoras de vuelos dentro de Estados Unidos en el que cada registro corresponde a un vuelo único. Los datos tienen las siguientes columnas:
+\textit{Reporting Carrier On-Time Performance (1987-present)}, disponible en \cite{linktranstat}. Este conjunto de datos está compuesto de 109 columnas que contienen información de demoras de vuelos dentro de Estados Unidos en el que cada registro corresponde a un vuelo único. Para el experimento se mantuvieron las 109 columnas, sin embargo se utilizan únicamente las contenidas en la siguiente lista:
 
 \begin{itemize}
 	\item YEAR: (Entero) Año en el que sucedió el vuelo.
 	\item QUARTER: (Entero entre 1 y 4) Trimestre en el que sucedió el vuelo.
 	\item MONTH: (Entero entre 1 y 12) Mes en el que sucedió el vuelo.
 	\item DAY\_OF\_MONTH: (Entero entre 1 y 31) Día en el que sucedió el vuelo.
-	\item DAY\_OF\_WEEK: (Entero entre 1 y 7) Día de la semana en en el que sucedió el vuelo. El 1 corresponde al Lunes.
 	\item FL\_DATE: (\textit{string} en formato \textit{yyyy-mm-dd}) Fecha en la que sucedió el vuelo.
-	\item \LARGE X...X
+	\item TAIL\_NUM: (\textit{string}) La matrícula que identifica de manera única a un avión.
+	\item OP\_UNIQUE\_CARRIER: (\textit{string}) Código único de cada aerolínea.
+	\item ARR\_TIME: (\textit{string} en formato \textit{hhmm}) Hora de llegada en el horario local.
+	\item DEP\_TIME: (\textit{string} en formato \textit{hhmm}) Hora de salida en el horario local.
+	\item ARR\_DELAY: (Entero) Diferencia en minutos entre la hora de salida programada y la hora de salida real.
+	\item DEP\_DELAY: (Entero) Diferencia en minutos entre la hora de salida programada y la hora de salida real.
+	\item ACTUAL\_ELAPSED\_TIME: (\textit{float}) Duración real del vuelo.
+	\item TAXI\_IN: (\textit{float}) Tiempo entre el aterrizaje y la llegada del avión a la plataforma de desembarco.
+	\item TAXI\_OUT: (\textit{float}) Tiempo en minutos entre que el avión deja la plataforma y el despegue.
+	\item ORIGIN: (\textit{string}) Código de 3 letras que identifica a cada aeropuerto de origen.
+	\item DEST: (\textit{string}) Código de 3 letras que identifica a cada aeropuerto de destino.
+	\item ORIGIN\_CITY\_MARKET\_ID: (Entero) Número que identifica de forma única la ciudad mercado de un aeropuerto de origen. Sirve para unir aeropuertos que sirven al mismo mercado de ciudades.
+	\item DEST\_CITY\_MARKET\_ID: (Entero) Número que identifica de forma única la ciudad mercado de un aeropuerto de destino. Sirve para unir aeropuertos que sirven al mismo mercado de ciudades.
 \end{itemize}
 
-Los datos utilizados corresponden al periodo del $1^{ro}$ de enero de 2008 al 30 de Noviembre de 2020 y se componen de 80,345,298 registros. 
+Los datos utilizados corresponden al periodo del $1^{ro}$ de enero de 2008 al 30 de Noviembre de 2020 y se componen de 80,345,298 registros.
 
 \subsection{Tratamiento de los datos}
 

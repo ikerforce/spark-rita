@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.3.11)  25 MAR 2021 10:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.3.11)  25 MAR 2021 16:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -984,7 +984,7 @@ ABD: EveryShipout initializing macros
 Package pgfplots notification 'compat/show suggested version=true': document ha
 s been generated with the most recent feature set (\pgfplotsset{compat=1.16}).
 
-<Imagenes/itam_logo.png, id=139, 406.51875pt x 124.465pt>
+<Imagenes/itam_logo.png, id=131, 406.51875pt x 124.465pt>
 File: Imagenes/itam_logo.png Graphic file (type png)
 <use Imagenes/itam_logo.png>
 Package pdftex.def Info: Imagenes/itam_logo.png  used on input line 75.
@@ -1077,12 +1077,7 @@ Cap\'{\i }tulo 2.
 
 
 
-]
-
-LaTeX Warning: Citation `sparkclusteroverview' on page 5 undefined on input lin
-e 15.
-
-[5] [6] [7]) [8]
+] [5] [6] [7]) [8]
 \openout2 = `Chapters/3.Metod.aux'.
 
  (./Chapters/3.Metod.tex
@@ -1093,9 +1088,9 @@ Cap\'{\i }tulo 3.
 
 ]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 21.
+put line 13.
 
-Overfull \hbox (4.44113pt too wide) in paragraph at lines 27--28
+Overfull \hbox (4.44113pt too wide) in paragraph at lines 19--20
 [] $[] \OMS/cmsy/m/n/10.95   []$ 
  []
 
@@ -1139,22 +1134,15 @@ LaTeX Info: Redefining \% on input line 25.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 359.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 359.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 10AA293CC89B6C52DB9D7D4A065B9840;2377.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
+(rerunfilecheck)             Checksum: AA04EC65A6E1C1F32C5F2E80870C9922;2261.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 359.
  ) 
 Here is how much of TeX's memory you used:
- 31600 strings out of 483007
- 729828 string characters out of 5961757
+ 31595 strings out of 483007
+ 729753 string characters out of 5961757
  1128676 words of memory out of 5000000
- 45908 multiletter control sequences out of 15000+600000
- 547311 words of font info for 80 fonts, out of 8000000 for 9000
+ 45905 multiletter control sequences out of 15000+600000
+ 547012 words of font info for 79 fonts, out of 8000000 for 9000
  107 hyphenation exceptions out of 8191
  78i,11n,136p,1067b,2070s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
@@ -1165,18 +1153,17 @@ xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/share/texlive
 f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
-ublic/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.
-pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
-usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/sh
-are/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share/te
-xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/
-texmf-dist/fonts/type1/public/amsfonts/latxfont/lasy10.pfb>
-Output written on main.pdf (35 pages, 247779 bytes).
+ublic/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><
+/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/s
+hare/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/t
+exlive/texmf-dist/fonts/type1/public/amsfonts/latxfont/lasy10.pfb>
+Output written on main.pdf (35 pages, 240786 bytes).
 PDF statistics:
- 449 PDF objects out of 1000 (max. 8388607)
- 389 compressed objects within 4 object streams
- 88 named destinations out of 1000 (max. 500000)
- 282 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 436 PDF objects out of 1000 (max. 8388607)
+ 377 compressed objects within 4 object streams
+ 86 named destinations out of 1000 (max. 500000)
+ 266 words of extra memory for PDF output out of 10000 (max. 10000000)
 
