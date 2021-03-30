@@ -195,13 +195,6 @@ Estos datos fueron obtenidos en formato \texttt{csv} y convertidos a \texttt{par
 
 Para evitar que la partición de los datos beneficiara a alguno de las herramientas, se crearon dos copias de los datos y cada una fue particionada y almacenada de acuerdo a los lineamientos especificados en la documentación de la herramienta correspondiente.
 
-En el caso de Dask, se siguieron los siguientes lineamientos que se especifican en \cite{daskbestpractices}:
-\begin{itemize}
-	\item Las particiones deben caber en memoria, preferiblemente ser menores a 1 GB.
-	\item Se deben tener pocas particiones.
-	\item Las particiones deben tener un tamaño aproximado de 100 MB.
-\end{itemize}
-
 Además, se creó el archivo \texttt{\_metadata} que permite acelerar la lectura de los archivos.
 
 Por otro lado, para Spark, el conjunto de datos fue almacenado particionado por año y mes para acelerar la consulta sobre estos periodos.

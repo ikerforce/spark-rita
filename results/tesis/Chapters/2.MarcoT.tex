@@ -4,11 +4,10 @@
 
 \newpage
 
-\section{Introducción al cómputo en paralelo}
 
 \section{Apache Spark}
 
-Apache Spark es un motor de cómputo unificado con bibliotecas para procesamiento de datos en paralelo en clústeres de computadoras. Soporta múltiples lenguajes de programación como Python, Java, Scala y R. Entre sus aplicaciones más comunes están trabajos de SQL, \textit{streaming} y \textit{machine learning}.\cite{sparkguide}. Debido a que soporta múltiples sistemas de almacenamiento como HDFS, S3, Cassandra y SQL, Spark facilita el cómputo de datos proveniente de diversas fuertes y la unión de las mismas. El desempeño de Spark en múltiples actividades como conteo de palabras y ejecución de consultas de \textit{SQL} es comparable al de herramientas diseñadas para propósitos específicos como \textit{Imapala} y \textit{Storm} \cite{sparkberkeley}, lo que lo convierte en un \textit{framework} multipropósito.
+Apache Spark es un motor de cómputo unificado con bibliotecas para procesamiento de datos en paralelo en clústeres de computadoras. Soporta múltiples lenguajes de programación como Python, Java, Scala y R. Entre sus aplicaciones más comunes están trabajos de SQL, \textit{streaming} y \textit{machine learning}.\cite{sparkguide}. Debido a que soporta múltiples sistemas de almacenamiento como HDFS, S3, Cassandra y SQL, Spark facilita el cómputo de datos proveniente de diversas fuertes y la unión de las mismas. El desempeño de Spark en múltiples actividades como conteo de palabras y ejecución de consultas de \textit{SQL} es comparable al de herramientas diseñadas para propósitos específicos como \textit{Imapala} y \textit{Storm} \cite{sparkberkeley}, lo que lo convierte en un \textit{framework} multipropósito competitivo.
 
 \section{Arquitectura de Spark}
 
@@ -24,14 +23,48 @@ Para permitir la ejecución en paralelo, Spark divide los datos en fragmentos ll
 
 \subsection{DataFrames}
 
-Los \textit{DataFrames} de Spark son la API estructurada más popular del \textit{framework} y permiten representar tablas de datos a través de renglones y columnas nombradas. Y pueden extenderse a múltiples computadoras \cite{sparkguide}. Estas estructuras buscan que se pueda interactuar con los datos de la misma forma que en bases de datos analíticas. Los \textit{DataFrames} son \textit{RDDs} que cumplen con un esquema específico \cite{sparkberkeley}. Se pueden manipular mediante \textit{queries} de \textit{SQL} y con funciones preestablecidas como filtrado de datos y agregaciones \cite{sparkberkeley}.
+Los \textit{DataFrames} de Spark son la API estructurada más popular del \textit{framework} y permiten representar tablas de datos a través de renglones y columnas nombradas. Y pueden extenderse a múltiples computadoras \cite{sparkguide}. Estas estructuras buscan que se pueda interactuar con los datos de la misma forma que en bases de datos analíticas. Los \textit{DataFrames} son \textit{RDDs} que cumplen con un esquema específico \cite{sparkberkeley}. Se pueden manipular mediante \textit{queries} de \textit{SQL} y con funciones preestablecidas como filtrado de datos y agregaciones \cite{sparkberkeley}. Esta estructura es que la que más se utilizará durante esta investigación.
 
 \subsection{Mejores prácticas de Apache Spark}
 
+Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguieron las prácticas de \cite{sparkibm}. La siguiente lista corresponde a los puntos más importantes.
+
+\begin{itemize}
+	\item Sólo mantener las \textbf{acciones} necesarias. Dado que estas son evaluadas de forma inmediata, pueden afectar al plan de ejecución y provocar planes poco eficientes.
+	\item Almacenar los datos en un formato columnar optimizado para lectura y escritura como \texttt{parquet} o \texttt{orc}.
+	\item Evitar un gran número de archivos pequeños.
+	\item Aumentar el número de particiones para aprovechar el paralelismo.
+	\item Buscar entre 2 y 3 \textit{tasks} por ejecutor.
+	\item Cambiar el valor del parámetro \textit{shuffle partitions} en caso de tener conjuntos de datos muy grandes. Cuando el conjunto de datos es muy grandes el tamaño de cada partición debe estar entre 100 y 200 MB. Usar la fórmula: \texttt{spark.sql.shuffle.partitions} = quotient (shuffle stage input size/target size)/total cores) * total cores.
+	\item Evitar \textit{shuffles}, es decir que datos tengan que ser compartidos entre nodos.
+	\item Reduce o filtra los datos lo más pronto posible.
+	\item Cuando la misma operación se ejecuta múltiples veces, usa \textit{cache} y elimina los datos en el \textit{cache} cuando ya no sean necesarios.
+	\item Cuando se esté haciendo un join con una tabla pequeña, usar \texttt{BroadcastHashJoin}.
+	\item Si vas a hacer múltiples \textit{joins}, empieza por el más selectivo para reducir el número de registros.
+	\item Evita \textit{cross joins}
+	\item Configura el uso de recursos del clúster dependiendo del administrador de recursos y la versión de Spark.
+	\item Configura los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster.
+	\item Evita operaciones costosas como \texttt{order by}, seleccionar todas las columnas usando \texttt{\*} en lugar de dar los nombres específicos y no usar \texttt{count} de forma innecesaria.
+	\item Asegurarse de que las particiones tengan tamaños similares para que los recursos se utilicen de forma equitativa. En algunos casos, puede ser útil usar \texttt{repartition} para evitar el sesgo hacia alguna partición, pero esto se debe de hacer con cuidado y poca frecuencia ya que la operación es muy costosa.
+	\item De ser posible, utiliza las funciones nativas de \textit{Spark} en lugar de crear funciones personalizadas.
+	 	
+\end{itemize}
+
 \section{Dask}
 
-Dask es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas}. 
+Dask es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas} \cite{daskdocs}. Al usar esta interfaz se genera una gráfica de tareas de forma automática que después es ejecutada en paralelo. Además Dask cuenta con distintas formas de ejecutar las tareas, sin embargo este trabajo se concentra en el modo \textit{Dask Distributed} que fue diseñado para ejecución en clústeres pero funciona en ambientes locales también \cite{daskscheduling}.
+
+\section{Arquitectura de Dask}
+
+Para la ejecución de tareas, \textit{Dask} usa un calendarizador central, distribuido y dinámico. A través de un proceso llamado \textit{dask-scheduler}, coordina las acciones de múltiples \textit{dask-workers} que se ubican en diferentes máquinas. El calendarizador es asíncrono y orientado a eventos, lo que le permite manejar múltiples trabajos de forma simultánea y manejar las tareas de los \textit{dask-workers} de forma eficiente y recuperarse de fallos. Todas las tareas generadas por los usuarios se añaden a una Gráfica acícilca dirigida (\textit{DAG} por sus siglas en inglés) que crece cuando se añaden tareas, se actualiza al completarlas y se reduce cuando resultados previos ya no son necesarios \cite{daskdistributed}. Esta forma de asignar las tareas permite una ejecución eficiente de las mismas y mantiene un linaje de las tareas programadas.
 
 
+\subsection{Mejores prácticas en Dask}
 
+En el caso de \textit{Dask}, se siguieron los siguientes lineamientos que se especifican en \cite{daskbestpractices}:
+\begin{itemize}
+	\item Las particiones deben caber en memoria, preferiblemente ser menores a 1 GB.
+	\item Se deben tener pocas particiones.
+	\item Las particiones deben tener un tamaño aproximado de 100 MB.
+\end{itemize}
 
