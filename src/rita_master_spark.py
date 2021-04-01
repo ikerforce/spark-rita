@@ -14,14 +14,22 @@ import argparse # Utilizado para leer archivo de configuracion
 import json # Utilizado para leer archivo de configuracion
 import time # Utilizado para medir el timpo de ejecucion
 
-# Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
-parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
+parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
+parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
+
+def lee_config_csv(path, sample_size, process):
+    """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
+    file = open(path, "r").read().splitlines()
+    nombres = file[0]
+    info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
+    parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
+    return parametros
+
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
-with open(args.config) as json_file:
-    config = json.load(json_file)
+config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 # ----------------------------------------------------------------------------------------------------
@@ -32,7 +40,7 @@ with open(args.creds) as json_file:
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
 # Lectura de datos de MySQL
-df_rita = spark.read.format('parquet').load('samples/data_10K')
+df_rita = spark.read.format('parquet').load(config['input_path'])
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -210,5 +218,6 @@ df_time.write.format("jdbc")\
     .mode(config["time_table_mode"])\
     .save()
 
+print('\n\n\tTiempo ejecución: {t}\n\n'.format(t = t_final - t_inicio))
 print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
 # ----------------------------------------------------------------------------------------------------
