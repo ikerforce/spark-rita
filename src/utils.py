@@ -47,3 +47,11 @@ def rollup(df, columnas, agregaciones, meta=list):
     conjuntos_columnas = conjuntos_rollup(columnas_totales)
     dataframes = list(map(lambda X: group_by_rollup(df, X, columnas_totales, agregaciones), conjuntos_columnas))
     return dataframes
+
+
+def lee_config_csv(path, sample_size, process):
+    file = open(path, "r").read().splitlines()
+    nombres = file[0]
+    info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
+    parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
+    return parametros
