@@ -40,7 +40,14 @@ with open(args.creds) as json_file:
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
 # Lectura de datos de MySQL
-df_rita = spark.read.format('parquet').load(config['input_path']).select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
+df_rita = spark.read\
+    .format('parquet')\
+    .load(config['input_path'])\
+    .select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
+
+df_rita.cache()
+
+t_intermedio = time.time()
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -78,11 +85,11 @@ def aeropuerto_demoras_origen(df):
     df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("TAXI_IN"),
-            F.avg('TAXI_OUT').alias("TAXI_OUT")
+            F.max('ARR_DELAY').alias("ARR_DELAY"),
+            F.max('DEP_DELAY').alias("DEP_DELAY"),
+            F.max('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.max('TAXI_IN').alias("TAXI_IN"),
+            F.max('TAXI_OUT').alias("TAXI_OUT")
             )
     return df_resp
 
@@ -98,11 +105,11 @@ def aeropuerto_demoras_destino(df):
     df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("TAXI_IN"),
-            F.avg('TAXI_OUT').alias("TAXI_OUT")
+            F.min('ARR_DELAY').alias("ARR_DELAY"),
+            F.min('DEP_DELAY').alias("DEP_DELAY"),
+            F.min('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.min('TAXI_IN').alias("TAXI_IN"),
+            F.min('TAXI_OUT').alias("TAXI_OUT")
             )
     return df_resp
 
@@ -142,11 +149,11 @@ def principales_rutas_mktid_fecha(df):
     df_resp = df_resp.rollup('ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"), 
-            F.avg('ARR_DELAY').alias("ARR_DELAY"), 
-            F.avg('DEP_DELAY').alias("DEP_DELAY"), 
-            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
-            F.avg('TAXI_IN').alias("TAXI_IN"),
-            F.avg('TAXI_OUT').alias("TAXI_OUT")
+            F.stddev_pop('ARR_DELAY').alias("ARR_DELAY"), 
+            F.stddev_pop('DEP_DELAY').alias("DEP_DELAY"), 
+            F.stddev_pop('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.stddev_pop('TAXI_IN').alias("TAXI_IN"),
+            F.stddev_pop('TAXI_OUT').alias("TAXI_OUT")
             )\
         .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
         .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
@@ -197,10 +204,23 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"]]]) # Almacenamos infomracion de ejecucion en rdd
-df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
+rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
+df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
-df_time.write.format("jdbc")\
+df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+    .withColumn("insertion_ts", F.current_timestamp())
+df_time_1.write.format("jdbc")\
+    .options(
+        url=creds["db_url"] + creds["database"],
+        driver=creds["db_driver"],
+        dbtable="registro_de_tiempo_spark",
+        user=creds["user"],
+        password=creds["password"])\
+    .mode(config["time_table_mode"])\
+    .save()
+
+df_time_2.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
