@@ -20,16 +20,23 @@ import datetime # Utilizado para el parseo de fecha de salida
 
 # Definicion y lectura de los argumentos que se le pasan a la funcion
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
-parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
+parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
+parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
 parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
 args = parser.parse_args()
 
-# Leemos las credenciales de la ruta especificada
-with open(args.config) as json_file:
-    config = json.load(json_file)
+def lee_config_csv(path, sample_size, process):
+    """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
+    file = open(path, "r").read().splitlines()
+    nombres = file[0]
+    info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
+    parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
+    return parametros
+
+config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
@@ -50,7 +57,7 @@ y_min, m_min, d_min = args.dep_date.split('-')
 y_max, m_max, d_max = max_arr_date.split('-')
 
 
-df_rita = spark.read.format('parquet').load('/home/ikerforce/Documents/Tesis/spark-rita/data')\
+df_rita = spark.read.format('parquet').load(config['input_path'])\
     .filter('''CAST(YEAR AS INT) >= {y_min}
         AND CAST(YEAR AS INT) <= {y_max}
         AND CAST(MONTH AS INT) >= {m_min}
@@ -94,11 +101,11 @@ df = df_rita\
 
 df.cache()
 
+t_intermedio = time.time()
+
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
-
-t_intermedio = time.time()
 
 encontro_ruta = True
 early_arr = 0
@@ -239,7 +246,7 @@ if encontro_ruta == True:
         .mode(config["results_table_mode"])\
         .save()
 
-    t_final = time.time() # Tiempo de finalizacion de la ejecucion
+t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
     # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
@@ -250,11 +257,11 @@ if encontro_ruta == True:
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"]]])
-rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"]]]) # Almacenamos informacion de ejecucion en rdd
-df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
+rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
+df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
-df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources'])\
+df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
 df_time_1.write.format("jdbc")\
     .options(
