@@ -243,10 +243,10 @@ if __name__ == '__main__':
 
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
-    info_tiempo_1 = [[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
-    info_tiempo_2 = [[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
-    df_tiempo_1 = pd.DataFrame(data=info_tiempo_1, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
-    df_tiempo_2 = pd.DataFrame(data=info_tiempo_2, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
+    info_tiempo_1 = [[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    info_tiempo_2 = [[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    df_tiempo_1 = pd.DataFrame(data=info_tiempo_1, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
+    df_tiempo_2 = pd.DataFrame(data=info_tiempo_2, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
     df_tiempo_1.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
     df_tiempo_2.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
 
