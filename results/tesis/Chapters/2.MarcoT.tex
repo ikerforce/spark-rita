@@ -56,13 +56,18 @@ Dask es una librería de Python para cómputo en paralelo que extiende herramien
 
 \section{Arquitectura de Dask}
 
-Para la ejecución de tareas, \textit{Dask} usa un calendarizador central, distribuido y dinámico. A través de un proceso llamado \textit{dask-scheduler}, coordina las acciones de múltiples \textit{dask-workers} que se ubican en diferentes máquinas. El calendarizador es asíncrono y orientado a eventos, lo que le permite manejar múltiples trabajos de forma simultánea y manejar las tareas de los \textit{dask-workers} de forma eficiente y recuperarse de fallos. Todas las tareas generadas por los usuarios se añaden a una Gráfica acícilca dirigida (\textit{DAG} por sus siglas en inglés) que crece cuando se añaden tareas, se actualiza al completarlas y se reduce cuando resultados previos ya no son necesarios \cite{daskdistributed}. Esta forma de asignar las tareas permite una ejecución eficiente de las mismas y mantiene un linaje de las tareas programadas.
+Para la ejecución de tareas, \textit{Dask} usa un calendarizador central, distribuido y dinámico. A través de un proceso llamado \textit{dask-scheduler}, coordina las acciones de múltiples \textit{dask-workers} que se ubican en diferentes máquinas. El calendarizador es asíncrono y orientado a eventos, lo que le permite manejar múltiples trabajos de forma simultánea y gestionar las tareas de los \textit{dask-workers} de forma eficiente y recuperarse de fallos. Todas las tareas generadas por los usuarios se añaden a una Gráfica acícilca dirigida (\textit{DAG} por sus siglas en inglés) que crece cuando se añaden tareas, se actualiza al completarlas y se reduce cuando resultados previos ya no son necesarios \cite{daskdistributed}. Esta forma de asignar las tareas permite una ejecución eficiente de las mismas y mantiene un linaje de las tareas programadas.
 
 
 \subsection{Mejores prácticas en Dask}
 
-En el caso de \textit{Dask}, se siguieron los siguientes lineamientos que se especifican en \cite{daskbestpractices}:
+En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas listadas en \cite{daskbestpractices}:
 \begin{itemize}
+	\item Usar \textit{Pandas} para datos que quepan en memoria.
+	\item Reduce el tamaño de un conjunto de datos grande con \textit{Dask} y ya que el conjunto sea suficientemente pequeño continúa el resto de las operaciones con \textit{Pandas}.
+	\item Sigue las mejores prácticas de Pandas ya que estas normalmente aplican a los \textit{Dask Dataframes}. Esto incluye evitar usar \texttt{apply} y usar operaciones vectorizadas.
+	\item Utiliza el \texttt{index} de \textit{Dask} cuando sea posible. Esto acelerará las operaciones que usen esa columna. A veces utilizar el método \texttt{set_index} puede acelerar el cómputo pero hay que tener en cuenta que es una operación muy costosa.
+	\item Evita operaciones que requieran \textit{data shuffling} que reubican los datos y pueden poner múltiples 
 	\item Las particiones deben caber en memoria, preferiblemente ser menores a 1 GB.
 	\item Se deben tener pocas particiones.
 	\item Las particiones deben tener un tamaño aproximado de 100 MB.
