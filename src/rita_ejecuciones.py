@@ -12,15 +12,8 @@ hora_ejecucion = time.strftime("%d_%m_%Y_%H_%M_%S") #
 parser = argparse.ArgumentParser()
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 parser.add_argument("--ejecs", help="Determina el numero_de_ejecuciones que se haran.")
+parser.add_argument("--sample_size", help="Determina la muestra con la que se ejecutarán los procesos.")
 args = parser.parse_args()
-
-from collections import ChainMap
-
-def lee_config(path):
-    f = open(path, "r").readlines()
-    dicts = list(map(lambda x: convierte_en_dict(x.split("|")), f))
-    paths = dict(ChainMap(*dicts))
-    return paths
 
 def convierte_en_dict(l):
     return {l[0]: {'dask':l[1], 'spark':l[2].replace('\n', '')}}
@@ -31,6 +24,21 @@ def orden_pruebas(numero_de_ejecuciones):
     pruebas = [1 for i in range(numero_de_ejecuciones)] + [0 for i in range(numero_de_ejecuciones)]
     random.shuffle(pruebas)
     return pruebas
+
+def lee_config_csv(path, sample_size, process):
+    """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
+    file = open(path, "r").read().splitlines()
+    nombres = file[0]
+    info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
+    parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
+    return parametros
+
+def obten_procesos(path, sample_size):
+    """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
+    file = open(path, "r").read().splitlines()
+    file_sample_only = filter(lambda row: row.split('|')[0] == sample_size, file[1:])
+    procesos = set(x.replace('_dask', '').replace('_spark','') for x in map(lambda row: row.split('|')[1], file_sample_only))
+    return procesos
 
 def selecciona_aeropuertos_fecha(lista):
     primero = random.choice(lista)
@@ -48,21 +56,20 @@ def selecciona_aeropuertos_fecha(lista):
 
     return [primero, segundo, str(random_date)]
 
-rutas = lee_config("conf/base/paths_to_file.csv")
+procesos = obten_procesos(path='conf/base/configs.csv', sample_size=args.sample_size)
 
 # 0 es dask
 # 1 es spark
 numero_de_ejecuciones = int(args.ejecs)
-procesos = list(rutas.keys())
 procesos.remove('dijkstra')
-pruebas_totales = dict(zip(list(rutas.keys()), [orden_pruebas(numero_de_ejecuciones) for i in range(len(rutas.keys()))]))
+pruebas_totales = dict(zip(procesos, [orden_pruebas(numero_de_ejecuciones) for i in range(len(procesos))]))
 n_errores = 0
 for proceso in procesos:
     for x in pruebas_totales[proceso]:
         if x == 1:
             try:
                 print('\n\t' + proceso + ' spark\n')
-                os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['spark'])
+                os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --process ' + proceso + '_spark' + ' --sample_size ' + args.sample_size)
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
@@ -70,7 +77,7 @@ for proceso in procesos:
         else:
             try:
                 print('\n\t' + proceso + ' dask\n')
-                os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --conf ' + rutas[proceso]['dask'])
+                os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
