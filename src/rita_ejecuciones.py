@@ -77,7 +77,7 @@ for proceso in procesos:
         else:
             try:
                 print('\n\t' + proceso + ' dask\n')
-                os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
+                # os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
@@ -99,11 +99,12 @@ for i in pruebas_rutas:
         spark_cmd = '''spark-submit \
                         --driver-memory=8g \
                         src/calculo_ruta_minima/dijkstra_spark.py \
-                        --conf {conf} \
+                        --sample_size {sample_size} \
+                        --process {process} \
                         --creds {creds} \
                         --origin {origin} \
                         --dest {dest} \
-                        --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], conf=rutas['dijkstra']['spark'], creds=args.creds)
+                        --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
         os.system(spark_cmd)
     else:
         ruta = rutas_dask.pop()
