@@ -1,8 +1,8 @@
 sample_size|process|engine|input_path|results_table|results_table_mode|time_table|time_table_mode|db_numPartitions|partition_column|resources|description
 10K|demoras_aerolinea_dask|dask|samples/data_10K_dask|demoras_aerolinea_dask|overwrite|registro_de_tiempo_dask|append|20|||
 10K|demoras_aerolinea_spark|spark|samples/data_10K|demoras_aerolinea_spark|overwrite|registro_de_tiempo_spark|append|20|||
-10K|demoras_aeropuerto_destino_spark|dask|samples/data_10K_dask|demoras_aeropuerto_destino_spark|overwrite|registro_de_tiempo_dask|append|20|||
-10K|demoras_aeropuerto_destino_dask|spark|samples/data_10K|demoras_aeropuerto_destino_dask|overwrite|registro_de_tiempo_spark|append|20|||
+10K|demoras_aeropuerto_destino_dask|dask|samples/data_10K_dask|demoras_aeropuerto_destino_dask|overwrite|registro_de_tiempo_dask|append|20|||
+10K|demoras_aeropuerto_destino_spark|spark|samples/data_10K|demoras_aeropuerto_destino_spark|overwrite|registro_de_tiempo_spark|append|20|||
 10K|demoras_aeropuerto_origen_dask|dask|samples/data_10K_dask|demoras_aeropuerto_origen_dask|overwrite|registro_de_tiempo_dask|append|20|||
 10K|demoras_aeropuerto_origen_spark|spark|samples/data_10K|demoras_aeropuerto_origen_spark|overwrite|registro_de_tiempo_spark|append|20|||
 10K|demoras_ruta_aeropuerto_dask|dask|samples/data_10K_dask|demoras_ruta_aeropuerto_dask|overwrite|registro_de_tiempo_dask|append|20|||
