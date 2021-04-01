@@ -4,7 +4,7 @@ from dask.distributed import Client
 
 if __name__ == '__main__':
 
-    client = Client(n_workers=1)
+    client = Client(n_workers=2)
 
     # Importaciones de Python
     import argparse # Utilizado para leer archivo de configuracion
@@ -21,12 +21,20 @@ if __name__ == '__main__':
 
     # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
-    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
+    parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
+    parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
     args = parser.parse_args()
     # Leemos las credenciales de la ruta especificada
-    with open(args.config) as json_file:
-        config = json.load(json_file)
+
+    def lee_config_csv(path, sample_size, process):
+        file = open(path, "r").read().splitlines()
+        nombres = file[0]
+        info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
+        parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
+        return parametros
+
+    config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
     with open(args.creds) as json_file:
         creds = json.load(json_file)
 
@@ -89,8 +97,8 @@ if __name__ == '__main__':
 
     # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])
     # df = dd.read_sql_table("RITA_100K", uri=uri, index_col=config["partition_column"])
-    df = dd.read_parquet('samples/data_10K'
-                , infer_divisions=False
+    df = dd.read_parquet(config['input_path']
+                # , infer_divisions=False
                 , engine='pyarrow'
                 , columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID']
                 # , index='ID'
@@ -102,9 +110,9 @@ if __name__ == '__main__':
     df['TAXI_IN'] = df['TAXI_IN'].astype(float)
     df['TAXI_OUT'] = df['TAXI_OUT'].astype(float)
 
-    df = df.repartition(4)
+    # df = df.repartition(4)
 
-    # df = client.persist(df)
+    df = client.persist(df)
 
     # print(df.count().compute())
 
