@@ -40,7 +40,7 @@ with open(args.creds) as json_file:
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
 # Lectura de datos de MySQL
-df_rita = spark.read.format('parquet').load(config['input_path'])
+df_rita = spark.read.format('parquet').load(config['input_path']).select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -111,22 +111,18 @@ def principales_rutas_aeropuerto_fecha(df):
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
-    df_resp = df.groupBy('ORIGIN', 'DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
-        .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
-            )\
+    df_resp = df\
         .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"), 
-            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
-            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), 
-            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME")
+            F.avg('ARR_DELAY').alias("ARR_DELAY"), 
+            F.avg('DEP_DELAY').alias("DEP_DELAY"), 
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.avg('TAXI_IN').alias("TAXI_IN"),
+            F.avg('TAXI_OUT').alias("TAXI_OUT")
             )\
         .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
         .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
@@ -139,22 +135,18 @@ def principales_rutas_mktid_fecha(df):
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
-    df_resp = df.groupBy('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE')\
-        .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"),
-            F.avg('ARR_DELAY').alias("ARR_DELAY"),
-            F.avg('DEP_DELAY').alias("DEP_DELAY"),
-            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME")
-            )\
+    df_resp = df\
         .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"), 
-            F.avg('ARR_DELAY').alias("AVG_ARR_DELAY"), 
-            F.avg('DEP_DELAY').alias("AVG_DEP_DELAY"), 
-            F.avg('ACTUAL_ELAPSED_TIME').alias("AVG_ACTUAL_ELAPSED_TIME")
+            F.avg('ARR_DELAY').alias("ARR_DELAY"), 
+            F.avg('DEP_DELAY').alias("DEP_DELAY"), 
+            F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.avg('TAXI_IN').alias("TAXI_IN"),
+            F.avg('TAXI_OUT').alias("TAXI_OUT")
             )\
         .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
         .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
