@@ -58,6 +58,7 @@ y_max, m_max, d_max = max_arr_date.split('-')
 
 
 df_rita = spark.read.format('parquet').load(config['input_path'])\
+    .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
     .filter('''CAST(YEAR AS INT) >= {y_min}
         AND CAST(YEAR AS INT) <= {y_max}
         AND CAST(MONTH AS INT) >= {m_min}
@@ -101,11 +102,11 @@ df = df_rita\
 
 df.cache()
 
-t_intermedio = time.time()
-
 # Obtenemos el numero de nodos que hay en la red
 n_nodos = df.select('ORIGIN')\
         .union(df.select('DEST')).distinct().count()
+
+t_intermedio = time.time()
 
 encontro_ruta = True
 early_arr = 0
