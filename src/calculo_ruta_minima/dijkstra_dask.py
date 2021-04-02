@@ -25,15 +25,15 @@ if __name__ == '__main__':
 
     # Definicion y lectura de los argumentos que se le pasan a la funcion
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
-    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos")
+    parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
+    parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
     parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
     parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
     parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
     args = parser.parse_args()
     # Leemos las credenciales de la ruta especificada
-    with open(args.config) as json_file:
-        config = json.load(json_file)
+    config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
     with open(args.creds) as json_file:
         creds = json.load(json_file)
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     y_min, m_min, d_min = args.dep_date.split('-')
     y_max, m_max, d_max = max_arr_date.split('-')
 
-    df = dd.read_parquet('data_dask_50'
+    df = dd.read_parquet(config['input_path']
             , infer_divisions=False
             , engine='pyarrow'
             # , gather_statistics=False
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
-    
+
     t_intermedio = time.time()
 
     encontro_ruta = True
@@ -118,11 +118,11 @@ if __name__ == '__main__':
     # Primero busco si hay vuelo directo
     frontera = df[(df['ORIGIN'] == args.origin) & (df['DEST'] == args.dest)]\
                 .nsmallest(1, columns=['dep_epoch'])[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']].compute()
-
+    
     if frontera['ORIGIN'].shape[0] > 0:
 
         # Si hay vuelo directo lo regreso como ruta optima
-        vuelo_elegido = frontera[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']].reset_index().compute()
+        vuelo_elegido = frontera[['ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME']].reset_index()
         nodo_anterior = vuelo_elegido['ORIGIN'].values[0] # Origen del vuelo directo
         nodo_actual = vuelo_elegido['DEST'].values[0] # Destino del vuelo directo
         visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido['dep_epoch']), 'llegada': float(vuelo_elegido['arr_epoch'])}
@@ -232,7 +232,7 @@ if __name__ == '__main__':
 
         df_resp.to_sql(process, uri, if_exists=config["results_table_mode"], index=False)
 
-        t_final = time.time() # Tiempo de finalizacion de la ejecucion
+    t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
         # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
@@ -250,5 +250,5 @@ if __name__ == '__main__':
     df_tiempo_1.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
     df_tiempo_2.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
 
-    # print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+    print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
     # # ----------------------------------------------------------------------------------------------------
