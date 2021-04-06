@@ -1,20 +1,18 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas en distintos escenarios, se crearon 7 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 7 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
 \newpage
 
 \section{Procesos para comparación de desempeño}
 
 Para contrastar el desempeño de los herramientas, se implementaron 7 procesos que realizan distintas operaciones sobre el conjunto de datos. Cada uno busca responder una pregunta distinta sobre los vuelos en Estados Unidos, cuya respuesta requiere de distintas operaciones. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
 
-Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos:
+Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos que tiene como entradas la \texttt{muestra} de datos que se utilizará, \texttt{n}, el número de ejecuciones a realizar y \texttt{procesos}, la lista de procesos que se ejecutarán:
 
 \begin{algorithm}[H]
 \caption{Ejecución de procesos}\label{ejecucion_procesos}
 \begin{algorithmic}[1]
-\Procedure{Ejecuciones}{}
-\State $\textit{n} \gets \text{número de ejecuciones a realizar}$
-\State $\textit{procesos} \gets \text{lista de procesos que se van a ejecutar}$
+\Procedure{Ejecuciones(muestra, n, procesos)}{}
 \For{\texttt{\textit{proceso} in \textit{procesos}}}
 	\State $\textit{framework} \gets \text{lista de 0 y 1 en orden aleatorio de longitud 2\textit{n}}$
 	\For{\texttt{\textit{x} in \textit{framework}}}
@@ -29,7 +27,7 @@ Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proce
 \end{algorithmic}
 \end{algorithm}
 
-De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \textit{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube de con los mismos tamaños de muestra. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
+De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
 
 \subsection{Proceso 1: Cálculo del tamaño de la flota por aerolínea}
 
@@ -57,7 +55,7 @@ Este proceso tiene como objetivo obtener estadísticas sobre las demoras de cada
 
 \subsection{Proceso 3: Demora máxima por aeropuerto de origen}
 
-Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de origen y obteniendo el resultado para los periodos por año, trimestre, mes y día. EL proceso se compone de las siguientes operaciones:
+Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de origen y obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso se compone de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -69,7 +67,7 @@ Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de 
 
 \subsection{Proceso 4: Demora mínima por aeropuerto de destino}
 
-Este proceso es similar al anterior con la diferencia de que calcula el tiempo mínimo de demora y que hace la agrupación de acuerdo al aeropuerto de destino y obteniendo el resultado para los periodos por año, trimestre, mes y día. EL proceso se compone de las siguientes operaciones:
+Este proceso es similar al anterior con la diferencia de que calcula el tiempo mínimo de demora y que hace la agrupación de acuerdo al aeropuerto de destino y obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso se compone de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -92,7 +90,7 @@ Este proceso obtiene el tiempo promedio de demora para cada ruta entre los aerop
 	\item Escritura de datos a SQL.
 \end{itemize}
 
-\subsection{Proceso 6: Demora promedio por ruta entre \texttt{market id}}
+\subsection{Proceso 6: Desviación estándar de la demora por ruta entre \texttt{market ids}}
 
 Este proceso obtiene la desviación estándar del tiempo de demora para cada ruta entre áreas identificadas por el indicador \texttt{market id} que corresponde a las áreas geográficas cuyos aeropuertos sirven al mismo mercado de personas. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular la desviación estándar de los indicadores de demoras en el periodo correspondiente.
 
@@ -108,7 +106,7 @@ Este proceso obtiene la desviación estándar del tiempo de demora para cada rut
 
 \subsection{Proceso 7: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
 
-El último proceso consiste en calcular la ruta mínima (minimizando el tiempo de vuelo) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación de \textit{Dijkstra} con algunas variaciones que permiten descartar vuelos que dejan de ser factibles por el horario. Además el algoritmo considera que debe existir un tiempo mayor a 2 horas cuando se requiera hacer una conexión entre vuelos. Para calcular la ruta mínima se requiere un aeropuerto de salida, uno de llegada y una fecha deseada de salida. La ruta resultante, en caso de que exista, se buscará dentro de un periodo de una semana a partir del día especificado por el usuario.   
+El último proceso consiste en calcular la ruta mínima (minimizando el tiempo transcurrido entre la salida del origen y la llegada al destino final) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación del algoritmo \ref{dijkstra_modificado}.   
 
 El proceso se compone de las siguientes operaciones principales:
 
@@ -117,16 +115,20 @@ El proceso se compone de las siguientes operaciones principales:
 	\item Filtrado de datos.
 	\item Conteo de datos.
 	\item Borrado de duplicados.
-	\item Cálculo de registro mínimo
+	\item Cálculo de registro mínimo.
 	\item Ordenamiento de datos.
+	\item *Uso de \texttt{persist} (Sólo \textit{Dask}).
+	\item *Escritura de datos \texttt{parquet} (Sólo \textit{PySpark}).
 	\item Suma de columnas a un escalar.
 	\item Concatenación de \textit{DataFrames}.
 	\item Escritura de datos a SQL.
 \end{itemize}
 
+Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, debido a que la lectura y escritura de archivos \texttt{parquet} es muy rápida, resultó más conveniente almacenar datos intermedios en este tipo de archivos en lugar de usar la función \texttt{cache}. Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} que hacer la escritura de datos.
+
 \subsection{Registro de tiempo y resultados}
 
-Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos SQL junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
+Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos SQL junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}), el tamaño de muestra en el que se ejecutó el proceso (\textit{sample\_size}) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -137,13 +139,14 @@ Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución d
   duration & 9.154929876327515 \\ 
   description & Ejecucion de prueba en equipo local. \\
   resources & 16 GB y 12 nucleos. \\
+  sample\_size & 10K \\
   insertion\_ts & 2021-03-08 13:31:56 \\
   \hline
 \end{tabular}
 \end{center}
 
 
-La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobre escribe cada que finaliza la ejecución de ese proceso. 
+La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobreescribe cada que finaliza la ejecución de ese proceso. 
 
 \section{Infraestructura}
 
@@ -167,7 +170,7 @@ Para ello se utilizó un equipo con las siguientes características:
 \end{tabular}
 \end{center}
 
-Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos en MySQL.
+Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos \textit{MySQL}.
 
 Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} 3.8.5. Este ambiente se utilizó para las ejecuciones con la versión 2021.1.1 de \textit{Dask} y la versión 2.4.7 de \textit{Spark}. 
 
