@@ -55,21 +55,33 @@ Este proceso tiene como objetivo obtener estadísticas sobre las demoras de cada
 	\item Escritura de datos a SQL.
 \end{itemize}
 
-\subsection{Proceso 3 y 4: Demoras por aeropuerto de origen y destino}
+\subsection{Proceso 3: Demora máxima por aeropuerto de origen}
 
-Estos procesos son muy similares ya que ambos calculan estadísticas de demoras de vuelos de acuerdo al aeropuerto. El proceso 3 hace el cálculo agrupando por el aeropuerto de orgien mientras que el 4 hace la agregación respecto al aeropuerto de destino. Los procesos ejecutan las siguientes operaciones:
+Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de origen y obteniendo el resultado para los periodos por año, trimestre, mes y día. EL proceso se compone de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
 	\item Conteo.
-	\item Cálculo de promedio.
+	\item Cálculo del máximo.
 	\item Agregación de datos agrupando por diferentes columnas.
 	\item Escritura de datos a SQL.
 \end{itemize}
 
-\subsection{Procesos 5 y 6: Demoras por ruta de aeropuerto y \textit{market id}}
+\subsection{Proceso 4: Demora mínima por aeropuerto de destino}
 
-Estos procesos tienen como objetivo obtener información sobre las rutas recorridas entre aeropuertos y ciudades identificadas por el \textit{market id}. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular las estadísticas correspondientes. El proceso 5 calcula la ruta de acuerdo al aeropuerto de origen y destino y el 6 lo hace de acuerdo al \textit{market id}.
+Este proceso es similar al anterior con la diferencia de que calcula el tiempo mínimo de demora y que hace la agrupación de acuerdo al aeropuerto de destino y obteniendo el resultado para los periodos por año, trimestre, mes y día. EL proceso se compone de las siguientes operaciones:
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Conteo.
+	\item Cálculo del mínimo.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
+\subsection{Proceso 5: Demora promedio por ruta entre aeropuertos}
+
+Este proceso obtiene el tiempo promedio de demora para cada ruta entre los aeropuertos. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular el promedio del las demoras en el periodo correspondiente.
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -79,6 +91,20 @@ Estos procesos tienen como objetivo obtener información sobre las rutas recorri
 	\item Agregación de datos agrupando por diferentes columnas.
 	\item Escritura de datos a SQL.
 \end{itemize}
+
+\subsection{Proceso 6: Demora promedio por ruta entre \texttt{market id}}
+
+Este proceso obtiene la desviación estándar del tiempo de demora para cada ruta entre áreas identificadas por el indicador \texttt{market id} que corresponde a las áreas geográficas cuyos aeropuertos sirven al mismo mercado de personas. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular la desviación estándar de los indicadores de demoras en el periodo correspondiente.
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Concatenación de columnas.
+	\item Conteo.
+	\item Cálculo de la desviación estándar.
+	\item Agregación de datos agrupando por diferentes columnas.
+	\item Escritura de datos a SQL.
+\end{itemize}
+
 
 \subsection{Proceso 7: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
 
