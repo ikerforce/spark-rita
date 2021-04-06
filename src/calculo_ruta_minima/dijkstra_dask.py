@@ -81,9 +81,9 @@ if __name__ == '__main__':
 # DEFINICION DE FUNCION DE ACTUALIZACION DE PESO ACUMULADO
 # ----------------------------------------------------------------------------------------------------
     def convierte_timestamp_a_epoch(fl_date, dep_time):
-            fl_date = str(fl_date).split('-')
-            dt = datetime.datetime(int(fl_date[0]), int(fl_date[1]), int(fl_date[2]), int(dep_time[:2]) % 24, int(dep_time[2:4]))
-            return time.mktime(dt.timetuple())
+        fl_date = str(fl_date).split('-')
+        dt = datetime.datetime(int(fl_date[0]), int(fl_date[1]), int(fl_date[2]), int(dep_time[:2]) % 24, int(dep_time[2:4]))
+        return time.mktime(dt.timetuple())
 
 
     def convierte_dict_en_lista(diccionario):
