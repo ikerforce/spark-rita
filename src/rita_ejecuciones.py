@@ -77,12 +77,11 @@ for proceso in procesos:
         else:
             try:
                 print('\n\t' + proceso + ' dask\n')
-                # os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
+                os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
                     myfile.write('\n\t' + proceso + ' dask\n' + e)
-
 
 pruebas_rutas = orden_pruebas(numero_de_ejecuciones)
 random.shuffle(pruebas_rutas)
@@ -111,11 +110,12 @@ for i in pruebas_rutas:
         print('\n\tdijkstra - dask\n')
         dask_cmd = '''python \
                         src/calculo_ruta_minima/dijkstra_dask.py \
-                        --conf {conf} \
+                        --sample_size {sample_size} \
+                        --process {process} \
                         --creds {creds} \
                         --origin {origin} \
                         --dest {dest} \
-                        --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], conf=rutas['dijkstra']['dask'], creds=args.creds)
+                        --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
         os.system(dask_cmd)
 
 if n_errores > 0:
