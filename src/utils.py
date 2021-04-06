@@ -28,10 +28,10 @@ def conjuntos_rollup(columnas): # Hay que ver la forma de que se haga la agregac
 def group_by_rollup(df, columnas_agregacion, columnas_totales, agregaciones, meta=pd.DataFrame):
     columnas_nulas = [item for item in columnas_totales if item not in columnas_agregacion]
     try:
-        resultado = df.groupby(columnas_agregacion).agg(agregaciones).reset_index().compute()
+        resultado = df.groupby(columnas_agregacion).agg(agregaciones, split_out=20).reset_index().compute()
     except Exception as e:
         if 'nunique' in list(agregaciones.values()):
-            resultado = df.groupby(columnas_agregacion).agg(nunique).reset_index().compute()
+            resultado = df.groupby(columnas_agregacion).agg(nunique, split_out=20).reset_index().compute()
         else:
             print("\nHubo un error en la agregación.\n")
             print(e)
