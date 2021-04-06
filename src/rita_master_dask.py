@@ -39,7 +39,9 @@ if __name__ == '__main__':
     t_inicio = time.time() # Inicia tiempo de ejecucion
 
     # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])
-    # df = dd.read_sql_table("RITA_100K", uri=uri, index_col=config["partition_column"])
+    # df = dd.read_sql_table("RITA_100K", uri=uri
+    #     , index_col=config["partition_column"]
+    #     , columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
     df = dd.read_parquet(config['input_path']
                 # , infer_divisions=False
                 , engine='pyarrow'
@@ -48,19 +50,21 @@ if __name__ == '__main__':
                 , dtype={'ACTUAL_ELAPSED_TIME' : float, 'ARR_DELAY' : float, 'DEP_DELAY' : float, 'TAXI_IN' : float, 'TAXI_OUT' : float}
             )
 
-    print(df.dtypes)
+    # print(df.dtypes)
 
-    df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
-    df['ARR_DELAY'] = df['ARR_DELAY'].astype(float)
-    df['DEP_DELAY'] = df['DEP_DELAY'].astype(float)
-    df['TAXI_IN'] = df['TAXI_IN'].astype(float)
-    df['TAXI_OUT'] = df['TAXI_OUT'].astype(float)
+    # df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
+    # df['ARR_DELAY'] = df['ARR_DELAY'].astype(float)
+    # df['DEP_DELAY'] = df['DEP_DELAY'].astype(float)
+    # df['TAXI_IN'] = df['TAXI_IN'].astype(float)
+    # df['TAXI_OUT'] = df['TAXI_OUT'].astype(float)
 
-    print(df.dtypes)
+    # print(df.dtypes)
 
-    # df = df.repartition(4)
+    # df = df.repartition(1)
 
-    df = client.persist(df)
+    # print(df.divisions)
+
+    # df = client.persist(df)
 
     # print(df.count().compute())
 
@@ -75,10 +79,10 @@ if __name__ == '__main__':
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_aeropuerto_origen_dask':
-        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'max', 'DEP_DELAY':'max', 'ACTUAL_ELAPSED_TIME':'max', 'TAXI_IN':'max', 'TAXI_OUT':'max'}
         lista_df = utils.rollup(df, ['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_aeropuerto_destino_dask':
-        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'min', 'DEP_DELAY':'min', 'ACTUAL_ELAPSED_TIME':'min', 'TAXI_IN':'min', 'TAXI_OUT':'min'}
         lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_ruta_aeropuerto_dask':
         df = utils.unir_columnas(df, "ORIGIN", "DEST", "ROUTE_AIRPORTS")
@@ -86,7 +90,7 @@ if __name__ == '__main__':
         lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_ruta_mktid_dask':
         df = utils.unir_columnas(df, "ORIGIN_CITY_MARKET_ID", "DEST_CITY_MARKET_ID", "ROUTE_MKT_ID")
-        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
+        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'std', 'DEP_DELAY':'std', 'ACTUAL_ELAPSED_TIME':'std', 'TAXI_IN':'std', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'flota_dask':
         agregaciones = {'TAIL_NUM' : 'nunique'}
@@ -108,6 +112,8 @@ if __name__ == '__main__':
     info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
     df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
+
+    print(resultado.head())
 
     print()
     print(time.time() - t_inicio)
