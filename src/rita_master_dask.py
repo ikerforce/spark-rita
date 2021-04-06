@@ -4,7 +4,7 @@ from dask.distributed import Client
 
 if __name__ == '__main__':
 
-    client = Client(n_workers=4)
+    client = Client(n_workers=10)
 
     # Importaciones de Python
     import argparse # Utilizado para leer archivo de configuracion
@@ -44,14 +44,19 @@ if __name__ == '__main__':
                 # , infer_divisions=False
                 , engine='pyarrow'
                 , columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID']
-                # , index='ID'
+                # , index='yearMonth'
                 , dtype={'ACTUAL_ELAPSED_TIME' : float, 'ARR_DELAY' : float, 'DEP_DELAY' : float, 'TAXI_IN' : float, 'TAXI_OUT' : float}
             )
+
+    print(df.dtypes)
+
     df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float)
     df['ARR_DELAY'] = df['ARR_DELAY'].astype(float)
     df['DEP_DELAY'] = df['DEP_DELAY'].astype(float)
     df['TAXI_IN'] = df['TAXI_IN'].astype(float)
     df['TAXI_OUT'] = df['TAXI_OUT'].astype(float)
+
+    print(df.dtypes)
 
     # df = df.repartition(4)
 
@@ -100,8 +105,8 @@ if __name__ == '__main__':
 
     # REGISTRO DE TIEMPO
     # ----------------------------------------------------------------------------------------------------
-    info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], time.strftime('%Y-%m-%d %H:%M:%S')]]
-    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'insertion_ts'])
+    info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
     df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
 
     print()
