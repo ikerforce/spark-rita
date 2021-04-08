@@ -284,5 +284,5 @@ df_time_2.write.format("jdbc")\
     .mode(config["time_table_mode"])\
     .save()
 
-# print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+print('\tFIN DE LA EJECUCIÓN')
 # ----------------------------------------------------------------------------------------------------
