@@ -68,16 +68,20 @@ for proceso in procesos:
     for x in pruebas_totales[proceso]:
         if x == 1:
             try:
-                print('\n\t' + proceso + ' spark\n')
+                print('+----------------------------------+')
+                print('\t' + proceso + ' spark')
                 os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --process ' + proceso + '_spark' + ' --sample_size ' + args.sample_size)
+                print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
                     myfile.write('\n\t' + proceso + ' spark\n' + e)
         else:
             try:
-                print('\n\t' + proceso + ' dask\n')
+                print('+----------------------------------+')
+                print('\t' + proceso + ' dask')
                 os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
+                print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
                 with open("rita_ejecuciones{fecha}.err".format(fecha=hora_ejecucion), "a") as myfile:
@@ -94,7 +98,8 @@ rutas_dask = rutas_spark.copy()
 for i in pruebas_rutas:
     if i == 1:
         ruta = rutas_spark.pop()
-        print('\n\tdijkstra - spark\n')
+        print('+----------------------------------+')
+        print('\tdijkstra - spark')
         spark_cmd = '''spark-submit \
                         --driver-memory=8g \
                         src/calculo_ruta_minima/dijkstra_spark.py \
@@ -105,9 +110,11 @@ for i in pruebas_rutas:
                         --dest {dest} \
                         --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
         os.system(spark_cmd)
+        print('+----------------------------------+')
     else:
         ruta = rutas_dask.pop()
-        print('\n\tdijkstra - dask\n')
+        print('+----------------------------------+')
+        print('\tdijkstra - dask')
         dask_cmd = '''python \
                         src/calculo_ruta_minima/dijkstra_dask.py \
                         --sample_size {sample_size} \
@@ -117,8 +124,9 @@ for i in pruebas_rutas:
                         --dest {dest} \
                         --dep_date {date}'''.format(origin=ruta[0], dest=ruta[1], date=ruta[2], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
         os.system(dask_cmd)
+        print('+----------------------------------+')
 
 if n_errores > 0:
     print('\n\tSe registraron {n_errores} errores.\n'.format(n_errores=n_errores))
 else:
-    print('\n\tNo se registraron errores.')
+    print('\tNo se registraron errores.')
