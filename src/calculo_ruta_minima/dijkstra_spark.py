@@ -59,6 +59,7 @@ y_max, m_max, d_max = max_arr_date.split('-')
 
 df_rita = spark.read.format('parquet').load(config['input_path'])\
     .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
+    .filter("DEP_TIME != 'None'").filter("ARR_TIME != 'None'")\
     .filter('''CAST(YEAR AS INT) >= {y_min}
         AND CAST(YEAR AS INT) <= {y_max}
         AND CAST(MONTH AS INT) >= {m_min}
@@ -235,7 +236,6 @@ if encontro_ruta == True:
         x = visitados[x]['origen']
 
     df_resp = sc.parallelize(convierte_dict_en_lista(solo_optimo)).toDF(['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME']).select('ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME')
-
     df_resp.write.format("jdbc")\
         .options(
             url=creds["db_url"] + creds["database"],
@@ -268,7 +268,7 @@ df_time_1.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable="registro_de_tiempo_spark",
+        dbtable=config['time_table'],
         user=creds["user"],
         password=creds["password"])\
     .mode(config["time_table_mode"])\
@@ -278,7 +278,7 @@ df_time_2.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable="registro_de_tiempo_spark",
+        dbtable=config['time_table'],
         user=creds["user"],
         password=creds["password"])\
     .mode(config["time_table_mode"])\
