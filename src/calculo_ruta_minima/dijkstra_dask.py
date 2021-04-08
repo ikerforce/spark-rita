@@ -250,5 +250,5 @@ if __name__ == '__main__':
     df_tiempo_1.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
     df_tiempo_2.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
-    print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+    print('\tFIN DE LA EJECUCIÓN')
     # # ----------------------------------------------------------------------------------------------------
