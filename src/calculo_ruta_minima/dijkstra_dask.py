@@ -71,6 +71,7 @@ if __name__ == '__main__':
             , dtype={'ACTUAL_ELAPSED_TIME' : float}
         )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
+    df = df[(df['DEP_TIME'] != 'None') & (df['ARR_TIME'] != 'None')]
     df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
     df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
     df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
@@ -229,7 +230,6 @@ if __name__ == '__main__':
             x = visitados[x]['origen']
 
         df_resp = pd.DataFrame(data=convierte_dict_en_lista(solo_optimo), columns=['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME'])[['ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME']]
-
         df_resp.to_sql(process, uri, if_exists=config["results_table_mode"], index=False)
 
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
@@ -247,8 +247,8 @@ if __name__ == '__main__':
     info_tiempo_2 = [[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo_1 = pd.DataFrame(data=info_tiempo_1, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
     df_tiempo_2 = pd.DataFrame(data=info_tiempo_2, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
-    df_tiempo_1.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
-    df_tiempo_2.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
+    df_tiempo_1.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
+    df_tiempo_2.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
     print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
     # # ----------------------------------------------------------------------------------------------------
