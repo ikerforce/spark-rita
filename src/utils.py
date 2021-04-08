@@ -30,6 +30,10 @@ def tiempo_ejecucion(t_inicial):
     tiempo['segundos'] = tiempo_segundos % 3600 % 60
     return tiempo
 
+def elimina_nulos(df):
+    """Esta funcion elimina los valores nulos de todas las columnas."""
+    return df.dropna(how="any")
+
 def unir_columnas(df, col1, col2, col_resultante, meta=pd.DataFrame):
     """Esta función recibe como argumento un dataframe y dos columnas (col1, col2) cuyos valores concatenará en una columna nueva cuyo resultado
     corresponde al cuarto argumento. (col resultante)"""
@@ -69,3 +73,8 @@ def lee_config_csv(path, sample_size, process):
     info = filter(lambda row: row.split("|")[0] == sample_size and row.split("|")[1] == process, file[1:])
     parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
     return parametros
+
+def write_result_to_mysql(lista_df, uri, process):
+    lista_df[0].to_sql(process, uri, if_exists='replace', index=False) # En la primera escritura borro los resultados anteriores
+    for resultado in lista_df[1:]:
+        resultado.to_sql(process, uri, if_exists='append', index=False) # Desupés solo hago append
