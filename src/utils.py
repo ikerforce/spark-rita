@@ -5,6 +5,21 @@ import pandas as pd
 
 nunique = dd.Aggregation('nunique', lambda s: s.nunique(), lambda s0: s0.sum()) # Definimos como hacer la agregacion para contar elementos únicos
 
+def read_df_from_parquet(path, columns=None):
+    """Esta función lee los datos desde el path proprocionado y lee las columnas especificadas. Si no se especifica lista de columnas entonces se leen todas."""
+    if columns != None:
+        df = dd.read_parquet(path
+                    , engine='pyarrow'
+                    , columns=columns
+                    )
+
+    else:
+        df = dd.read_parquet(path
+                    , engine='pyarrow'
+                )
+
+    return df
+
 def tiempo_ejecucion(t_inicial):
     """Esta función mide el tiempo transcurrido entre t_inicial y el momento en el que se llama la función.
     El resultado es un JSON con los campos: horas, minutos y segundos."""
