@@ -67,11 +67,11 @@ def read_df_from_parquet(path, columns=None):
     return df_rita
 
 
-def dropna(path):
+def elimina_nulos(path):
     """Esta funcion elimina los valores nulos de todas las columnas."""
     df = read_df_from_parquet(path=path)
 
-    return df.na.drop()
+    return df.na.drop("any")
 
 def aeropuerto_demoras_aerolinea(path):
     """Esta funcion calcula, tomando como referencia el cada aerolínea:
@@ -208,6 +208,18 @@ def tamano_flota_aerolinea(path):
     df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(F.expr('COUNT(DISTINCT TAIL_NUM)').alias('TAIL_NUM'))
     return df_resp
+
+def write_result_to_mysql(df_resp, creds, config, process):
+    df_resp.write.format("jdbc")\
+        .options(
+            url=creds["db_url"] + creds["database"],
+            driver=creds["db_driver"],
+            dbtable=process,
+            user=creds["user"],
+            password=creds["password"],
+            numPartitions=config["db_numPartitions"])\
+        .mode(config["results_table_mode"])\
+        .save()
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -215,31 +227,38 @@ def tamano_flota_aerolinea(path):
 # ----------------------------------------------------------------------------------------------------
 process = config["results_table"]
 print('\tLos resultados se escribirán en la tabla: ' + process)
+
 if process == 'demoras_aerolinea_spark':
-	df_resp = aeropuerto_demoras_aerolinea(config['input_path']) # Calculo de demoras en cada ruta
+    df_resp = aeropuerto_demoras_aerolinea(config['input_path']) # Calculo de demoras en cada ruta
+    write_result_to_mysql(df_resp, creds, config, process)
+
 elif process == 'demoras_aeropuerto_origen_spark':
-	df_resp = aeropuerto_demoras_origen(config['input_path']) # Calculo de demoras en cada ruta
+    df_resp = aeropuerto_demoras_origen(config['input_path']) # Calculo de demoras en cada ruta
+    write_result_to_mysql(df_resp, creds, config, process)
+
 elif process == 'demoras_aeropuerto_destino_spark':
-	df_resp = aeropuerto_demoras_destino(config['input_path']) # Calculo de demoras en cada ruta basados en destino
+    df_resp = aeropuerto_demoras_destino(config['input_path']) # Calculo de demoras en cada ruta basados en destino
+    write_result_to_mysql(df_resp, creds, config, process)
+
 elif process == 'demoras_ruta_aeropuerto_spark':
-	df_resp = principales_rutas_aeropuerto_fecha(config['input_path']) # Calculo de demoras en cada ruta
+    df_resp = principales_rutas_aeropuerto_fecha(config['input_path']) # Calculo de demoras en cada ruta
+    write_result_to_mysql(df_resp, creds, config, process)
+
 elif process == 'demoras_ruta_mktid_spark':
     df_resp = principales_rutas_mktid_fecha(config['input_path']) # Calculo de demoras en cada ruta
-elif process == 'flota_spark':
-	df_resp = tamano_flota_aerolinea(config['input_path']) # Calculo del tamano de la flota
-else:
-	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
+    write_result_to_mysql(df_resp, creds, config, process)
 
-df_resp.write.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable=process,
-        user=creds["user"],
-        password=creds["password"],
-        numPartitions=config["db_numPartitions"])\
-    .mode(config["results_table_mode"])\
-    .save()
+elif process == 'flota_spark':
+    df_resp = tamano_flota_aerolinea(config['input_path']) # Calculo del tamano de la flota
+    write_result_to_mysql(df_resp, creds, config, process)
+
+elif process == 'elimina_nulos_spark':
+    df = elimina_nulos(config['input_path'])
+    print('Conteo sin nulos: ' + str(df.count()))
+
+else:
+    print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
+
 t_final = time.time() # Tiempo de finalizacion de la ejecucion
 # ----------------------------------------------------------------------------------------------------
 
