@@ -102,6 +102,7 @@ for i in pruebas_rutas:
         print('\tdijkstra - spark')
         spark_cmd = '''spark-submit \
                         --driver-memory=8g \
+                        --num-executors=10 \
                         src/calculo_ruta_minima/dijkstra_spark.py \
                         --sample_size {sample_size} \
                         --process {process} \
