@@ -40,20 +40,40 @@ with open(args.creds) as json_file:
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
 # Lectura de datos de MySQL
-df_rita = spark.read\
-    .format('parquet')\
-    .load(config['input_path'])\
-    .select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
+# df_rita = spark.read\
+#     .format('parquet')\
+#     .load(config['input_path'])\
+#     .select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
 
-df_rita.cache()
-
-t_intermedio = time.time()
+# t_intermedio = time.time()
 # ----------------------------------------------------------------------------------------------------
 
 
 # DEFINICION DE FUNCIONES
 # ----------------------------------------------------------------------------------------------------
-def aeropuerto_demoras_aerolinea(df):
+def read_df_from_parquet(path, columns=None):
+    """Esta función lee los datos desde el path proprocionado y lee las columnas especificadas. Si no se especifica lista de columnas entonces se leen todas."""
+    if columns != None:
+        df_rita = spark.read\
+            .format('parquet')\
+            .load(path)\
+            .select(*columns)
+
+    else:
+        df_rita = spark.read\
+            .format('parquet')\
+            .load(path)
+
+    return df_rita
+
+
+def dropna(path):
+    """Esta funcion elimina los valores nulos de todas las columnas."""
+    df = read_df_from_parquet(path=path)
+
+    return df.na.drop()
+
+def aeropuerto_demoras_aerolinea(path):
     """Esta funcion calcula, tomando como referencia el cada aerolínea:
     - El retraso promedio en la salida de los vuelos.
     - El retraso promedio en la llegada de los vuelos.
@@ -62,6 +82,8 @@ def aeropuerto_demoras_aerolinea(df):
     - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     """
+    df = read_df_from_parquet(path=path, columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
+
     df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("FL_DATE"),
@@ -73,7 +95,7 @@ def aeropuerto_demoras_aerolinea(df):
             )
     return df_resp
 
-def aeropuerto_demoras_origen(df):
+def aeropuerto_demoras_origen(path):
     """Esta funcion calcula, tomando como referencia el aeropuerto de origen:
     - El retraso promedio en la salida de los vuelos.
     - El retraso promedio en la llegada de los vuelos.
@@ -82,6 +104,10 @@ def aeropuerto_demoras_origen(df):
     - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     """
+    df = read_df_from_parquet(path=path, columns=['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
+    
+    df.cache()
+    
     df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"),
@@ -93,7 +119,7 @@ def aeropuerto_demoras_origen(df):
             )
     return df_resp
 
-def aeropuerto_demoras_destino(df):
+def aeropuerto_demoras_destino(path):
     """Esta funcion calcula, tomando como referencia el aeropuerto de destino:
     - El retraso promedio en la salida de los vuelos.
     - El retraso promedio en la llegada de los vuelos.
@@ -102,6 +128,10 @@ def aeropuerto_demoras_destino(df):
     - El tiempo de rodaje del avión desde la puerta de rodaje hasta el despegue.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     """
+    df = read_df_from_parquet(path=path, columns=['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
+
+    df.cache()
+    
     df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("N_FLIGHTS"),
@@ -113,11 +143,15 @@ def aeropuerto_demoras_destino(df):
             )
     return df_resp
 
-def principales_rutas_aeropuerto_fecha(df):
+def principales_rutas_aeropuerto_fecha(path):
     """Esta funcion calcula el retraso promedio en la salida, llegada y la duracion promedio para cada ruta.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
+    df = read_df_from_parquet(path=path, columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST'])
+
+    df.cache()
+    
     df_resp = df\
         .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))
     
@@ -137,11 +171,15 @@ def principales_rutas_aeropuerto_fecha(df):
     return df_resp
 
 
-def principales_rutas_mktid_fecha(df):
+def principales_rutas_mktid_fecha(path):
     """Esta funcion calcula el retraso promedio en la salida, llegada y la duracion promedio para cada ruta.
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR).
-    \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
+    La entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
+    df = read_df_from_parquet(path=path, columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
+
+    df.cache()
+    
     df_resp = df\
         .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
     
@@ -161,7 +199,11 @@ def principales_rutas_mktid_fecha(df):
     return df_resp
 
 
-def tamano_flota_aerolinea(df):
+def tamano_flota_aerolinea(path):
+    df = read_df_from_parquet(path=path, columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'TAIL_NUM'])
+
+    df.cache()
+    
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(F.expr('COUNT(DISTINCT TAIL_NUM)').alias('TAIL_NUM'))
@@ -172,19 +214,19 @@ def tamano_flota_aerolinea(df):
 # EJECUCION
 # ----------------------------------------------------------------------------------------------------
 process = config["results_table"]
-print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
+print('\tLos resultados se escribirán en la tabla: ' + process)
 if process == 'demoras_aerolinea_spark':
-	df_resp = aeropuerto_demoras_aerolinea(df_rita) # Calculo de demoras en cada ruta
+	df_resp = aeropuerto_demoras_aerolinea(config['input_path']) # Calculo de demoras en cada ruta
 elif process == 'demoras_aeropuerto_origen_spark':
-	df_resp = aeropuerto_demoras_origen(df_rita) # Calculo de demoras en cada ruta
+	df_resp = aeropuerto_demoras_origen(config['input_path']) # Calculo de demoras en cada ruta
 elif process == 'demoras_aeropuerto_destino_spark':
-	df_resp = aeropuerto_demoras_destino(df_rita) # Calculo de demoras en cada ruta basados en destino
+	df_resp = aeropuerto_demoras_destino(config['input_path']) # Calculo de demoras en cada ruta basados en destino
 elif process == 'demoras_ruta_aeropuerto_spark':
-	df_resp = principales_rutas_aeropuerto_fecha(df_rita) # Calculo de demoras en cada ruta
+	df_resp = principales_rutas_aeropuerto_fecha(config['input_path']) # Calculo de demoras en cada ruta
 elif process == 'demoras_ruta_mktid_spark':
-    df_resp = principales_rutas_mktid_fecha(df_rita) # Calculo de demoras en cada ruta
+    df_resp = principales_rutas_mktid_fecha(config['input_path']) # Calculo de demoras en cada ruta
 elif process == 'flota_spark':
-	df_resp = tamano_flota_aerolinea(df_rita) # Calculo del tamano de la flota
+	df_resp = tamano_flota_aerolinea(config['input_path']) # Calculo del tamano de la flota
 else:
 	print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
 
@@ -204,32 +246,45 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
-rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
+# rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
+# rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
+# df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+#     .withColumn("insertion_ts", F.current_timestamp())
+# df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+#     .withColumn("insertion_ts", F.current_timestamp())
+# df_time_1.write.format("jdbc")\
+#     .options(
+#         url=creds["db_url"] + creds["database"],
+#         driver=creds["db_driver"],
+#         dbtable="registro_de_tiempo_spark",
+#         user=creds["user"],
+#         password=creds["password"])\
+#     .mode(config["time_table_mode"])\
+#     .save()
+
+# df_time_2.write.format("jdbc")\
+#     .options(
+#         url=creds["db_url"] + creds["database"],
+#         driver=creds["db_driver"],
+#         dbtable="registro_de_tiempo_spark",
+#         user=creds["user"],
+#         password=creds["password"])\
+#     .mode(config["time_table_mode"])\
+#     .save()
+
+rdd_time_1 = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size]])
 df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
-    .withColumn("insertion_ts", F.current_timestamp())
-df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
 df_time_1.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
-        dbtable="registro_de_tiempo_spark",
+        dbtable=config['time_table'],
         user=creds["user"],
         password=creds["password"])\
     .mode(config["time_table_mode"])\
     .save()
 
-df_time_2.write.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable="registro_de_tiempo_spark",
-        user=creds["user"],
-        password=creds["password"])\
-    .mode(config["time_table_mode"])\
-    .save()
-
-print('\n\n\tTiempo ejecución: {t}\n\n'.format(t = t_final - t_inicio))
-print('\n\n\tFIN DE LA EJECUCIÓN\n\n')
+print('\tTiempo ejecución: {t}'.format(t = t_final - t_inicio))
+print('\tFIN DE LA EJECUCIÓN')
 # ----------------------------------------------------------------------------------------------------

@@ -42,13 +42,6 @@ if __name__ == '__main__':
     # df = dd.read_sql_table("RITA_100K", uri=uri
     #     , index_col=config["partition_column"]
     #     , columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
-    df = dd.read_parquet(config['input_path']
-                # , infer_divisions=False
-                , engine='pyarrow'
-                , columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID']
-                # , index='yearMonth'
-                , dtype={'ACTUAL_ELAPSED_TIME' : float, 'ARR_DELAY' : float, 'DEP_DELAY' : float, 'TAXI_IN' : float, 'TAXI_OUT' : float}
-            )
 
     # print(df.dtypes)
 
@@ -74,25 +67,31 @@ if __name__ == '__main__':
     # EJECUCION
     # ----------------------------------------------------------------------------------------------------
     process = config["results_table"] # Tabla en la que almaceno el resultado (resumen de flota por aerolinea)
-    print('\n\n\tLos resultados se escribirán en la tabla: ' + process + '\n\n')
+    print('\tLos resultados se escribirán en la tabla: ' + process)
     if process == 'demoras_aerolinea_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_aeropuerto_origen_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'max', 'DEP_DELAY':'max', 'ACTUAL_ELAPSED_TIME':'max', 'TAXI_IN':'max', 'TAXI_OUT':'max'}
         lista_df = utils.rollup(df, ['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_aeropuerto_destino_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'min', 'DEP_DELAY':'min', 'ACTUAL_ELAPSED_TIME':'min', 'TAXI_IN':'min', 'TAXI_OUT':'min'}
         lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_ruta_aeropuerto_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST'])
         df = utils.unir_columnas(df, "ORIGIN", "DEST", "ROUTE_AIRPORTS")
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'demoras_ruta_mktid_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
         df = utils.unir_columnas(df, "ORIGIN_CITY_MARKET_ID", "DEST_CITY_MARKET_ID", "ROUTE_MKT_ID")
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'std', 'DEP_DELAY':'std', 'ACTUAL_ELAPSED_TIME':'std', 'TAXI_IN':'std', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     elif process == 'flota_dask':
+        df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'TAIL_NUM'])
         agregaciones = {'TAIL_NUM' : 'nunique'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
     else:
@@ -111,13 +110,8 @@ if __name__ == '__main__':
     # ----------------------------------------------------------------------------------------------------
     info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
-    df_tiempo.to_sql("registro_de_tiempo_dask", uri, if_exists=config["time_table_mode"], index=False)
+    df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
-    print(resultado.head())
-
-    print()
-    print(time.time() - t_inicio)
-    print()
-
-    print('\n\t\tFIN DE LA EJECUCION')
+    print('\tTiempo de ejecución: ' + str(time.time() - t_inicio))
+    print('\tFIN DE LA EJECUCION')
     # ----------------------------------------------------------------------------------------------------
