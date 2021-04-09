@@ -11,6 +11,7 @@ sqlContext = SQLContext(sc)
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
+spark.sparkContext.setCheckpointDir('temp_dir')
 
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
@@ -57,20 +58,27 @@ y_min, m_min, d_min = args.dep_date.split('-')
 y_max, m_max, d_max = max_arr_date.split('-')
 
 
+# df_rita = spark.read.format('parquet').load(config['input_path'])\
+#     .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
+#     .filter("DEP_TIME != 'None'").filter("ARR_TIME != 'None'")\
+#     .filter('''CAST(YEAR AS INT) >= {y_min}
+#         AND CAST(YEAR AS INT) <= {y_max}
+#         AND CAST(MONTH AS INT) >= {m_min}
+#         AND CAST(MONTH AS INT) <= {m_max}
+#         AND CAST(DAY_OF_MONTH AS INT) >= {d_min}
+#         AND CAST(DAY_OF_MONTH AS INT) <= {d_max}'''.format(y_min=int(y_min)
+#                                                             , y_max=int(y_max)
+#                                                             , m_min=int(m_min)
+#                                                             , m_max=int(m_max)
+#                                                             , d_min=int(d_min)
+#                                                             , d_max=int(d_max)))\
+#     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
+#     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60.0)
+
+
 df_rita = spark.read.format('parquet').load(config['input_path'])\
     .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
     .filter("DEP_TIME != 'None'").filter("ARR_TIME != 'None'")\
-    .filter('''CAST(YEAR AS INT) >= {y_min}
-        AND CAST(YEAR AS INT) <= {y_max}
-        AND CAST(MONTH AS INT) >= {m_min}
-        AND CAST(MONTH AS INT) <= {m_max}
-        AND CAST(DAY_OF_MONTH AS INT) >= {d_min}
-        AND CAST(DAY_OF_MONTH AS INT) <= {d_max}'''.format(y_min=int(y_min)
-                                                            , y_max=int(y_max)
-                                                            , m_min=int(m_min)
-                                                            , m_max=int(m_max)
-                                                            , d_min=int(d_min)
-                                                            , d_max=int(d_max)))\
     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60.0)
 # ----------------------------------------------------------------------------------------------------
@@ -117,88 +125,101 @@ t_acumulado = 0
 
 # CALCULO DE RUTAS MINIMAS
 # ----------------------------------------------------------------------------------------------------
-# Primero busco si hay vuelo directo
-frontera = df.filter(F.col('ORIGIN') == F.lit(args.origin)).filter(F.col('DEST') == F.lit(args.dest))\
-                    .orderBy(F.asc('dep_epoch'))\
-                    .limit(1).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')
+# Primero compruebo que haya vuelos saliendo del aeropuerto elegido
+if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
 
-if frontera.count() > 0:
+    # Luego busco si hay vuelo directo
+    frontera = df.filter(F.col('ORIGIN') == F.lit(args.origin)).filter(F.col('DEST') == F.lit(args.dest))\
+                        .orderBy(F.asc('dep_epoch'))\
+                        .limit(1).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME')
 
-    # Si hay vuelo directo lo regreso como ruta optima
-    vuelo_elegido = frontera.select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME').collect()[0]
-    nodo_anterior = vuelo_elegido[0] # Origen del vuelo directo
-    nodo_actual = vuelo_elegido[1] # Destino del vuelo directo
-    visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido[2]), 'llegada': float(vuelo_elegido[3])}
-    salida = float(vuelo_elegido[2])
-    t_acumulado = float(vuelo_elegido[4]) # Duracion del trayecto
+    if len(frontera.head(1)) > 0:
+
+        # Si hay vuelo directo lo regreso como ruta optima
+        vuelo_elegido = frontera.select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 'ACTUAL_ELAPSED_TIME').collect()[0]
+        nodo_anterior = vuelo_elegido[0] # Origen del vuelo directo
+        nodo_actual = vuelo_elegido[1] # Destino del vuelo directo
+        visitados[nodo_actual] = {'origen': nodo_anterior, 'salida': float(vuelo_elegido[2]), 'llegada': float(vuelo_elegido[3])}
+        salida = float(vuelo_elegido[2])
+        t_acumulado = float(vuelo_elegido[4]) # Duracion del trayecto
+
+    else:
+
+        # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
+        df = df.filter(F.col('DEST') != F.lit(nodo_actual))
+
+        df = df.cache()
+
+        # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
+        # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
+
+        # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tiempo de conexion mayor a 7200 minutos
+        frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
+                    .withColumn('t_acumulado', F.lit(t_acumulado) + F.col('ACTUAL_ELAPSED_TIME').cast('float'))\
+                    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado')
+
+        # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
+        frontera = frontera_nueva.union(frontera)
+
+        # En otro caso uso Dijkstra para encontrar la ruta optima
+        i = 1
+        while i < n_nodos and nodo_actual != args.dest:
+
+            i += 1
+
+            try:
+
+                vuelo_elegido = frontera.orderBy(F.asc('t_acumulado')).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado').limit(1).collect()[0]
+                nodo_anterior = vuelo_elegido[0] # Origen del vuelo elegido
+                nodo_actual = vuelo_elegido[1] # Destino del vuelo elegido
+                visitados[nodo_actual] = {'origen' : nodo_anterior, 'salida' : float(vuelo_elegido[2]), 'llegada' : float(vuelo_elegido[3])}
+                early_arr = vuelo_elegido[3]
+                t_acumulado = vuelo_elegido[4]
+                min_dep_epoch = float(vuelo_elegido[3]) + 7200
+
+                print('''\nIteration {i} / {n_nodos}
+                            Nodo actual = {nodo_actual}
+                            Weight = {w}
+                            Transcurrido = {transcurrido}'''.format(i = i
+                                                , n_nodos = n_nodos
+                                                , nodo_actual = nodo_actual
+                                                , w = t_acumulado
+                                                , transcurrido=time.time()-t_inicio))
+
+                frontera = frontera.filter('DEST != "{nodo_actual}" OR t_acumulado < {t_acumulado}'.format(nodo_actual=nodo_actual, t_acumulado=t_acumulado))
+
+                df = df.filter('dep_epoch > {min_dep_epoch} OR ORIGIN != "{nodo_actual}"'.format(nodo_actual=nodo_actual, min_dep_epoch=min_dep_epoch))
+
+            except Exception as e:
+
+                print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
+                encontro_ruta = False
+                print(e)
+                break;
+
+            df = df.filter(F.col('DEST') != F.lit(nodo_actual))
+
+            # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
+            # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
+
+            df = df.cache()
+
+            frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
+                        .withColumn('t_conexion', F.col('dep_epoch').cast('float') - F.lit(early_arr).cast('float'))\
+                        .filter('t_conexion > 7200')\
+                        .withColumn('t_acumulado', F.lit(t_acumulado).cast('float') + F.col('t_conexion').cast('float') + F.col('ACTUAL_ELAPSED_TIME').cast('float'))\
+                        .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado')\
+                        
+            frontera = frontera_nueva.union(frontera)
+
+            frontera.write.format('parquet').mode('overwrite').save('temp_dir/frontera_spark')
+            frontera = spark.read.format('parquet').load('temp_dir/frontera_spark').cache()
 
 else:
 
-    # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
-    df = df.filter(F.col('DEST') != F.lit(nodo_actual))
+    print('\n\tNo hay vuelos saliendo de {origen} cercano a la fecha {fecha}.\n'.format(origen=args.origin, fecha=args.dep_date))
+    encontro_ruta = False
 
-    df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
-    df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
-
-    # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tiempo de conexion mayor a 7200 minutos
-    frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
-                .withColumn('t_acumulado', F.lit(t_acumulado) + F.col('ACTUAL_ELAPSED_TIME').cast('float'))\
-                .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado')
-
-    # Uno los nuevos vuelos de la frontera a los vuelos de la frontera anterior
-    frontera = frontera_nueva.union(frontera)
-
-    # En otro caso uso Dijkstra para encontrar la ruta optima
-    i = 1
-    while i < n_nodos and nodo_actual != args.dest:
-
-        i += 1
-
-        try:
-
-            vuelo_elegido = frontera.orderBy(F.asc('t_acumulado')).select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado').limit(1).collect()[0]
-            nodo_anterior = vuelo_elegido[0] # Origen del vuelo elegido
-            nodo_actual = vuelo_elegido[1] # Destino del vuelo elegido
-            visitados[nodo_actual] = {'origen' : nodo_anterior, 'salida' : float(vuelo_elegido[2]), 'llegada' : float(vuelo_elegido[3])}
-            early_arr = vuelo_elegido[3]
-            t_acumulado = vuelo_elegido[4]
-            min_dep_epoch = float(vuelo_elegido[3]) + 7200
-
-            # print('''\nIteration {i} / {n_nodos}
-            #             Nodo actual = {nodo_actual}
-            #             Weight = {w}
-            #             Transcurrido = {transcurrido}'''.format(i = i
-            #                                 , n_nodos = n_nodos
-            #                                 , nodo_actual = nodo_actual
-            #                                 , w = t_acumulado
-            #                                 , transcurrido=time.time()-t_inicio))
-
-            frontera = frontera.filter('DEST != "{nodo_actual}" OR t_acumulado < {t_acumulado}'.format(nodo_actual=nodo_actual, t_acumulado=t_acumulado))
-
-            df = df.filter('dep_epoch > {min_dep_epoch} OR ORIGIN != "{nodo_actual}"'.format(nodo_actual=nodo_actual, min_dep_epoch=min_dep_epoch))
-
-        except Exception as e:
-
-            print('\n\tNo hay ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
-            encontro_ruta = False
-            print(e)
-            break;
-
-        df = df.filter(F.col('DEST') != F.lit(nodo_actual))
-
-        df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
-        df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
-
-        frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
-                    .withColumn('t_conexion', F.col('dep_epoch').cast('float') - F.lit(early_arr).cast('float'))\
-                    .filter('t_conexion > 7200')\
-                    .withColumn('t_acumulado', F.lit(t_acumulado).cast('float') + F.col('t_conexion').cast('float') + F.col('ACTUAL_ELAPSED_TIME').cast('float'))\
-                    .select('ORIGIN', 'DEST', 'dep_epoch', 'arr_epoch', 't_acumulado')\
-                    
-        frontera = frontera_nueva.union(frontera)
-
-        frontera.write.format('parquet').mode('overwrite').save('temp_dir/frontera_spark')
-        frontera = spark.read.format('parquet').load('temp_dir/frontera_spark').cache()
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -215,6 +236,8 @@ if encontro_ruta == True:
     #                                                 , salida=time.ctime(visitados[args.dest]['salida'])
     #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
     #                                                 )
+
+    print('\n\tSe encontro ruta entre {origen} y {destino} en la fecha {fecha}.\n'.format(origen=args.origin, destino=args.dest, fecha=args.dep_date))
 
     solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
     solo_optimo[args.dest] = visitados[args.dest]
@@ -251,7 +274,7 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
     # print("\n\tLa ruta óptima es:\n{ruta_optima_str}\n\tDuración del trayecto: {early_arr}.\n".format(early_arr=str(datetime.timedelta(seconds=float(t_acumulado))), ruta_optima_str=ruta_optima_str))
 
-    # print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
+print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 # ----------------------------------------------------------------------------------------------------
 
 
