@@ -110,7 +110,7 @@ def aeropuerto_demoras_origen(path):
     
     df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"),
+            F.count("FL_DATE").alias("FL_DATE"),
             F.max('ARR_DELAY').alias("ARR_DELAY"),
             F.max('DEP_DELAY').alias("DEP_DELAY"),
             F.max('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
@@ -134,7 +134,7 @@ def aeropuerto_demoras_destino(path):
     
     df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"),
+            F.count("FL_DATE").alias("FL_DATE"),
             F.min('ARR_DELAY').alias("ARR_DELAY"),
             F.min('DEP_DELAY').alias("DEP_DELAY"),
             F.min('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
@@ -153,21 +153,21 @@ def principales_rutas_aeropuerto_fecha(path):
     df.cache()
     
     df_resp = df\
-        .withColumn('ROUTE_AIRPORTS', F.array('ORIGIN', 'DEST'))
+        .withColumn('ROUTE_AIRPORTS', F.concat('ORIGIN', F.lit('-'), 'DEST'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"), 
+            F.count("FL_DATE").alias("FL_DATE"), 
             F.avg('ARR_DELAY').alias("ARR_DELAY"), 
             F.avg('DEP_DELAY').alias("DEP_DELAY"), 
             F.avg('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
             F.avg('TAXI_IN').alias("TAXI_IN"),
             F.avg('TAXI_OUT').alias("TAXI_OUT")
             )\
-        .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
-        .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
-        .drop('ROUTE_AIRPORTS')
+        # .withColumn('ORIGIN', F.expr('ROUTE_AIRPORTS[0]'))\
+        # .withColumn('DEST', F.expr('ROUTE_AIRPORTS[1]'))\
+        # .drop('ROUTE_AIRPORTS')
     return df_resp
 
 
@@ -181,21 +181,21 @@ def principales_rutas_mktid_fecha(path):
     df.cache()
     
     df_resp = df\
-        .withColumn('ROUTE_MKT_ID', F.array('ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'))
+        .withColumn('ROUTE_MKT_ID', F.concat('ORIGIN_CITY_MARKET_ID', F.lit('-'), 'DEST_CITY_MARKET_ID'))
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df_resp.rollup('ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
-            F.count("FL_DATE").alias("N_FLIGHTS"), 
-            F.stddev_pop('ARR_DELAY').alias("ARR_DELAY"), 
-            F.stddev_pop('DEP_DELAY').alias("DEP_DELAY"), 
-            F.stddev_pop('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
-            F.stddev_pop('TAXI_IN').alias("TAXI_IN"),
-            F.stddev_pop('TAXI_OUT').alias("TAXI_OUT")
+            F.count("FL_DATE").alias("FL_DATE"), 
+            F.stddev('ARR_DELAY').alias("ARR_DELAY"), 
+            F.stddev('DEP_DELAY').alias("DEP_DELAY"), 
+            F.stddev('ACTUAL_ELAPSED_TIME').alias("ACTUAL_ELAPSED_TIME"),
+            F.stddev('TAXI_IN').alias("TAXI_IN"),
+            F.stddev('TAXI_OUT').alias("TAXI_OUT")
             )\
-        .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
-        .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
-        .drop('ROUTE_MKT_ID')
+        # .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
+        # .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
+        # .drop('ROUTE_MKT_ID')
     return df_resp
 
 
