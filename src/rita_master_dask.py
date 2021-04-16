@@ -97,7 +97,7 @@ if __name__ == '__main__':
     elif process == 'demoras_ruta_mktid_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
         df = utils.unir_columnas(df, "ORIGIN_CITY_MARKET_ID", "DEST_CITY_MARKET_ID", "ROUTE_MKT_ID")
-        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'std', 'DEP_DELAY':'std', 'ACTUAL_ELAPSED_TIME':'std', 'TAXI_IN':'std', 'TAXI_OUT':'mean'}
+        agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'std', 'DEP_DELAY':'std', 'ACTUAL_ELAPSED_TIME':'std', 'TAXI_IN':'std', 'TAXI_OUT':'std'}
         lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
         utils.write_result_to_mysql(lista_df, uri, process)
     
