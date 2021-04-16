@@ -3,6 +3,7 @@ sc = SparkContext()
 from pyspark.sql import SparkSession, SQLContext
 spark = SparkSession(sc)
 sqlContext = SQLContext(sc)
+spark.sparkContext.setCheckpointDir('temp_dir')
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 import subprocess
@@ -214,6 +215,6 @@ for column in list(new_dtypes.keys()):
 
 output_file = input_file + '_spark_casted'
 
-df.write.format('parquet').save(output_file, engine='pyarrow')
+df.write.format('parquet').save(output_file)
 
 print("Archivo almacenado en: " + output_file)
