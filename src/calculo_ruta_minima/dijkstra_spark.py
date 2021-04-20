@@ -27,7 +27,6 @@ parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la b
 parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
-parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
 args = parser.parse_args()
 
 def lee_config_csv(path, sample_size, process):
@@ -52,34 +51,8 @@ visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los 
 
 # LECTURA DE DATOS
 # ----------------------------------------------------------------------------------------------------
-date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
-max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
-
-y_min, m_min, d_min = args.dep_date.split('-')
-y_max, m_max, d_max = max_arr_date.split('-')
-
-
-# df_rita = spark.read.format('parquet').load(config['input_path'])\
-#     .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
-#     .filter("DEP_TIME != 'None'").filter("ARR_TIME != 'None'")\
-#     .filter('''CAST(YEAR AS INT) >= {y_min}
-#         AND CAST(YEAR AS INT) <= {y_max}
-#         AND CAST(MONTH AS INT) >= {m_min}
-#         AND CAST(MONTH AS INT) <= {m_max}
-#         AND CAST(DAY_OF_MONTH AS INT) >= {d_min}
-#         AND CAST(DAY_OF_MONTH AS INT) <= {d_max}'''.format(y_min=int(y_min)
-#                                                             , y_max=int(y_max)
-#                                                             , m_min=int(m_min)
-#                                                             , m_max=int(m_max)
-#                                                             , d_min=int(d_min)
-#                                                             , d_max=int(d_max)))\
-#     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
-#     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60.0)
-
-
 df_rita = spark.read.format('parquet').load(config['input_path'])\
     .select(*['YEAR', 'MONTH', 'DAY_OF_MONTH', 'ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
-    .filter("DEP_TIME != 'None'").filter("ARR_TIME != 'None'")\
     .na.drop(subset=['ORIGIN', 'DEST', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ACTUAL_ELAPSED_TIME'])\
     .withColumn('ACTUAL_ELAPSED_TIME', F.col('ACTUAL_ELAPSED_TIME') * 60.0)
 # ----------------------------------------------------------------------------------------------------
@@ -149,7 +122,7 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
         # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
 
-        df = df.cache()
+        df = df.checkpoint()
 
         # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
         # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
@@ -220,7 +193,7 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
 
 else:
 
-    print('\n\tNo hay vuelos saliendo de {origen} cercano a la fecha {fecha}.\n'.format(origen=args.origin, fecha=args.dep_date))
+    print('\n\tNo hay vuelos saliendo de {origen}..\n'.format(origen=args.origin))
     encontro_ruta = False
 
 # ----------------------------------------------------------------------------------------------------
@@ -240,7 +213,7 @@ if encontro_ruta == True:
     #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
     #                                                 )
 
-    print('\n\tSe encontro ruta entre {origen} y {destino} en la fecha {fecha}.\n'.format(origen=args.origin, destino=args.dest, fecha=args.dep_date))
+    print('\n\tSe encontro ruta entre {origen} y {destino}.\n'.format(origen=args.origin, destino=args.dest))
 
     solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
     solo_optimo[args.dest] = visitados[args.dest]
