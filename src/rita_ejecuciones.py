@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Script para ejecutar
 import os
 import random
@@ -70,7 +71,16 @@ for proceso in procesos:
             try:
                 print('+----------------------------------+')
                 print('\t' + proceso + ' spark')
-                os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --process ' + proceso + '_spark' + ' --sample_size ' + args.sample_size)
+                spark_cmd = """spark-submit \
+                                --driver-memory=8g \
+                                --num-executors=10 \
+                                --jars sql/mysql-connector-java-8.0.23.jar \
+                                src/rita_master_spark.py \
+                                --creds {creds} \
+                                --process {proceso}_spark \
+                                --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                os.system(spark_cmd)
+                # os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --process ' + proceso + '_spark' + ' --sample_size ' + args.sample_size)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -80,7 +90,13 @@ for proceso in procesos:
             try:
                 print('+----------------------------------+')
                 print('\t' + proceso + ' dask')
-                os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
+                dask_cmd = """python \
+                                src/rita_master_dask.py \
+                                --creds {creds} \
+                                --process {proceso}_dask \
+                                --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                os.system(dask_cmd)
+                # os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -103,6 +119,7 @@ for i in pruebas_rutas:
         spark_cmd = '''spark-submit \
                         --driver-memory=8g \
                         --num-executors=10 \
+                        --jars sql/mysql-connector-java-8.0.23.jar \
                         src/calculo_ruta_minima/dijkstra_spark.py \
                         --sample_size {sample_size} \
                         --process {process} \
