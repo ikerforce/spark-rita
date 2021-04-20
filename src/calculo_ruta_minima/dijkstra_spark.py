@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Algoritmo para calcular la ruta minima entre un par de aeropuertos dentro de EU
 
 # PREPARACION DE AMBIENTE
@@ -202,7 +203,9 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
             # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
             # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
 
-            df = df.cache()
+            # df.unpersist()
+
+            df = df.checkpoint()
 
             frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
                         .withColumn('t_conexion', F.col('dep_epoch').cast('float') - F.lit(early_arr).cast('float'))\
