@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 # Algoritmo para calcular la ruta minima entre un par de aeropuertos dentro de EU
-
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 # Inicio de cliente dask distributed
