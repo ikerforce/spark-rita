@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 # Importaciones de PySpark
@@ -69,7 +70,7 @@ def read_df_from_parquet(path, columns=None):
 
 def elimina_nulos(path):
     """Esta funcion elimina los valores nulos de todas las columnas."""
-    df = read_df_from_parquet(path=path)
+    df = read_df_from_parquet(path=path, columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
 
     return df.na.drop("any")
 
@@ -193,6 +194,7 @@ def principales_rutas_mktid_fecha(path):
             F.stddev('TAXI_IN').alias("TAXI_IN"),
             F.stddev('TAXI_OUT').alias("TAXI_OUT")
             )\
+        .fillna(0, subset=['FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         # .withColumn('ORIGIN_MKT_ID', F.expr('ROUTE_MKT_ID[0]'))\
         # .withColumn('DEST_MKT_ID', F.expr('ROUTE_MKT_ID[1]'))\
         # .drop('ROUTE_MKT_ID')
