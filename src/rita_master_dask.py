@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 from dask.distributed import Client
@@ -108,7 +109,7 @@ if __name__ == '__main__':
         utils.write_result_to_mysql(lista_df, uri, process)
 
     elif process == 'elimina_nulos_dask':
-        df = utils.read_df_from_parquet(config['input_path'])
+        df = utils.read_df_from_parquet(config['input_path'], columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
         df = utils.elimina_nulos(df)
         print('Conteo sin nulos: ' + str(df.shape[0].compute()))
     
