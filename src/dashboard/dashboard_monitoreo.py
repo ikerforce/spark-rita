@@ -32,6 +32,11 @@ demoras_ruta_mktid
 demoras_ruta_aeropuerto
 dijkstra""".split("\n")
 
+samples = ['10K', '100K', '1M', '10M', 'TOTAL']
+
+tabla_tiempo_dask = 'registro_de_tiempo_dask_test'
+tabla_tiempo_spark = 'registro_de_tiempo_spark_test'
+
 # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="Ruta hacia archivo de configuracion")
@@ -69,9 +74,20 @@ app.layout = html.Div([
             children=[
                 html.Div(className='barras',
                     children=[
+                        html.Label(['Nombre del proceso:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
                             id='dropdown-fecha-barras',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                html.Div(className='barras-sample',
+                    children=[
+                        html.Label(['Tamaño de la muestra:'], style={'font-weight': 'bold', "text-align": "center"}),
+                        dcc.Dropdown(
+                            id='dropdown-barras-sample',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
                             value='%%',
                             clearable=False)
                     ],
@@ -82,8 +98,10 @@ app.layout = html.Div([
         dcc.Graph('resumen-duracion', config={'displayModeBar': False}),
         html.Div(className='menus-desplegables',
             children=[
+
                 html.Div(className='proceso',
                     children=[
+                        html.Label(['Nombre del proceso:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
                             id='dropdown-proceso',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
@@ -91,8 +109,10 @@ app.layout = html.Div([
                             clearable=False)
                     ],
                     style=dict(width='25%')),
+
                 html.Div(className='numero-registros',
                     children=[
+                        html.Label(['Número de ejecuciones:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
                             id='dropdown-numero-registros',
                             options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
@@ -100,6 +120,18 @@ app.layout = html.Div([
                             clearable=False)
                     ],
                     style=dict(width='25%')),
+
+                html.Div(className='lineas-sample-size',
+                    children=[
+                        html.Label(['Tamaño de la muestra:'], style={'font-weight': 'bold', "text-align": "center"}),
+                        dcc.Dropdown(
+                            id='dropdown-lineas-sample-size',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+
                 ],
             style=dict(display='flex')
         ),
@@ -143,22 +175,25 @@ app.layout = html.Div([
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 @app.callback(
     Output('resumen-duracion', 'figure'),
-    [Input('interval-component', 'interval')])
-
-# Este es el metodo que actualiza la informacion de MySQL y genera los dashboards de visitas y usuarios conectados por sexo
-def update_graph(proceso):
+    [Input('dropdown-proceso', 'value')
+    , Input('dropdown-barras-sample', 'value')])
+def update_graph(proceso, sample_size):
 
     query_spark = """SELECT REPLACE(process, '_spark', '') as process
                         , AVG(duration) as avg_duration
                         , STDDEV(duration) as stddev_duration
-                    FROM registro_de_tiempo_spark
-                    GROUP BY process"""
+                    FROM {tabla}
+                    WHERE process LIKE CONCAT('{process}', '_spark')
+                    AND sample_size LIKE '{sample_size}'
+                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_spark, sample_size=sample_size)
 
     query_dask = """SELECT REPLACE(process, '_dask', '') as process
                         , AVG(duration) as avg_duration
                         , STDDEV(duration) as stddev_duration
-                    FROM registro_de_tiempo_dask
-                    GROUP BY process"""
+                    FROM {tabla}
+                    WHERE process LIKE CONCAT('{process}', '_dask')
+                    AND sample_size LIKE '{sample_size}'
+                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_dask, sample_size=sample_size)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
@@ -214,27 +249,27 @@ def update_graph(proceso):
 @app.callback(
     Output('proceso-en-tiempo', 'figure'),
     [Input('dropdown-proceso', 'value')
-    , Input('dropdown-numero-registros', 'value')])
+    , Input('dropdown-numero-registros', 'value')
+    , Input('dropdown-lineas-sample-size', 'value')])
+def update_graph(process, n_registros, sample_size):
 
-def update_graph(process, n_registros):
-
-    process = "'" + process + "'"
-
-    query_spark = """SELECT CAST(insertion_ts AS CHAR) as insertion_ts
+    query_spark = """SELECT (@row_number:=@row_number + 1) as num
                         , REPLACE(process, '_spark', '') as process
                         , duration
-                    FROM registro_de_tiempo_spark
-                    WHERE process LIKE CONCAT({process}, '_spark')
+                    FROM {tabla}, (SELECT @row_number:=0) AS t
+                    WHERE process LIKE CONCAT('{process}', '_spark')
+                    AND sample_size LIKE '{sample_size}'
                     ORDER BY insertion_ts DESC
-                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros)
+                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_spark, sample_size=sample_size)
 
-    query_dask = """SELECT CAST(insertion_ts AS CHAR) as insertion_ts
+    query_dask = """SELECT (@row_number:=@row_number + 1) as num
                         , REPLACE(process, '_dask', '') as process
                         , duration
-                    FROM registro_de_tiempo_dask
-                    WHERE process LIKE CONCAT({process}, '_dask')
+                    FROM {tabla}, (SELECT @row_number:=0) AS t
+                    WHERE process LIKE CONCAT('{process}', '_dask')
+                    AND sample_size LIKE '{sample_size}'
                     ORDER BY insertion_ts DESC
-                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros)
+                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_dask, sample_size=sample_size)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
@@ -245,7 +280,7 @@ def update_graph(process, n_registros):
 
     fig.add_trace(
         go.Scatter(
-            x=tiempo_spark.insertion_ts
+            x=tiempo_spark.num
             , y=tiempo_spark.duration
             , marker=dict(color=Greys[4])
             , mode='lines+markers'
@@ -255,7 +290,7 @@ def update_graph(process, n_registros):
         , col=1)
     fig.add_trace(
         go.Scatter(
-            x=tiempo_dask.insertion_ts
+            x=tiempo_dask.num
             , y=tiempo_dask.duration
             , marker=dict(color=Oranges[4])
             , mode='lines+markers'
@@ -291,45 +326,44 @@ def update_graph(process, n_registros):
     [Input('dropdown-proceso-movil', 'value')
     , Input('dropdown-ventana', 'value')
     , Input('dropdown-numero-registros-movil', 'value')])
-
 def update_graph(process, ventana, n_registros):
 
     process = "'" + process + "'"
 
 
-    query_spark =  """SELECT insertion_ts
+    query_spark =  """SELECT num
                         , duration
                         , stddev_duration
                         , duration - stddev_duration as duration_low
                         , duration + stddev_duration as duration_high
                     FROM
                     (
-                        SELECT CAST(insertion_ts AS CHAR) as insertion_ts
-                            , REPLACE(process, '_spark', '') as process
+                        SELECT (@row_number:=@row_number + 1) as num
+                            , process
                             , AVG(duration) OVER(ORDER BY insertion_ts DESC ROWS BETWEEN {ventana} PRECEDING AND CURRENT ROW) as duration
                             , STDDEV(duration) OVER(ORDER BY insertion_ts DESC ROWS BETWEEN {ventana} PRECEDING AND CURRENT ROW) as stddev_duration
-                        FROM registro_de_tiempo_spark
+                        FROM {tabla}, (SELECT @row_number:=0) AS t
                         WHERE process LIKE CONCAT({process}, '_spark')
                         ORDER BY insertion_ts DESC
                     ) temp
-                    LIMIT {n_registros}""".format(process=process, ventana=ventana, n_registros=n_registros)
+                    LIMIT {n_registros}""".format(process=process, ventana=ventana, n_registros=n_registros, tabla=tabla_tiempo_spark)
 
-    query_dask =  """SELECT insertion_ts
+    query_dask =  """SELECT num
                         , duration
                         , stddev_duration
                         , duration - stddev_duration as duration_low
                         , duration + stddev_duration as duration_high
                     FROM
                     (
-                        SELECT CAST(insertion_ts AS CHAR) as insertion_ts
-                            , REPLACE(process, '_spark', '') as process
+                        SELECT (@row_number:=@row_number + 1) as num
+                            , process
                             , AVG(duration) OVER(ORDER BY insertion_ts DESC ROWS BETWEEN {ventana} PRECEDING AND CURRENT ROW) as duration
                             , STDDEV(duration) OVER(ORDER BY insertion_ts DESC ROWS BETWEEN {ventana} PRECEDING AND CURRENT ROW) as stddev_duration
-                        FROM registro_de_tiempo_dask
+                        FROM {tabla}, (SELECT @row_number:=0) AS t
                         WHERE process LIKE CONCAT({process}, '_dask')
                         ORDER BY insertion_ts DESC
                     ) temp
-                    LIMIT {n_registros}""".format(process=process, ventana=ventana, n_registros=n_registros)
+                    LIMIT {n_registros}""".format(process=process, ventana=ventana, n_registros=n_registros, tabla=tabla_tiempo_dask)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection)
     tiempo_dask = pd.read_sql(query_dask, con=db_connection)
@@ -339,7 +373,7 @@ def update_graph(process, ventana, n_registros):
     fig.add_trace(
         go.Scatter(
             name="Spark Bounds"
-            , x=list(tiempo_spark.insertion_ts) + list(tiempo_spark.insertion_ts[::-1])
+            , x=list(tiempo_spark.num) + list(tiempo_spark.num[::-1])
             , y=list(tiempo_spark.duration_high) + list(tiempo_spark.duration_low[::-1])
             , mode='lines'
             , fill='toself'
@@ -353,7 +387,7 @@ def update_graph(process, ventana, n_registros):
     fig.add_trace(
         go.Scatter(
             name="Spark Duration"
-            , x=tiempo_spark.insertion_ts
+            , x=tiempo_spark.num
             , y=tiempo_spark.duration
             # , error_y=dict(type='data', array=tiempo_spark.stddev_duration)
             , marker=dict(color=Greys[4])
@@ -364,7 +398,7 @@ def update_graph(process, ventana, n_registros):
     fig.add_trace(
         go.Scatter(
             name="Dask Bounds"
-            , x=list(tiempo_dask.insertion_ts) + list(tiempo_dask.insertion_ts[::-1])
+            , x=list(tiempo_dask.num) + list(tiempo_dask.num[::-1])
             , y=list(tiempo_dask.duration_high) + list(tiempo_dask.duration_low[::-1])
             , mode='lines'
             , fill='toself'
@@ -378,7 +412,7 @@ def update_graph(process, ventana, n_registros):
     fig.add_trace(
         go.Scatter(
             name="Dask Duration"
-            , x=tiempo_dask.insertion_ts
+            , x=tiempo_dask.num
             , y=tiempo_dask.duration
             # , error_y=dict(type='data', array=tiempo_dask.stddev_duration)
             , marker=dict(color=Oranges[4])
