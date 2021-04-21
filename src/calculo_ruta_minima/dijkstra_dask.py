@@ -30,7 +30,6 @@ if __name__ == '__main__':
     parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
     parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
     parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
-    parser.add_argument("--dep_date", help="Fecha de vuelo deseada.")
     args = parser.parse_args()
     # Leemos las credenciales de la ruta especificada
     config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
@@ -50,31 +49,14 @@ if __name__ == '__main__':
 
 # LECTURA DE DATOS
 # ----------------------------------------------------------------------------------------------------
-    date_time_obj = datetime.datetime.strptime(args.dep_date, '%Y-%m-%d')
-    max_arr_date = str(date_time_obj + datetime.timedelta(days=7))[0:10]
-
-    y_min, m_min, d_min = args.dep_date.split('-')
-    y_max, m_max, d_max = max_arr_date.split('-')
-
     df = dd.read_parquet(config['input_path']
             , infer_divisions=False
             , engine='pyarrow'
-            # , gather_statistics=False
-            # , filter=[[('YEAR', '>=', y_min)
-            #             , ('MONTH', '>=', m_min)
-            #             , ('DAY_OF_MONTH', '>=', d_min)
-            #             , ('YEAR', '<=', y_max)
-            #             , ('MONTH', '<=', m_max)
-            #             , ('DAY_OF_MONTH', '<=', d_max)]]
             , columns=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME']
             , index=False
             , dtype={'ACTUAL_ELAPSED_TIME' : float}
         )\
         .dropna(subset=['FL_DATE', 'DEP_TIME', 'ARR_TIME', 'ORIGIN', 'DEST', 'ACTUAL_ELAPSED_TIME'])
-    # df = df[(df['DEP_TIME'] != 'None') & (df['ARR_TIME'] != 'None')]
-    # df = df[(df['YEAR'].astype(int) >= int(y_min)) & (df['YEAR'].astype(int) <= int(y_max))]
-    # df = df[(df['MONTH'].astype(int) >= int(m_min)) & (df['MONTH'].astype(int) <= int(m_max))]
-    # df = df[(df['DAY_OF_MONTH'].astype(int) >= int(d_min)) & (df['DAY_OF_MONTH'].astype(int) <= int(d_max))]
     df['ACTUAL_ELAPSED_TIME'] = df['ACTUAL_ELAPSED_TIME'].astype(float) * 60.0
 # ----------------------------------------------------------------------------------------------------
 
@@ -198,7 +180,7 @@ if __name__ == '__main__':
 
     else:
 
-        print('\n\tNo hay vuelos saliendo de {origen} cercano a la fecha {fecha}.\n'.format(origen=args.origin, fecha=args.dep_date))
+        print('\n\tNo hay vuelos saliendo de {origen}.\n'.format(origen=args.origin))
         encontro_ruta = False
 # ----------------------------------------------------------------------------------------------------
 
@@ -218,7 +200,7 @@ if __name__ == '__main__':
         #                                                 , llegada=time.ctime(visitados[args.dest]['llegada'])
         #                                                 )
 
-        print('\tSe encontro ruta entre {origen} y {destino} en la fecha {fecha}.'.format(origen=args.origin, destino=args.dest, fecha=args.dep_date))
+        print('\tSe encontro ruta entre {origen} y {destino}.'.format(origen=args.origin, destino=args.dest))
 
         solo_optimo = dict() # En este diccionario guardo solo los vuelos que me interesan
         solo_optimo[args.dest] = visitados[args.dest]
