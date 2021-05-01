@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 parser.add_argument("--ejecs", help="Determina el numero_de_ejecuciones que se haran.")
 parser.add_argument("--sample_size", help="Determina la muestra con la que se ejecutarán los procesos.")
+parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 args = parser.parse_args()
 
 def convierte_en_dict(l):
@@ -49,7 +50,10 @@ def selecciona_aeropuertos(lista):
 
     return [origen, destino]
 
-procesos = obten_procesos(path='conf/base/configs.csv', sample_size=args.sample_size)
+if args.env != 'cluster'
+    procesos = obten_procesos(path='conf/base/configs.csv', sample_size=args.sample_size)
+else:
+    procesos = obten_procesos(path='conf/base/configs_cluster.csv', sample_size=args.sample_size)
 
 # 0 es dask
 # 1 es spark
