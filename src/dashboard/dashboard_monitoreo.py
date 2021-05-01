@@ -169,7 +169,39 @@ app.layout = html.Div([
             style=dict(display='flex')
         ),
         dcc.Graph('promedio-movil', config={'displayModeBar': False}),
-        dcc.Graph('perfilamiento-perc2', config={'displayModeBar': False}),
+        html.Div(className='menus-desplegables3',
+            children=[
+                html.Div(className='histograma-proceso',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-histograma-proceso',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                html.Div(className='histograma-sample-size',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-histograma-sample-size',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
+                            value='4',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                html.Div(className='numero-registros-movil',
+                    children=[
+                        dcc.Dropdown(
+                            id='dropdown-histograma-numero-registros',
+                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
+                            value='20',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                ],
+            style=dict(display='flex')
+        ),
+        dcc.Graph('histograma-duracion', config={'displayModeBar': False}),
         dcc.Interval(id='interval-component', interval=1*1000)])])
 
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
@@ -442,6 +474,79 @@ def update_graph(process, ventana, n_registros):
             , xanchor="left"
             , x=0.45)
         )
+
+    # Regresamos el bloque de graficos 
+    return fig
+
+@app.callback(
+    Output('histograma-duracion', 'figure'),
+    [Input('dropdown-proceso', 'value')
+    , Input('dropdown-numero-registros', 'value')
+    , Input('dropdown-lineas-sample-size', 'value')])
+def update_graph(process, n_registros, sample_size):
+
+    query_spark = """SELECT 1 as num
+                        , REPLACE(process, '_spark', '') as process
+                        , duration
+                    FROM {tabla}, (SELECT @row_number:=0) AS t
+                    WHERE process LIKE CONCAT('{process}', '_spark')
+                    AND sample_size LIKE '{sample_size}'
+                    ORDER BY insertion_ts DESC
+                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_spark, sample_size=sample_size)
+
+    query_dask = """SELECT 1 as num
+                        , REPLACE(process, '_dask', '') as process
+                        , duration
+                    FROM {tabla}, (SELECT @row_number:=0) AS t
+                    WHERE process LIKE CONCAT('{process}', '_dask')
+                    AND sample_size LIKE '{sample_size}'
+                    ORDER BY insertion_ts DESC
+                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_dask, sample_size=sample_size)
+
+    tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
+    tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
+
+    # Iniciamos dos graficos de barras. Uno con la informacion de usuarios conectados por alcaldia y otro con las paginas web que registraron mas visitas
+    fig = make_subplots(rows=1, cols=1,
+                        specs=[[{"type":"bar"}]])
+
+    fig.add_trace(
+        go.Histogram(
+            x=tiempo_spark.duration
+            , y=tiempo_spark.num
+            # , marker=dict(color=Greys[4])
+            # , mode='lines+markers'
+            , name='Spark'
+            )
+        , row=1
+        , col=1)
+    fig.add_trace(
+        go.Histogram(
+            x=tiempo_dask.duration
+            , y=tiempo_dask.num
+            # , marker=dict(color=Oranges[4])
+            # , mode='lines+markers'
+            , name='Dask'
+            )
+        , row=1
+        , col=1)
+
+
+    fig.update_xaxes(title_text='Fecha de ejecución', title_font={'size':12}, showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
+    # Actualizamos el tamano y titulo del grafico y ubicacion de los titulos y posicion del bloque
+    fig.update_layout(title_text="Duración del proceso"
+        , title_font={'size':25}
+        , title_x=0.5
+        , height=500
+        , autosize=True
+        # , width=1400
+        , template='plotly_white'
+        , legend=dict(orientation="h"
+            , yanchor="bottom"
+            , y=-0.3
+            , xanchor="left"
+            , x=0.45))
 
     # Regresamos el bloque de graficos 
     return fig
