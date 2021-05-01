@@ -1,11 +1,11 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 7 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 7 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. Cada proceso se ejecutó \textit{\LARGE X} veces en dos ambientes, uno local y otro en la nube. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
 \newpage
 
 \section{Procesos para comparación de desempeño}
 
-Para contrastar el desempeño de los herramientas, se implementaron 7 procesos que realizan distintas operaciones sobre el conjunto de datos. Cada uno busca responder una pregunta distinta sobre los vuelos en Estados Unidos, cuya respuesta requiere de distintas operaciones. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
+Para contrastar el desempeño de los herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Cada uno busca responder una pregunta distinta sobre los vuelos en Estados Unidos, cuya respuesta requiere de distintas operaciones. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
 
 Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos que tiene como entradas la \texttt{muestra} de datos que se utilizará, \texttt{n}, el número de ejecuciones a realizar y \texttt{procesos}, la lista de procesos que se ejecutarán:
 
@@ -125,6 +125,16 @@ El proceso se compone de las siguientes operaciones principales:
 \end{itemize}
 
 Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, debido a que la lectura y escritura de archivos \texttt{parquet} es muy rápida, resultó más conveniente almacenar datos intermedios en este tipo de archivos en lugar de usar la función \texttt{cache}. Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} que hacer la escritura de datos.
+
+\subsection{Proceso 8: Eliminación de nulos}
+
+Este proceso tiene como objetivo eliminar todos los registros que tengan algún valor nulo en cualquiera de las columnas seleccionadas. 
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Eliminación de nulos.
+	\item Conteo.
+\end{itemize}
 
 \subsection{Registro de tiempo y resultados}
 
