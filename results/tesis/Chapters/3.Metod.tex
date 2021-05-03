@@ -103,8 +103,17 @@ Este proceso obtiene la desviación estándar del tiempo de demora para cada rut
 	\item Escritura de datos a SQL.
 \end{itemize}
 
+\subsection{Proceso 7: Eliminación de nulos}
 
-\subsection{Proceso 7: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
+Este proceso tiene como objetivo eliminar todos los registros que tengan algún valor nulo en cualquiera de las columnas seleccionadas. 
+
+\begin{itemize}
+	\item Lectura de datos desde \texttt{parquet}.
+	\item Eliminación de nulos.
+	\item Conteo.
+\end{itemize}
+
+\subsection{Proceso 8: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
 
 El último proceso consiste en calcular la ruta mínima (minimizando el tiempo transcurrido entre la salida del origen y la llegada al destino final) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación del algoritmo \ref{dijkstra_modificado}.   
 
@@ -125,16 +134,6 @@ El proceso se compone de las siguientes operaciones principales:
 \end{itemize}
 
 Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, debido a que la lectura y escritura de archivos \texttt{parquet} es muy rápida, resultó más conveniente almacenar datos intermedios en este tipo de archivos en lugar de usar la función \texttt{cache}. Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} que hacer la escritura de datos.
-
-\subsection{Proceso 8: Eliminación de nulos}
-
-Este proceso tiene como objetivo eliminar todos los registros que tengan algún valor nulo en cualquiera de las columnas seleccionadas. 
-
-\begin{itemize}
-	\item Lectura de datos desde \texttt{parquet}.
-	\item Eliminación de nulos.
-	\item Conteo.
-\end{itemize}
 
 \subsection{Registro de tiempo y resultados}
 
