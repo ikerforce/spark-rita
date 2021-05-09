@@ -15,6 +15,7 @@ parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la b
 parser.add_argument("--ejecs", help="Determina el numero_de_ejecuciones que se haran.")
 parser.add_argument("--sample_size", help="Determina la muestra con la que se ejecutarán los procesos.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
+parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
 args = parser.parse_args()
 
 def convierte_en_dict(l):
@@ -50,7 +51,7 @@ def selecciona_aeropuertos(lista):
 
     return [origen, destino]
 
-if args.env != 'cluster'
+if args.env != 'cluster':
     procesos = obten_procesos(path='conf/base/configs.csv', sample_size=args.sample_size)
 else:
     procesos = obten_procesos(path='conf/base/configs_cluster.csv', sample_size=args.sample_size)
@@ -91,11 +92,19 @@ for proceso in procesos:
             try:
                 print('+----------------------------------+')
                 print('\t' + proceso + ' dask')
-                dask_cmd = """python \
-                                src/rita_master_dask.py \
-                                --creds {creds} \
-                                --process {proceso}_dask \
-                                --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                if args.scheduler == None:
+                    dask_cmd = """python \
+                                    src/rita_master_dask.py \
+                                    --creds {creds} \
+                                    --process {proceso}_dask \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                else:
+                    dask_cmd = """python \
+                                    src/rita_master_dask.py \
+                                    --creds {creds} \
+                                    --process {proceso}_dask \
+                                    --sample_size {sample_size} \
+                                    --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler)
                 os.system(dask_cmd)
                 # os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
                 print('+----------------------------------+')
@@ -133,13 +142,23 @@ for i in pruebas_rutas:
         ruta = rutas_dask.pop()
         print('+----------------------------------+')
         print('\tdijkstra - dask')
-        dask_cmd = '''python \
-                        src/calculo_ruta_minima/dijkstra_dask.py \
-                        --sample_size {sample_size} \
-                        --process {process} \
-                        --creds {creds} \
-                        --origin {origin} \
-                        --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
+        if args.scheduler == None:
+            dask_cmd = '''python \
+                            src/calculo_ruta_minima/dijkstra_dask.py \
+                            --sample_size {sample_size} \
+                            --process {process} \
+                            --creds {creds} \
+                            --origin {origin} \
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
+        else:
+            dask_cmd = '''python \
+                            src/calculo_ruta_minima/dijkstra_dask.py \
+                            --sample_size {sample_size} \
+                            --process {process} \
+                            --creds {creds} \
+                            --scheduler {scheduler} \
+                            --origin {origin} \
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler)
         os.system(dask_cmd)
         print('+----------------------------------+')
 

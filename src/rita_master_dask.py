@@ -2,42 +2,49 @@
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 from dask.distributed import Client
+# Importaciones de Python
+import argparse # Utilizado para leer archivo de configuracion
+import json # Utilizado para leer archivo de configuracion
+import time # Utilizado para medir el timpo de ejecucion
+import dask.dataframe as dd # Utilizado para el procesamiento de los datos
+import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL
+from sqlalchemy import create_engine
+import sys # Ayuda a agregar archivos al path
+from os import getcwdb # Nos permite conocer el directorio actual
+curr_path = getcwdb().decode() # Obtenemos el directorio actual
+sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
+from src import utils # Estas son las funciones definidas por mi
+
+# Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
+parser = argparse.ArgumentParser()
+parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
+parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
+parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
+args = parser.parse_args()
+
+config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+with open(args.creds) as json_file:
+    creds = json.load(json_file)
+
+uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
+
+t_inicio = time.time() # Inicia tiempo de ejecucion
 
 if __name__ == '__main__':
 
-    client = Client(n_workers=10)
-
-    # Importaciones de Python
-    import argparse # Utilizado para leer archivo de configuracion
-    import json # Utilizado para leer archivo de configuracion
-    import time # Utilizado para medir el timpo de ejecucion
-    import dask.dataframe as dd # Utilizado para el procesamiento de los datos
-    import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL
-    from sqlalchemy import create_engine
-    import sys # Ayuda a agregar archivos al path
-    from os import getcwdb # Nos permite conocer el directorio actual
-    curr_path = getcwdb().decode() # Obtenemos el directorio actual
-    sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
-    from src import utils # Estas son las funciones definidas por mi
-
-    # Al ejecutar el archivo se debe de pasar el argumento --config /ruta/a/archivo/de/crecenciales.json
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
-    parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
-    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
-    args = parser.parse_args()
-
-    config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
-    with open(args.creds) as json_file:
-        creds = json.load(json_file)
-
-    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
+    if args.scheduler != None:
+        
+        client = Client(args.scheduler)
+    
+    else:
+        
+        client = Client()
     # ----------------------------------------------------------------------------------------------------
 
 
     # LECTURA DE DATOS
     # ----------------------------------------------------------------------------------------------------
-    t_inicio = time.time() # Inicia tiempo de ejecucion
 
     # df = dd.read_sql_table(config["input_table"], uri=uri, index_col=config["partition_column"])
     # df = dd.read_sql_table("RITA_100K", uri=uri

@@ -4,46 +4,52 @@
 # ----------------------------------------------------------------------------------------------------
 # Inicio de cliente dask distributed
 from dask.distributed import Client
+# Importaciones de Python
+import argparse # Utilizado para leer archivo de configuracion
+import json # Utilizado para leer archivo de configuracion
+import time # Utilizado para medir el timpo de ejecucion
+import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL y para el dataframe frontera
+from sqlalchemy import create_engine
+import datetime # Utilizado para el parseo de fecha de salida
+import sys # Ayuda a agregar archivos al path
+import os # Nos permite conocer el directorio actual
+curr_path = os.getcwdb().decode() # Obtenemos el directorio actual
+sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
+from src import utils # Estas son las funciones definidas por mi
+import dask.dataframe as dd # Utilizado para el procesamiento de los datos
+
+# Definicion y lectura de los argumentos que se le pasan a la funcion
+parser = argparse.ArgumentParser()
+parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
+parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
+parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
+parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
+parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
+args = parser.parse_args()
+# Leemos las credenciales de la ruta especificada
+config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+with open(args.creds) as json_file:
+    creds = json.load(json_file)
+
+# Cadena de conexion a base de datos (para escrbir los resultados)
+uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
+
+t_inicio = time.time()
+
+process = config['results_table']
+nodo_actual = args.origin # Empezamos a explorar en el nodo origen
+visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
 
 if __name__ == '__main__':
 
-    client = Client(n_workers=10)
-
-    # Importaciones de Python
-    import argparse # Utilizado para leer archivo de configuracion
-    import json # Utilizado para leer archivo de configuracion
-    import time # Utilizado para medir el timpo de ejecucion
-    import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL y para el dataframe frontera
-    from sqlalchemy import create_engine
-    import datetime # Utilizado para el parseo de fecha de salida
-    import sys # Ayuda a agregar archivos al path
-    import os # Nos permite conocer el directorio actual
-    curr_path = os.getcwdb().decode() # Obtenemos el directorio actual
-    sys.path.insert(0, curr_path) # Agregamos el directioro en el que se encuentra el directorio src
-    from src import utils # Estas son las funciones definidas por mi
-    import dask.dataframe as dd # Utilizado para el procesamiento de los datos
-
-    # Definicion y lectura de los argumentos que se le pasan a la funcion
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
-    parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
-    parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
-    parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
-    parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
-    args = parser.parse_args()
-    # Leemos las credenciales de la ruta especificada
-    config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
-    with open(args.creds) as json_file:
-        creds = json.load(json_file)
-
-    # Cadena de conexion a base de datos (para escrbir los resultados)
-    uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
-
-    t_inicio = time.time()
-
-    process = config['results_table']
-    nodo_actual = args.origin # Empezamos a explorar en el nodo origen
-    visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
+    if args.scheduler != None:
+        
+        client = Client(args.scheduler)
+    
+    else:
+        
+        client = Client()
 # ----------------------------------------------------------------------------------------------------
 
 
