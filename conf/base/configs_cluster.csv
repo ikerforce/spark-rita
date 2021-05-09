@@ -1,6 +1,6 @@
 sample_size|process|engine|input_path|results_table|results_table_mode|time_table|time_table_mode|db_numPartitions|partition_column|resources|description
-100K|demoras_aerolinea_dask|dask|az://transtat-tesis/data_100K_dask_casted/*/*|demoras_aerolinea_dask|replace|registro_de_tiempo_dask_test|append|20|ID||
-100K|demoras_aerolinea_spark|spark|wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_spark_casted/*|demoras_aerolinea_spark|overwrite|registro_de_tiempo_spark_test|append|20|||
+100K|demoras_aerolinea_dask|dask|/samples/data_100K_dask_casted|demoras_aerolinea_dask|replace|registro_de_tiempo_dask_test|append|20|ID||
+100K|demoras_aerolinea_spark|spark|/samples/data_100K_spark_casted|demoras_aerolinea_spark|overwrite|registro_de_tiempo_spark_test|append|20|||
 100K|demoras_aeropuerto_destino_dask|spark|az://transtat-tesis/data_100K_dask_casted/*/*|demoras_aeropuerto_destino_dask|replace|registro_de_tiempo_dask_test|append|20|ID||
 100K|demoras_aeropuerto_destino_spark|dask|wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_spark_casted/*|demoras_aeropuerto_destino_spark|overwrite|registro_de_tiempo_spark_test|append|20|||
 100K|demoras_aeropuerto_origen_dask|dask|az://transtat-tesis/data_100K_dask_casted/*/*|demoras_aeropuerto_origen_dask|replace|registro_de_tiempo_dask_test|append|20|ID||
