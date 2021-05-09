@@ -28,6 +28,7 @@ def orden_pruebas(numero_de_ejecuciones):
     random.shuffle(pruebas)
     return pruebas
 
+
 def lee_config_csv(path, sample_size, process):
     """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
     file = open(path, "r").read().splitlines()
@@ -36,12 +37,14 @@ def lee_config_csv(path, sample_size, process):
     parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
     return parametros
 
+
 def obten_procesos(path, sample_size):
     """Esta función lee un archivo de configuración y obtiene la información para un proceso y tamaño de muestra específico."""
     file = open(path, "r").read().splitlines()
     file_sample_only = filter(lambda row: row.split('|')[0] == sample_size, file[1:])
     procesos = set(x.replace('_dask', '').replace('_spark','') for x in map(lambda row: row.split('|')[1], file_sample_only))
     return procesos
+
 
 def selecciona_aeropuertos(lista):
     origen = random.choice(lista)
@@ -51,10 +54,15 @@ def selecciona_aeropuertos(lista):
 
     return [origen, destino]
 
+
 if args.env != 'cluster':
+
     procesos = obten_procesos(path='conf/base/configs.csv', sample_size=args.sample_size)
+
 else:
+
     procesos = obten_procesos(path='conf/base/configs_cluster.csv', sample_size=args.sample_size)
+
 
 # 0 es dask
 # 1 es spark
@@ -151,7 +159,7 @@ for i in pruebas_rutas:
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
         else:
-            dask_cmd = '''python \
+            dask_cmd = '''/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                             src/calculo_ruta_minima/dijkstra_dask.py \
                             --sample_size {sample_size} \
                             --process {process} \
