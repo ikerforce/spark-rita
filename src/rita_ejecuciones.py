@@ -99,7 +99,7 @@ for proceso in procesos:
                                     --process {proceso}_dask \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
                 else:
-                    dask_cmd = """python \
+                    dask_cmd = """/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                                     src/rita_master_dask.py \
                                     --creds {creds} \
                                     --process {proceso}_dask \
