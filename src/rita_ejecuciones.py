@@ -86,6 +86,7 @@ for proceso in procesos:
                                 --num-executors=10 \
                                 --jars sql/mysql-connector-java-8.0.23.jar \
                                 src/rita_master_spark.py \
+                                --env cluster \
                                 --creds {creds} \
                                 --process {proceso}_spark \
                                 --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
@@ -109,6 +110,7 @@ for proceso in procesos:
                 else:
                     dask_cmd = """ARROW_LIBHDFS_DIR=/usr/hdp/4.1.4.0/ /home/sshuser/miniconda/envs/dask_yarn/bin/python \
                                     src/rita_master_dask.py \
+                                    --env cluster \
                                     --creds {creds} \
                                     --process {proceso}_dask \
                                     --sample_size {sample_size} \
@@ -139,6 +141,7 @@ for i in pruebas_rutas:
                         --num-executors=10 \
                         --jars sql/mysql-connector-java-8.0.23.jar \
                         src/calculo_ruta_minima/dijkstra_spark.py \
+                        --env cluster \
                         --sample_size {sample_size} \
                         --process {process} \
                         --creds {creds} \
@@ -164,6 +167,7 @@ for i in pruebas_rutas:
                             --sample_size {sample_size} \
                             --process {process} \
                             --creds {creds} \
+                            --env cluster \
                             --scheduler {scheduler} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler)
