@@ -107,7 +107,7 @@ for proceso in procesos:
                                     --process {proceso}_dask \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
                 else:
-                    dask_cmd = """/home/sshuser/miniconda/envs/dask_yarn/bin/python \
+                    dask_cmd = """ARROW_LIBHDFS_DIR=/usr/hdp/4.1.4.0/ /home/sshuser/miniconda/envs/dask_yarn/bin/python \
                                     src/rita_master_dask.py \
                                     --creds {creds} \
                                     --process {proceso}_dask \
@@ -159,7 +159,7 @@ for i in pruebas_rutas:
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
         else:
-            dask_cmd = '''/home/sshuser/miniconda/envs/dask_yarn/bin/python \
+            dask_cmd = '''ARROW_LIBHDFS_DIR=/usr/hdp/4.1.4.0/ /home/sshuser/miniconda/envs/dask_yarn/bin/python \
                             src/calculo_ruta_minima/dijkstra_dask.py \
                             --sample_size {sample_size} \
                             --process {process} \
