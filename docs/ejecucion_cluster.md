@@ -62,9 +62,9 @@ conda-pack -o conf/conda_envs/dask_yarn.tar.gz
 Es importante que estemos dentro del ambiente que queremos empaquetar.
 
 
-### Clúster en Azure
+## Clúster en Azure
 
-## Creación y acceso
+### Creación y acceso
 
 ```
 az group create \
@@ -115,12 +115,9 @@ Una vez realizado el cambio de hdfs hay que seguir los siguientes pasos:
 
 ### Cambiar la versión default de python a la 2.7 (comentar en .bashrc al final lo de anaconda)
 
-
-hdfs dfs -mkdir /conda_envs/
-hdfs dfs -mkdir /samples/
-hdfs dfs -copyFromLocal conf/conda_envs/dask_yarn.tar.gz /conda_envs/
-hdfs dfs -cp wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_dask_casted /samples/
-hdfs dfs -cp wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_spark_casted /samples/
+hdfs dfs -mkdir hdfs://mycluster/user/sshuser/samples/
+hdfs dfs -cp wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_dask_casted hdfs://mycluster/user/sshuser/samples/
+hdfs dfs -cp wasbs://transtat-tesis@ritatesisstorage.blob.core.windows.net/data_100K_spark_casted hdfs://mycluster/user/sshuser/samples/
 hdfs dfs -mkdir hdfs://mycluster/spark/
 hdfs dfs -mkdir hdfs://mycluster/spark/events/
 
