@@ -18,6 +18,7 @@ import time # Utilizado para medir el timpo de ejecucion
 parser = argparse.ArgumentParser()
 parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
+parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 
 def lee_config_csv(path, sample_size, process):
@@ -30,7 +31,10 @@ def lee_config_csv(path, sample_size, process):
 
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
-config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+if args.env != 'cluster':
+    config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+else:
+    config = lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 

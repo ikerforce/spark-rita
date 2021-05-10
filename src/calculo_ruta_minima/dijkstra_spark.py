@@ -27,6 +27,7 @@ parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la b
 parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
+parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 args = parser.parse_args()
 
 def lee_config_csv(path, sample_size, process):
@@ -37,7 +38,11 @@ def lee_config_csv(path, sample_size, process):
     parametros = dict(zip(nombres.split('|'), list(info)[0].split('|')))
     return parametros
 
-config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+if args.env != 'cluster':
+    config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+else:
+    config = lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
+
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
