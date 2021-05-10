@@ -30,9 +30,9 @@ parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
 if args.env != 'cluster':
-    config = lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
+    config = utils.lee_config_csv(path="conf/base/configs.csv", sample_size=args.sample_size, process=args.process)
 else:
-    config = lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
+    config = utils.lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
