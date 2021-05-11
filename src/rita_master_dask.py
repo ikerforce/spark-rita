@@ -31,11 +31,7 @@ else:
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
-print('\n\n\n')
-print(config)
-print('\n\n\n')
-
-uri = 'mysql+pymysql://{0}:{1}@localhost:{2}/{3}'.format(creds["user"], creds["password"], "3306", creds["database"])
+uri = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(creds["user"], creds["password"], creds["host"], "3306", creds["database"])
 
 t_inicio = time.time() # Inicia tiempo de ejecucion
 
