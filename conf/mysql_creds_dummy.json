@@ -2,6 +2,7 @@
 	"user":"secret_user",
 	"password":"secret_password",
 	"database":"database_name",
+	"host":"localhost",
 	"db_url":"jdbc:mysql://localhost:3306/",
 	"db_driver":"com.mysql.jdbc.Driver"
 }
