@@ -1,3 +1,5 @@
-\chapter{Cuadros anexos}
+\chapter{Apéndice}
 
-\noindent 
+\section{Formato columnar\label{formatocolumnar}}
+
+\noindent En un formato columnar, cada columna del conjunto de datos se almacena en una localización distinta de disco, normalmente usando bloques de memoria grandes para evitar el escaneo de múltiples bloques. Además, se almacenan en un formato comprimido y se hace explícito cuando se trata de una columna de \textit{IDs} para eficientar la lectura de los datos \cite{column-oriented}. A diferencia del formato por renglón, común en formatos como \texttt{csv}, \texttt{json} o \texttt{avro}, el formato columnar agrupa los datos por columna y no por cada registro. Esto trae las siguientes ventajas: en primer lugar, las consultas sobre una columna específica son más eficientes ya que no es necesario hacer el parseo de cada registro, adicionalmente, se conoce con antelación el tipo de dato que se está procesando dado que normalmente los valores de la columna comparten el tipo de dato, en segundo lugar, se puede lograr una mayor compresión debido a que las columnas normalmente tienen valores similares y además se pueden almacenar de forma separada. Sin embargo, el formato columnar tiene desventajas, sobre todo al hacer búsquedas de un registro específico ya que puede ser mucho más complicado reconstruirlo debido a que las columnas están almacenadas en localizaciones distintas. Los formatos como \texttt{parquet} y \texttt{orc} son los más populares para este tipo de almacenamiento \cite{columnar-storage-blog}.
