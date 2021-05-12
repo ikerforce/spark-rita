@@ -28,26 +28,26 @@ Los \textit{DataFrames} de Spark son la API estructurada más popular del \texti
 Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguieron las prácticas de \cite{sparkibm}. La siguiente lista corresponde a los puntos más importantes.
 
 \begin{itemize}
-	\item Sólo mantener las \textit{acciones} necesarias. Dado que estas son evaluadas de forma inmediata, pueden afectar al plan de ejecución y provocar planes poco eficientes.
-	\item Almacenar los datos en un formato columnar optimizado para lectura y escritura como \texttt{parquet} o \texttt{orc}.
+	\item Mantener únicamente las \textit{acciones} necesarias. Dado que estas son evaluadas de forma inmediata, pueden afectar al plan de ejecución y provocar planes poco eficientes.
+	\item Almacenar los datos en un formato columnar (ver \ref{formatocolumnar}) optimizado para lectura y escritura como \texttt{parquet} o \texttt{orc}.
 	\item Evitar un gran número de archivos pequeños.
 	\item Aumentar el número de particiones para aprovechar el paralelismo.
 	\item Buscar entre 2 y 3 \textit{tasks} por ejecutor.
 	\item Cambiar el valor del parámetro \texttt{shuffle partitions} en caso de tener conjuntos de datos muy grandes. Cuando el conjunto de datos es muy grande, el tamaño de cada partición debe estar entre 100 y 200 MB. 
-	\item Para definir un valor adecuado para el parámetro \texttt{shuffle partitions} se puede usar la fórmula siguiente como referencia: \texttt{spark.sql.shuffle.partitions} = quotient (shuffle stage input size/target size)/total cores) * total cores.
 	\item Evitar \textit{shuffles}, es decir que los datos tengan que ser transmitidos entre nodos.
-	\item Reduce o filtra los datos lo más pronto posible.
-	\item Cuando la misma operación se ejecuta múltiples veces, usa \texttt{cache} y elimina los datos en el \texttt{cache} cuando ya no sean necesarios.
-	\item Cuando se esté haciendo un join con una tabla pequeña, usar \texttt{BroadcastHashJoin}.
-	\item Si vas a hacer múltiples \textit{joins}, empieza por el más selectivo para reducir el número de registros.
-	\item Evita \textit{cross joins}.
-	\item Configura el uso de recursos del clúster dependiendo del administrador de recursos y la versión de Spark.
-	\item Configura los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster.
-	\item Evita el uso de operaciones costosas como \texttt{order by}. 
-	\item Selecciona las columnas usando sus nombres en lugar de seleccionarlas todas con \texttt{*}.
-	\item No uses \texttt{count} de forma innecesaria.
-	\item Asegurarse de que las particiones tengan tamaños similares para que los recursos se utilicen de forma equitativa. En algunos casos, puede ser útil usar \texttt{repartition} para evitar el sesgo hacia alguna partición, sin embargo, esto se debe de hacer con cuidado y poca frecuencia ya que la operación es muy costosa.
-	\item De ser posible, utiliza las funciones nativas de \textit{Spark} en lugar de crear funciones personalizadas.
+	\item Definir un valor adecuado para el parámetro \texttt{shuffle partitions} usando la fórmula siguiente: \texttt{spark.sql.shuffle.partitions} = quotient (shuffle stage input size/target size)/total cores) * total cores.
+	\item Reducir o filtrar los datos lo más pronto posible.
+	\item Usar \texttt{cache} cuando la misma operación se ejecuta múltiples veces y eliminar los datos en el \texttt{cache} cuando ya no sean necesarios.
+	\item Usar \texttt{BroadcastHashJoin} cuando se esté haciendo un \textit{join} con una tabla pequeña.
+	\item Empezar haciendo el \textit{join} más selectivo para reducir el número de registros utilizados.
+	\item Evitar el uso de \textit{cross joins} (el producto cartesiano de dos tablas, relaciona cada registro de una tabla con todos los de la otra por lo que aumenta significativamente el número de registros).
+	\item Configurar el uso de recursos del clúster dependiendo del administrador de recursos y la versión de Spark.
+	\item Configurar los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster.
+	\item Evitar el uso de operaciones costosas como \texttt{order by}. 
+	\item Seleccionar las columnas usando sus nombres en lugar de seleccionarlas todas con \texttt{*} para evitar cargar columnas que no serán utilizadas.
+	\item Usar \texttt{count} sólo cuando sea necesario.
+	\item Asegurar que las particiones tengan tamaños similares para que los recursos se utilicen de forma equitativa. En algunos casos, puede ser útil usar \texttt{repartition} para evitar el sesgo hacia alguna partición, sin embargo, esto se debe de hacer con cuidado y poca frecuencia ya que la operación es muy costosa.
+	\item Utilizar las funciones nativas de \textit{Spark} en lugar de crear funciones personalizadas cuando sea posible.
 	 	
 \end{itemize}
 
@@ -72,17 +72,17 @@ Un \textit{Dask DataFrame} es ua estructura paralela y extensa, compuesta de mú
 En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas listadas en \cite{daskbestpractices}:
 \begin{itemize}
 	\item Usar \textit{Pandas} para datos que quepan en memoria.
-	\item Reduce el tamaño de un conjunto de datos grande con \textit{Dask} y ya que el conjunto sea suficientemente pequeño continúa el resto de las operaciones con \textit{Pandas}.
-	\item Sigue las mejores prácticas de Pandas ya que estas normalmente aplican a los \textit{Dask Dataframes}. Esto incluye evitar el uso \texttt{apply} y usar operaciones vectorizadas.
-	\item Utiliza el \texttt{index} de \textit{Dask} cuando sea posible. Esto acelerará las operaciones que usen esa columna. A veces utilizar el método \texttt{set\_index} puede acelerar el cómputo pero hay que tener en cuenta que es una operación muy costosa por lo que se debe hacer con poca frecuencia y se debe usar \texttt{persist} posteriormente.
-	\item Evita operaciones que requieran \textit{data shuffling} que intercambian los datos y son intensivas en comunicación entre los \textit{dask workers}. 
-	\item Usa \texttt{persist} de manera inteligente para mantener en memoria los datos que serán utilizados nuevamente y así evitar recalcularlos. Es preferible hacer esto después de operaciones como carga de datos, filtrado y operaciones que impliquen un \textit{shuffle} de los datos.
-	\item Mantén el número de particiones en un rango adecuado para evitar la sobrecarga de la memoria o para aumentar el grado de paralelización. Procura seguir las siguientes guías: Las particiones deben de caber en memoria cómodamente, preferiblemente ser menores a 1 GB y deben existir pocas particiones, además estas deben tener un tamaño aproximado de 100 MB. 
-	\item Después de reducir tus datos, usa \texttt{repartition} para reducir el número de particiones.
-	\item Reduce el número de particiones antes de hacer operaciones que impliquen \textit{data shuffling}, ya que estas crean $n \log{n}$ tareas para $n$ particiones, por lo que es más sencillo hacer un \textit{shuffle} de \textit{DataFrames} con 100 particiones o menos que uno con miles de particiones.
-	\item Al hacer \textit{joins} procura mantenerte dentro de los siguientes casos ya que son poco costosos: Unir dos \textit{Dask DataFrames} por sus columnas índice, Unir un \textit{Dask DataFrame} con un \textit{Pandas DataFrame}, unir dos \textit{Pandas DataFrame} y unir un \textit{Dask DataFrame} con otro \textit{Dask DataFrame} que esté en una única partición. 
-	\item Evita unir dos \textit{Dask DataFrames} por columnas que no sean el índice ya que esto es muy costoso.
-	\item Almacena y carga los datos en formato \textit{Apache Parquet}.
+	\item Reducir el tamaño de un conjunto de datos grande con \textit{Dask} y ya que el conjunto sea suficientemente pequeño continúa el resto de las operaciones con \textit{Pandas}.
+	\item Seguir las mejores prácticas de Pandas ya que estas normalmente aplican a los \textit{Dask Dataframes}. Esto incluye usar operaciones vectorizadas y evitar el uso de \texttt{apply}.
+	\item Evitar operaciones que requieran \textit{data shuffling} que intercambian los datos y son intensivas en comunicación entre los \textit{dask workers}. 
+	\item Usar \texttt{persist} de manera inteligente para mantener en memoria los datos que serán utilizados nuevamente y así evitar recalcularlos. Es preferible hacer esto después de operaciones como carga de datos, filtrado y operaciones que impliquen un \textit{shuffle} de los datos.
+	\item Utilizar el \texttt{index} de \textit{Dask} cuando sea posible. Esto acelerará las operaciones que usen esa columna. A veces utilizar el método \texttt{set\_index} puede acelerar el cómputo pero hay que tener en cuenta que es una operación muy costosa por lo que se debe hacer con poca frecuencia y se debe usar \texttt{persist} posteriormente.
+	\item Mantener el número de particiones en un rango adecuado para evitar la sobrecarga de la memoria o para aumentar el grado de paralelización. Procurar seguir las siguientes guías: Las particiones deben de caber en memoria cómodamente, preferiblemente ser menores a 1 GB y deben existir pocas particiones, además estas deben tener un tamaño aproximado de 100 MB. 
+	\item Usar \texttt{repartition} para reducir el número de particiones después de una reducción significativa de los datos.
+	\item Reducir el número de particiones antes de hacer operaciones que impliquen \textit{data shuffling}, ya que estas crean $n \log{n}$ tareas para $n$ particiones, por lo que es más sencillo hacer un \textit{shuffle} de \textit{DataFrames} con 100 particiones o menos que uno con miles de particiones.
+	\item Procurar mantenerse dentro de los siguientes casos al hacer \textit{joins}: Unir dos \textit{Dask DataFrames} por sus columnas índice, Unir un \textit{Dask DataFrame} con un \textit{Pandas DataFrame}, unir dos \textit{Pandas DataFrame} y unir un \textit{Dask DataFrame} con otro \textit{Dask DataFrame} que esté en una única partición. 
+	\item Evitar unir dos \textit{Dask DataFrames} por columnas que no sean el índice.
+	\item Almacenar y cargar los datos en formato \textit{Apache Parquet}.
 \end{itemize}
 
 \section{Algoritmo de Dijkstra}
