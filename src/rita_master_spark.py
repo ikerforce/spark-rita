@@ -38,10 +38,6 @@ else:
     config = lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
-
-print('\n\n\n')
-print(config)
-print('\n\n\n')
 # ----------------------------------------------------------------------------------------------------
 
 
