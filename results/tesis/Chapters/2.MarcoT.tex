@@ -42,7 +42,7 @@ Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguiero
 	\item Empezar haciendo el \textit{join} más selectivo para reducir el número de registros utilizados.
 	\item Evitar el uso de \textit{cross joins} (el producto cartesiano de dos tablas, relaciona cada registro de una tabla con todos los de la otra por lo que aumenta significativamente el número de registros).
 	\item Configurar el uso de recursos del clúster dependiendo del administrador de recursos y la versión de Spark.
-	\item Configurar los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster.
+	\item Configurar los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster. Esto se aborda más a detalle en la siguiente sección.
 	\item Evitar el uso de operaciones costosas como \texttt{order by}. 
 	\item Seleccionar las columnas usando sus nombres en lugar de seleccionarlas todas con \texttt{*} para evitar cargar columnas que no serán utilizadas.
 	\item Usar \texttt{count} sólo cuando sea necesario.
@@ -50,6 +50,19 @@ Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguiero
 	\item Utilizar las funciones nativas de \textit{Spark} en lugar de crear funciones personalizadas cuando sea posible.
 	 	
 \end{itemize}
+
+\subsection{Parametrización de trabajos de \textit{PySpark} en el clúster}
+
+Es importante utilizar los recursos del clúster de forma inteligente para aprovechar al máximo los recursos disponibles. En \cite{sparkconfuds}, se recomienda configurar los parámetros de una aplicación de \textit{Spark} de la siguiente forma:
+
+\begin{itemize}
+	\item \texttt{--driver-memory} determina la memoria que se le asignará al \textit{driver} y su valor predeterminado es 1G. Se recomienda aumentarlo cuando se requiera transmitir resultados grandes al \textit{driver} mediante acciones como \texttt{take(n)} o \texttt{collect()}.
+	\item \texttt{--driver-cores} determina el número de \textit{cores} que se le asignarán al \textit{driver}. El valor predeterminado es 1, pero se recomienda asignar de 2 a 4 \textit{cores} para clústeres más grandes y aplicaciones complejas. 
+	\item \texttt{--num-executors} especifica el número de ejecutores que se crearán para ejecutar las tareas de la aplicación. El número de ejecutores depende de la cantidad de \textit{cores} disponibles en el clúster. Se aconseja dejar, en cada nodo 1 o 2 cores disponibles para tareas independientes del trabajo de \textit{Spark} y asignar entre 2 y 5 \textit{cores} a cada ejecutor dependiendo de las tareas que procesará y el nivel de paralelismo que se busca alcanzar.  
+	\item \texttt{--executor-memory} asigna memoria a cada \textit{ejecutor}. El valor predeterminado es 1G pero se debe incrementar de acuerdo a la tarea y la cantidad de memoria disponible para cada ejecutor. 
+	\item \texttt{--executor-cores} determina el número de cores que se asigna a cada ejecutor y va muy de la mano con el parámetro \texttt{--num-executors} por lo que se deben de calcular de manera conjunta. De acuerdo a \cite{sparkconfcloudera}, el número de cores que se le asigna a cada ejecutor determina el número de tareas simultáneas que puede realizar.
+\end{itemize}
+
 
 \section{Dask}
 
