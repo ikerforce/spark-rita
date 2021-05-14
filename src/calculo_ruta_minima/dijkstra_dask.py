@@ -156,14 +156,14 @@ if __name__ == '__main__':
                     t_acumulado = float(vuelo_elegido['t_acumulado'])
                     min_dep_epoch = float(vuelo_elegido['arr_epoch']) + 7200
                     
-                    print('''\nIteration {i} / {n_nodos}
-                            Nodo actual = {nodo_actual}
-                            Weight = {w}
-                            Transcurrido = {transcurrido}'''.format(i = i
-                                                , n_nodos = n_nodos
-                                                , nodo_actual = nodo_actual
-                                                , w = t_acumulado
-                                                , transcurrido=time.time()-t_inicio))
+                    # print('''\nIteration {i} / {n_nodos}
+                    #         Nodo actual = {nodo_actual}
+                    #         Weight = {w}
+                    #         Transcurrido = {transcurrido}'''.format(i = i
+                    #                             , n_nodos = n_nodos
+                    #                             , nodo_actual = nodo_actual
+                    #                             , w = t_acumulado
+                    #                             , transcurrido=time.time()-t_inicio))
 
                     frontera = frontera[(frontera['DEST'] != nodo_actual) | (frontera['t_acumulado'] < t_acumulado)]
 
@@ -252,5 +252,6 @@ if __name__ == '__main__':
     df_tiempo_1.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
     df_tiempo_2.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
+    print('\tTiempo ejecución: {t}'.format(t = t_final - t_inicio))
     print('\tFIN DE LA EJECUCIÓN')
     # # ----------------------------------------------------------------------------------------------------

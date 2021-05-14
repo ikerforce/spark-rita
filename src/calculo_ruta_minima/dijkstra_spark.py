@@ -9,6 +9,7 @@ sc = SparkContext()
 from pyspark.sql import SparkSession, SQLContext
 spark = SparkSession(sc)
 sqlContext = SQLContext(sc)
+spark.sparkContext.setLogLevel("ERROR")
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
@@ -156,14 +157,14 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
                 t_acumulado = vuelo_elegido[4]
                 min_dep_epoch = float(vuelo_elegido[3]) + 7200
 
-                print('''\nIteration {i} / {n_nodos}
-                            Nodo actual = {nodo_actual}
-                            Weight = {w}
-                            Transcurrido = {transcurrido}'''.format(i = i
-                                                , n_nodos = n_nodos
-                                                , nodo_actual = nodo_actual
-                                                , w = t_acumulado
-                                                , transcurrido=time.time()-t_inicio))
+                # print('''\nIteration {i} / {n_nodos}
+                #             Nodo actual = {nodo_actual}
+                #             Weight = {w}
+                #             Transcurrido = {transcurrido}'''.format(i = i
+                #                                 , n_nodos = n_nodos
+                #                                 , nodo_actual = nodo_actual
+                #                                 , w = t_acumulado
+                #                                 , transcurrido=time.time()-t_inicio))
 
                 frontera = frontera.filter('DEST != "{nodo_actual}" OR t_acumulado < {t_acumulado}'.format(nodo_actual=nodo_actual, t_acumulado=t_acumulado))
 
@@ -288,5 +289,6 @@ df_time_2.write.format("jdbc")\
     .mode(config["time_table_mode"])\
     .save()
 
+print('\tTiempo ejecución: {t}'.format(t = t_final - t_inicio))
 print('\tFIN DE LA EJECUCIÓN')
 # ----------------------------------------------------------------------------------------------------
