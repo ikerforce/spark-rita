@@ -7,6 +7,7 @@ sc = SparkContext()
 from pyspark.sql import SparkSession, SQLContext
 spark = SparkSession(sc)
 sqlContext = SQLContext(sc)
+spark.sparkContext.setLogLevel("ERROR")
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
