@@ -81,17 +81,27 @@ for proceso in procesos:
             try:
                 print('+----------------------------------+')
                 print('\t' + proceso + ' spark')
-                spark_cmd = """spark-submit \
-                                --driver-memory=8g \
-                                --num-executors=10 \
-                                --jars sql/mysql-connector-java-8.0.23.jar \
-                                src/rita_master_spark.py \
-                                --env cluster \
-                                --creds {creds} \
-                                --process {proceso}_spark \
-                                --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                if args.env != 'cluster':
+                    spark_cmd = """spark-submit \
+                                    --driver-memory=16g \
+                                    --jars sql/mysql-connector-java-8.0.23.jar \
+                                    src/rita_master_spark.py \
+                                    --env {env} \
+                                    --creds {creds} \
+                                    --process {proceso}_spark \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env)
+                else:
+                    spark_cmd = """spark-submit \
+                                    --driver-memory=2g \
+                                    --driver-cores=2 \
+                                    --num-executors=10 \
+                                    --jars sql/mysql-connector-java-8.0.23.jar \
+                                    src/rita_master_spark.py \
+                                    --env cluster \
+                                    --creds {creds} \
+                                    --process {proceso}_spark \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
                 os.system(spark_cmd)
-                # os.system('spark-submit src/rita_master_spark.py --creds ' + args.creds + ' --process ' + proceso + '_spark' + ' --sample_size ' + args.sample_size)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -116,7 +126,6 @@ for proceso in procesos:
                                     --sample_size {sample_size} \
                                     --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler)
                 os.system(dask_cmd)
-                # os.system('python src/rita_master_dask.py --creds ' + args.creds + ' --process ' + proceso + '_dask' + ' --sample_size ' + args.sample_size)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -136,17 +145,29 @@ for i in pruebas_rutas:
         ruta = rutas_spark.pop()
         print('+----------------------------------+')
         print('\tdijkstra - spark')
-        spark_cmd = '''spark-submit \
-                        --driver-memory=8g \
-                        --num-executors=10 \
-                        --jars sql/mysql-connector-java-8.0.23.jar \
-                        src/calculo_ruta_minima/dijkstra_spark.py \
-                        --env cluster \
-                        --sample_size {sample_size} \
-                        --process {process} \
-                        --creds {creds} \
-                        --origin {origin} \
-                        --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
+        if args.env != 'cluster':
+            spark_cmd = '''spark-submit \
+                            --driver-memory=16g \
+                            --jars sql/mysql-connector-java-8.0.23.jar \
+                            src/calculo_ruta_minima/dijkstra_spark.py \
+                            --env {env} \
+                            --sample_size {sample_size} \
+                            --process {process} \
+                            --creds {creds} \
+                            --origin {origin} \
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env)
+        else:
+            spark_cmd = '''spark-submit \
+                            --driver-memory=2g \
+                            --driver-cores=2 \
+                            --jars sql/mysql-connector-java-8.0.23.jar \
+                            src/calculo_ruta_minima/dijkstra_spark.py \
+                            --env cluster \
+                            --sample_size {sample_size} \
+                            --process {process} \
+                            --creds {creds} \
+                            --origin {origin} \
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
         os.system(spark_cmd)
         print('+----------------------------------+')
     else:
