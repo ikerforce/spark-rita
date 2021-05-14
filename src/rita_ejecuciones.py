@@ -96,7 +96,7 @@ for proceso in procesos:
                                     --driver-cores 2 \
                                     --num-executors 2 \
                                     --executor-cores 3 \
-                                    --executory-memory 11G \
+                                    --executor-memory 11G \
                                     --jars sql/mysql-connector-java-8.0.23.jar \
                                     src/rita_master_spark.py \
                                     --env cluster \
@@ -164,7 +164,7 @@ for i in pruebas_rutas:
                             --driver-cores 2 \
                             --num-executors 2 \
                             --executor-cores 3 \
-                            --executory-memory 11G \
+                            --executor-memory 11G \
                             --jars sql/mysql-connector-java-8.0.23.jar \
                             src/calculo_ruta_minima/dijkstra_spark.py \
                             --env cluster \
