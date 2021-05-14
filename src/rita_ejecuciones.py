@@ -83,7 +83,7 @@ for proceso in procesos:
                 print('\t' + proceso + ' spark')
                 if args.env != 'cluster':
                     spark_cmd = """spark-submit \
-                                    --driver-memory=16g \
+                                    --driver-memory 11G \
                                     --jars sql/mysql-connector-java-8.0.23.jar \
                                     src/rita_master_spark.py \
                                     --env {env} \
@@ -92,9 +92,11 @@ for proceso in procesos:
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env)
                 else:
                     spark_cmd = """spark-submit \
-                                    --driver-memory=2g \
-                                    --driver-cores=2 \
-                                    --num-executors=10 \
+                                    --driver-memory 2G \
+                                    --driver-cores 2 \
+                                    --num-executors 2 \
+                                    --executor-cores 3 \
+                                    --executory-memory 11G \
                                     --jars sql/mysql-connector-java-8.0.23.jar \
                                     src/rita_master_spark.py \
                                     --env cluster \
@@ -147,7 +149,7 @@ for i in pruebas_rutas:
         print('\tdijkstra - spark')
         if args.env != 'cluster':
             spark_cmd = '''spark-submit \
-                            --driver-memory=16g \
+                            --driver-memory 11G \
                             --jars sql/mysql-connector-java-8.0.23.jar \
                             src/calculo_ruta_minima/dijkstra_spark.py \
                             --env {env} \
@@ -158,8 +160,11 @@ for i in pruebas_rutas:
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env)
         else:
             spark_cmd = '''spark-submit \
-                            --driver-memory=2g \
-                            --driver-cores=2 \
+                            --driver-memory 2G \
+                            --driver-cores 2 \
+                            --num-executors 2 \
+                            --executor-cores 3 \
+                            --executory-memory 11G \
                             --jars sql/mysql-connector-java-8.0.23.jar \
                             src/calculo_ruta_minima/dijkstra_spark.py \
                             --env cluster \
