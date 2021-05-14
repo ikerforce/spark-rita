@@ -47,6 +47,10 @@ else:
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
+print('\n\n\n')
+print(config)
+print('\n\n\n')
+
 t_inicio = time.time()
 
 process = config['results_table']
