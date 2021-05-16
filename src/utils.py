@@ -78,3 +78,12 @@ def write_result_to_mysql(lista_df, uri, process):
     lista_df[0].to_sql(process, uri, if_exists='replace', index=False) # En la primera escritura borro los resultados anteriores
     for resultado in lista_df[1:]:
         resultado.to_sql(process, uri, if_exists='append', index=False) # Desupés solo hago append
+
+def write_result_to_parquet(lista_df, process, env):
+    """Esta función escribe el resultado a la dirección especificada en formato parquet."""
+    date = time.strftime("%Y_%m_%d_%H_%M_%S", time.gmtime(time.time()))
+    if env != 'cluster':
+        full_path = 'resultados/' + process + '/' + date
+    else:
+        full_path = 'hdfs://resultados/' + process + '/' + date
+    dd.concat(lista_df, axis=0, interleave_partitions=True).repartition(1).to_parquet(full_path, engine='pyarrow')

@@ -85,7 +85,7 @@ if __name__ == '__main__':
         df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
-        utils.write_result_to_mysql(lista_df, uri, process)
+        utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_aeropuerto_origen_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
@@ -97,14 +97,14 @@ if __name__ == '__main__':
         df = utils.read_df_from_parquet(config['input_path'], columns=['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'min', 'DEP_DELAY':'min', 'ACTUAL_ELAPSED_TIME':'min', 'TAXI_IN':'min', 'TAXI_OUT':'min'}
         lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
-        utils.write_result_to_mysql(lista_df, uri, process)
+        utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_ruta_aeropuerto_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST'])
         df = utils.unir_columnas(df, "ORIGIN", "DEST", "ROUTE_AIRPORTS")
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
-        utils.write_result_to_mysql(lista_df, uri, process)
+        utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_ruta_mktid_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
