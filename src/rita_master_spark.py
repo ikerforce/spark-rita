@@ -216,6 +216,7 @@ def tamano_flota_aerolinea(path):
         .agg(F.expr('COUNT(DISTINCT TAIL_NUM)').alias('TAIL_NUM'))
     return df_resp
 
+
 def write_result_to_mysql(df_resp, creds, config, process):
     df_resp.write.format("jdbc")\
         .options(
@@ -227,6 +228,16 @@ def write_result_to_mysql(df_resp, creds, config, process):
             numPartitions=config["db_numPartitions"])\
         .mode(config["results_table_mode"])\
         .save()
+
+
+def write_result_to_parquet(df_resp, process, env=args.env):
+    """Esta función escribe el resultado a la dirección especificada en formato parquet."""
+    date = time.strftime("%Y_%m_%d_%H_%M_%S", time.gmtime(time.time()))
+    if env != 'cluster':
+        full_path = 'resultados/' + process + '/' + date
+    else:
+        full_path = 'hdfs://resultados/' + process + '/' + date
+    df_resp.coalesce(1).write.format('parquet').save(full_path)
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -237,7 +248,7 @@ print('\tLos resultados se escribirán en la tabla: ' + process)
 
 if process == 'demoras_aerolinea_spark':
     df_resp = aeropuerto_demoras_aerolinea(config['input_path']) # Calculo de demoras en cada ruta
-    write_result_to_mysql(df_resp, creds, config, process)
+    write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_aeropuerto_origen_spark':
     df_resp = aeropuerto_demoras_origen(config['input_path']) # Calculo de demoras en cada ruta
@@ -245,11 +256,11 @@ elif process == 'demoras_aeropuerto_origen_spark':
 
 elif process == 'demoras_aeropuerto_destino_spark':
     df_resp = aeropuerto_demoras_destino(config['input_path']) # Calculo de demoras en cada ruta basados en destino
-    write_result_to_mysql(df_resp, creds, config, process)
+    write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_ruta_aeropuerto_spark':
     df_resp = principales_rutas_aeropuerto_fecha(config['input_path']) # Calculo de demoras en cada ruta
-    write_result_to_mysql(df_resp, creds, config, process)
+    write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_ruta_mktid_spark':
     df_resp = principales_rutas_mktid_fecha(config['input_path']) # Calculo de demoras en cada ruta
