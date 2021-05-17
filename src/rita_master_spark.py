@@ -225,6 +225,7 @@ def write_result_to_mysql(df_resp, creds, config, process):
             dbtable=process,
             user=creds["user"],
             password=creds["password"],
+            batchsize=12000,
             rewriteBatchedStatements=True,
             numPartitions=config["db_numPartitions"])\
         .mode(config["results_table_mode"])\
