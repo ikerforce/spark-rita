@@ -236,7 +236,7 @@ def write_result_to_parquet(df_resp, process, env=args.env):
     if env != 'cluster':
         full_path = 'resultados/' + process + '/' + date
     else:
-        full_path = 'hdfs://resultados/' + process + '/' + date
+        full_path = 'hdfs://mycluster/resultados/' + process + '/' + date
     df_resp.coalesce(1).write.format('parquet').save(full_path)
 # ----------------------------------------------------------------------------------------------------
 
