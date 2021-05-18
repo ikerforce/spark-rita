@@ -13,4 +13,3 @@ conda deactivate
 cd spark-rita
 conda env create -f conf/conda_envs/dask_yarn.yml
 conda activate dask_yarn
-dask-worker $2
