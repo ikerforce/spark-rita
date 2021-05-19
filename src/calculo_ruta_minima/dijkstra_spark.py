@@ -128,10 +128,10 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
         # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
 
-        df = df.checkpoint()
+        # df = df.checkpoint()
 
-        # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
-        # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
+        df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
+        df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
 
         # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tiempo de conexion mayor a 7200 minutos
         frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
@@ -194,8 +194,10 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
                         
             frontera = frontera_nueva.union(frontera)
 
-            frontera.write.format('parquet').mode('overwrite').save('temp_dir/frontera_spark')
-            frontera = spark.read.format('parquet').load('temp_dir/frontera_spark').cache()
+            # frontera.write.format('parquet').mode('overwrite').save('temp_dir/frontera_spark')
+            # frontera = spark.read.format('parquet').load('temp_dir/frontera_spark').cache()
+
+            frontera = frontera.checkpoint()
 
 else:
 
@@ -247,6 +249,7 @@ if encontro_ruta == True:
             driver=creds["db_driver"],
             dbtable=process,
             user=creds["user"],
+            rewriteBatchedStatements=True,
             password=creds["password"],
             numPartitions=config["db_numPartitions"])\
         .mode(config["results_table_mode"])\
