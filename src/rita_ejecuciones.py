@@ -173,7 +173,7 @@ for i in pruebas_rutas:
                             --creds {creds} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
-        os.system(spark_cmd)
+        # os.system(spark_cmd)
         print('+----------------------------------+')
     else:
         ruta = rutas_dask.pop()
@@ -197,7 +197,7 @@ for i in pruebas_rutas:
                             --scheduler {scheduler} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler)
-        os.system(dask_cmd)
+        # os.system(dask_cmd)
         print('+----------------------------------+')
 
 if n_errores > 0:
