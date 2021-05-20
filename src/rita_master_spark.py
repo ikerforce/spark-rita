@@ -44,14 +44,6 @@ with open(args.creds) as json_file:
 # LECTURA DE DATOS
 # ----------------------------------------------------------------------------------------------------
 t_inicio = time.time() # Inicia tiempo de ejecucion
-
-# Lectura de datos de MySQL
-# df_rita = spark.read\
-#     .format('parquet')\
-#     .load(config['input_path'])\
-#     .select(*['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
-
-# t_intermedio = time.time()
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -112,8 +104,6 @@ def aeropuerto_demoras_origen(path):
     """
     df = read_df_from_parquet(path=path, columns=['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
     
-    df.cache()
-    
     df_resp = df.rollup('ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
             F.count("FL_DATE").alias("FL_DATE"),
@@ -135,8 +125,6 @@ def aeropuerto_demoras_destino(path):
     Los resultados se presentan para cada dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     """
     df = read_df_from_parquet(path=path, columns=['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
-
-    df.cache()
     
     df_resp = df.rollup('DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
         .agg(
@@ -155,8 +143,6 @@ def principales_rutas_aeropuerto_fecha(path):
     \nLa entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
     df = read_df_from_parquet(path=path, columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST'])
-
-    df.cache()
     
     df_resp = df\
         .withColumn('ROUTE_AIRPORTS', F.concat('ORIGIN', F.lit('-'), 'DEST'))
@@ -183,8 +169,6 @@ def principales_rutas_mktid_fecha(path):
     La entrada es un dataframe que contiene los datos de lugar, fecha, duracion y retraso de cada vuelo."""
     # Obtencion de ruta por dia
     df = read_df_from_parquet(path=path, columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
-
-    df.cache()
     
     df_resp = df\
         .withColumn('ROUTE_MKT_ID', F.concat('ORIGIN_CITY_MARKET_ID', F.lit('-'), 'DEST_CITY_MARKET_ID'))
@@ -208,8 +192,6 @@ def principales_rutas_mktid_fecha(path):
 
 def tamano_flota_aerolinea(path):
     df = read_df_from_parquet(path=path, columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'TAIL_NUM'])
-
-    df.cache()
     
     # Calculo de indicadores por dia (DAY), cada mes (MONTH), cada trimestre (QUARTER) y cada ano (YEAR)
     df_resp = df.rollup('OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH')\
