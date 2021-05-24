@@ -89,7 +89,8 @@ for proceso in procesos:
                                     --env {env} \
                                     --creds {creds} \
                                     --process {proceso}_spark \
-                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env)
+                                    --command_time {c_time} \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env, c_time=time.time())
                 else:
                     spark_cmd = """spark-submit \
                                     --driver-memory 2G \
@@ -102,7 +103,8 @@ for proceso in procesos:
                                     --env cluster \
                                     --creds {creds} \
                                     --process {proceso}_spark \
-                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                                    --command_time {c_time} \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time())
                 os.system(spark_cmd)
                 print('+----------------------------------+')
             except Exception as e:
@@ -118,15 +120,17 @@ for proceso in procesos:
                                     src/rita_master_dask.py \
                                     --creds {creds} \
                                     --process {proceso}_dask \
-                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size)
+                                    --command_time {c_time} \
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time())
                 else:
                     dask_cmd = """/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                                     src/rita_master_dask.py \
                                     --env cluster \
                                     --creds {creds} \
                                     --process {proceso}_dask \
+                                    --command_time {c_time} \
                                     --sample_size {sample_size} \
-                                    --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler)
+                                    --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler, c_time=time.time())
                 os.system(dask_cmd)
                 print('+----------------------------------+')
             except Exception as e:
@@ -156,8 +160,9 @@ for i in pruebas_rutas:
                             --sample_size {sample_size} \
                             --process {process} \
                             --creds {creds} \
+                            --command_time {c_time} \
                             --origin {origin} \
-                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env)
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env, c_time=time.time())
         else:
             spark_cmd = '''spark-submit \
                             --driver-memory 2G \
@@ -171,9 +176,10 @@ for i in pruebas_rutas:
                             --sample_size {sample_size} \
                             --process {process} \
                             --creds {creds} \
+                            --command_time {c_time} \
                             --origin {origin} \
-                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds)
-        # os.system(spark_cmd)
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, c_time=time.time())
+        os.system(spark_cmd)
         print('+----------------------------------+')
     else:
         ruta = rutas_dask.pop()
@@ -185,8 +191,9 @@ for i in pruebas_rutas:
                             --sample_size {sample_size} \
                             --process {process} \
                             --creds {creds} \
+                            --command_time {c_time} \
                             --origin {origin} \
-                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds)
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time())
         else:
             dask_cmd = '''/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                             src/calculo_ruta_minima/dijkstra_dask.py \
@@ -195,9 +202,10 @@ for i in pruebas_rutas:
                             --creds {creds} \
                             --env cluster \
                             --scheduler {scheduler} \
+                            --command_time {c_time} \
                             --origin {origin} \
-                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler)
-        # os.system(dask_cmd)
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler, c_time=time.time())
+        os.system(dask_cmd)
         print('+----------------------------------+')
 
 if n_errores > 0:
