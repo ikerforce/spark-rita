@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time # Utilizado para medir el timpo de ejecucion
+t_inicio = time.time() # Inicia tiempo de ejecucion
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 # Importaciones de PySpark
@@ -14,12 +16,12 @@ from pyspark.sql.window import Window
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
 import json # Utilizado para leer archivo de configuracion
-import time # Utilizado para medir el timpo de ejecucion
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
+parser.add_argument("--command_time", help="Hora a la que fue enviada la ejecución del proceso.")
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 
 def lee_config_csv(path, sample_size, process):
@@ -38,12 +40,8 @@ else:
     config = lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
-# ----------------------------------------------------------------------------------------------------
 
-
-# LECTURA DE DATOS
-# ----------------------------------------------------------------------------------------------------
-t_inicio = time.time() # Inicia tiempo de ejecucion
+command_time = float(args.command_time)
 # ----------------------------------------------------------------------------------------------------
 
 
@@ -266,36 +264,11 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-# rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
-# rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
-# df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
-#     .withColumn("insertion_ts", F.current_timestamp())
-# df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
-#     .withColumn("insertion_ts", F.current_timestamp())
-# df_time_1.write.format("jdbc")\
-#     .options(
-#         url=creds["db_url"] + creds["database"],
-#         driver=creds["db_driver"],
-#         dbtable="registro_de_tiempo_spark",
-#         user=creds["user"],
-#         password=creds["password"])\
-#     .mode(config["time_table_mode"])\
-#     .save()
-
-# df_time_2.write.format("jdbc")\
-#     .options(
-#         url=creds["db_url"] + creds["database"],
-#         driver=creds["db_driver"],
-#         dbtable="registro_de_tiempo_spark",
-#         user=creds["user"],
-#         password=creds["password"])\
-#     .mode(config["time_table_mode"])\
-#     .save()
-
-rdd_time_1 = sc.parallelize([[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size]])
-df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+rdd_time = sc.parallelize([[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size],
+                        [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size]])
+df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
-df_time_1.write.format("jdbc")\
+df_time.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],

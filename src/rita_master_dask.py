@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+import time # Utilizado para medir el timpo de ejecucion
+t_inicio = time.time() # Inicia tiempo de ejecucion
+
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 from dask.distributed import Client
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
 import json # Utilizado para leer archivo de configuracion
-import time # Utilizado para medir el timpo de ejecucion
 import dask.dataframe as dd # Utilizado para el procesamiento de los datos
 import pandas as pd # Utilizado para crear dataframe que escribe la informacion del tiempo en MySQL
 from sqlalchemy import create_engine
@@ -21,6 +23,7 @@ parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar."
 parser.add_argument("--sample_size", help="Tamaño de la muestra de datos que se utilizará.")
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
+parser.add_argument("--command_time", help="Hora a la que fue enviada la ejecución del proceso.")
 parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
 args = parser.parse_args()
 
@@ -31,9 +34,9 @@ else:
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
-uri = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(creds["user"], creds["password"], creds["host"], "3306", creds["database"])
+command_time = float(args.command_time)
 
-t_inicio = time.time() # Inicia tiempo de ejecucion
+uri = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(creds["user"], creds["password"], creds["host"], "3306", creds["database"])
 
 if __name__ == '__main__':
 
@@ -134,7 +137,8 @@ if __name__ == '__main__':
 
     # REGISTRO DE TIEMPO
     # ----------------------------------------------------------------------------------------------------
-    info_tiempo = [[process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')],
+                [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
     df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
