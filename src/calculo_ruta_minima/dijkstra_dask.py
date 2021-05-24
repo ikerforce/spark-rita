@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Algoritmo para calcular la ruta minima entre un par de aeropuertos dentro de EU
+import time # Utilizado para medir el timpo de ejecucion
+t_inicio = time.time()
+
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
 # Inicio de cliente dask distributed
@@ -26,6 +29,7 @@ parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar."
 parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
 parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
+parser.add_argument("--command_time", help="Hora a la que fue enviada la ejecución del proceso.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 args = parser.parse_args()
 # Leemos las credenciales de la ruta especificada
@@ -35,6 +39,8 @@ else:
     config = utils.lee_config_csv(path="conf/base/configs_cluster.csv", sample_size=args.sample_size, process=args.process)
 with open(args.creds) as json_file:
     creds = json.load(json_file)
+
+command_time = float(args.command_time)
 
 # Cadena de conexion a base de datos (para escrbir los resultados)
 uri = 'mysql+pymysql://{0}:{1}@{2}:{3}/{4}'.format(creds["user"], creds["password"], creds["host"], "3306", creds["database"])
@@ -245,12 +251,11 @@ if __name__ == '__main__':
 
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
-    info_tiempo_1 = [[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
-    info_tiempo_2 = [[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
-    df_tiempo_1 = pd.DataFrame(data=info_tiempo_1, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
-    df_tiempo_2 = pd.DataFrame(data=info_tiempo_2, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
-    df_tiempo_1.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
-    df_tiempo_2.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
+    info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')],
+                    [process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')],
+                    [process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
+    df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
     print('\tTiempo ejecución: {t}'.format(t = t_final - t_inicio))
     print('\tFIN DE LA EJECUCIÓN')
