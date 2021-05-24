@@ -49,6 +49,8 @@ else:
 with open(args.creds) as json_file:
     creds = json.load(json_file)
 
+command_time = float(args.command_time)
+
 process = config['results_table']
 nodo_actual = args.origin # Empezamos a explorar en el nodo origen
 visitados = dict() # Diccionario en el que almaceno las rutas optimas entre los nodos
@@ -266,42 +268,19 @@ print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time_0 = sc.parallelize([[process + '_command_time', float(command_time), t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size]])
-rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
-rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
-df_time_0 = rdd_time_0.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
-    .withColumn("insertion_ts", F.current_timestamp())
-df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
-    .withColumn("insertion_ts", F.current_timestamp())
-df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+rdd_time = sc.parallelize([[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size],
+                            [process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size],
+                            [process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]])
+df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
 
-df_time_0.write.format("jdbc")\
+df_time.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
         driver=creds["db_driver"],
         dbtable=config['time_table'],
         user=creds["user"],
-        password=creds["password"])\
-    .mode(config["time_table_mode"])\
-    .save()
-
-df_time_1.write.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable=config['time_table'],
-        user=creds["user"],
-        password=creds["password"])\
-    .mode(config["time_table_mode"])\
-    .save()
-
-df_time_2.write.format("jdbc")\
-    .options(
-        url=creds["db_url"] + creds["database"],
-        driver=creds["db_driver"],
-        dbtable=config['time_table'],
-        user=creds["user"],
+        rewriteBatchedStatements=True,
         password=creds["password"])\
     .mode(config["time_table_mode"])\
     .save()
