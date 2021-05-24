@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Algoritmo para calcular la ruta minima entre un par de aeropuertos dentro de EU
+import time # Utilizado para medir el timpo de ejecucion
+t_inicio = time.time()
 
 # PREPARACION DE AMBIENTE
 # ----------------------------------------------------------------------------------------------------
@@ -18,7 +20,6 @@ spark.sparkContext.setCheckpointDir('temp_dir')
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
 import json # Utilizado para leer archivo de configuracion
-import time # Utilizado para medir el timpo de ejecucion
 import datetime # Utilizado para el parseo de fecha de salida
 
 # Definicion y lectura de los argumentos que se le pasan a la funcion
@@ -28,6 +29,7 @@ parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la b
 parser.add_argument("--process", help="Nombre del proceso que se va a ejecutar.")
 parser.add_argument("--origin", help="Clave del aeropuerto de origen.")
 parser.add_argument("--dest", help="Clave del aeropuerto de destino.")
+parser.add_argument("--command_time", help="Hora a la que fue enviada la ejecución del proceso.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 args = parser.parse_args()
 
@@ -46,8 +48,6 @@ else:
 
 with open(args.creds) as json_file:
     creds = json.load(json_file)
-
-t_inicio = time.time()
 
 process = config['results_table']
 nodo_actual = args.origin # Empezamos a explorar en el nodo origen
@@ -128,10 +128,10 @@ if len(df.filter(F.col('ORIGIN') == F.lit(args.origin)).head(1)) > 0:
         # Elimino los vuelos que regresan al nodo actual para eliminar ciclos
         df = df.filter(F.col('DEST') != F.lit(nodo_actual))
 
-        # df = df.checkpoint()
+        df = df.checkpoint()
 
-        df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
-        df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
+        # df.write.format('parquet').mode('overwrite').save('temp_dir/df_vuelos_spark')
+        # df = spark.read.format('parquet').load('temp_dir/df_vuelos_spark').cache()
 
         # Agrego a la frontera los vuelos cuyo origen es el nodo actual y que tengan un tiempo de conexion mayor a 7200 minutos
         frontera_nueva = df.filter(F.col('ORIGIN') == F.lit(nodo_actual))\
@@ -266,12 +266,26 @@ print('\n\tTiempo de ejecucion: {tiempo}.\n'.format(tiempo=t_final - t_inicio))
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
+rdd_time_0 = sc.parallelize([[process + '_command_time', float(command_time), t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size]])
 rdd_time_1 = sc.parallelize([[process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size]])
 rdd_time_2 = sc.parallelize([[process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size]]) # Almacenamos informacion de ejecucion en rdd
+df_time_0 = rdd_time_0.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+    .withColumn("insertion_ts", F.current_timestamp())
 df_time_1 = rdd_time_1.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
 df_time_2 = rdd_time_2.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
     .withColumn("insertion_ts", F.current_timestamp())
+
+df_time_0.write.format("jdbc")\
+    .options(
+        url=creds["db_url"] + creds["database"],
+        driver=creds["db_driver"],
+        dbtable=config['time_table'],
+        user=creds["user"],
+        password=creds["password"])\
+    .mode(config["time_table_mode"])\
+    .save()
+
 df_time_1.write.format("jdbc")\
     .options(
         url=creds["db_url"] + creds["database"],
