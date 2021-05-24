@@ -137,9 +137,9 @@ if __name__ == '__main__':
 
     # REGISTRO DE TIEMPO
     # ----------------------------------------------------------------------------------------------------
-    info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')],
-                [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, time.strftime('%Y-%m-%d %H:%M:%S')]]
-    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'insertion_ts'])
+    info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
+                [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')]]
+    df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'env', 'insertion_ts'])
     df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
     print('\tTiempo de ejecución: ' + str(time.time() - t_inicio))

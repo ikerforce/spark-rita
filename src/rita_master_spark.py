@@ -264,9 +264,9 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
-rdd_time = sc.parallelize([[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size],
-                        [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size]])
-df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size'])\
+rdd_time = sc.parallelize([[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, args.env],
+                        [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env]])
+df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'env'])\
     .withColumn("insertion_ts", F.current_timestamp())
 df_time.write.format("jdbc")\
     .options(

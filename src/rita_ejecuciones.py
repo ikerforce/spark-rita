@@ -18,6 +18,10 @@ parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los
 parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
 args = parser.parse_args()
 
+if args.env == None:
+    print('\n\tPor favor especifica el parámetro env.\n')
+    len(args.env)
+
 def convierte_en_dict(l):
     return {l[0]: {'dask':l[1], 'spark':l[2].replace('\n', '')}}
 
@@ -120,8 +124,9 @@ for proceso in procesos:
                                     src/rita_master_dask.py \
                                     --creds {creds} \
                                     --process {proceso}_dask \
+                                    --env {env} \
                                     --command_time {c_time} \
-                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time())
+                                    --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time(), env=args.env)
                 else:
                     dask_cmd = """/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                                     src/rita_master_dask.py \
@@ -192,8 +197,9 @@ for i in pruebas_rutas:
                             --process {process} \
                             --creds {creds} \
                             --command_time {c_time} \
+                            --env {env} \
                             --origin {origin} \
-                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time())
+                            --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time(), env=args.env)
         else:
             dask_cmd = '''/home/sshuser/miniconda/envs/dask_yarn/bin/python \
                             src/calculo_ruta_minima/dijkstra_dask.py \
