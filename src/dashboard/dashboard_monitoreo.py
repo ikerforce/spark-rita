@@ -24,15 +24,8 @@ import json
 Oranges = sequential.Oranges
 Greys = sequential.Greys
 
-procesos = """demoras_aerolinea
-flota
-demoras_aeropuerto_destino
-demoras_aeropuerto_origen
-demoras_ruta_mktid
-demoras_ruta_aeropuerto
-dijkstra""".split("\n")
-
 samples = ['10K', '100K', '1M', '10M', 'TOTAL']
+ambientes = ['local', 'cluster']
 
 tabla_tiempo_dask = 'registro_de_tiempo_dask_test'
 tabla_tiempo_spark = 'registro_de_tiempo_spark_test'
@@ -61,6 +54,20 @@ db_connection = create_engine(db_connection_str) # Conectamos con la base de dat
 # ---------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------------
+query_spark = """SELECT DISTINCT process
+                FROM {tabla_dask}
+                UNION
+                SELECT DISTINCT process
+                FROM {tabla_spark}""".format(tabla_dask=tabla_tiempo_dask, tabla_spark=tabla_tiempo_spark)
+
+procesos = pd.read_sql(query_spark, con=db_connection)
+procesos['process'] = procesos['process'].str.replace('_spark', '')
+procesos['process'] = procesos['process'].str.replace('_dask', '')
+procesos = procesos['process'].values
+# ---------------------------------------------------------------------------------
+
+
 # Dashboard
 # -----------------------------------------------------------------------------------
 app = Dash(__name__, routes_pathname_prefix='/monitoreo/') # Ruta en la que se expondra el dashboard
@@ -76,7 +83,7 @@ app.layout = html.Div([
                     children=[
                         html.Label(['Nombre del proceso:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
-                            id='dropdown-fecha-barras',
+                            id='dropdown-proceso-barras',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
                             value='%%',
                             clearable=False)
@@ -88,6 +95,16 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-barras-sample',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='25%')),
+                html.Div(className='barras-ambiente',
+                    children=[
+                        html.Label(['Ambiente de ejecución:'], style={'font-weight': 'bold', "text-align": "center"}),
+                        dcc.Dropdown(
+                            id='dropdown-barras-ambiente',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in ambientes],
                             value='%%',
                             clearable=False)
                     ],
@@ -108,7 +125,7 @@ app.layout = html.Div([
                             value='%%',
                             clearable=False)
                     ],
-                    style=dict(width='25%')),
+                    style=dict(width='20%')),
 
                 html.Div(className='numero-registros',
                     children=[
@@ -119,7 +136,7 @@ app.layout = html.Div([
                             value='20',
                             clearable=False)
                     ],
-                    style=dict(width='25%')),
+                    style=dict(width='20%')),
 
                 html.Div(className='lineas-sample-size',
                     children=[
@@ -130,7 +147,18 @@ app.layout = html.Div([
                             value='%%',
                             clearable=False)
                     ],
-                    style=dict(width='25%')),
+                    style=dict(width='20%')),
+
+                html.Div(className='lineas-ambiente',
+                    children=[
+                        html.Label(['Ambiente de ejecución:'], style={'font-weight': 'bold', "text-align": "center"}),
+                        dcc.Dropdown(
+                            id='dropdown-lineas-ambiente',
+                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in ambientes],
+                            value='%%',
+                            clearable=False)
+                    ],
+                    style=dict(width='20%')),
 
                 ],
             style=dict(display='flex')
@@ -185,7 +213,7 @@ app.layout = html.Div([
                         dcc.Dropdown(
                             id='dropdown-histograma-sample-size',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
-                            value='4',
+                            value='100K',
                             clearable=False)
                     ],
                     style=dict(width='25%')),
@@ -207,9 +235,10 @@ app.layout = html.Div([
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
 @app.callback(
     Output('resumen-duracion', 'figure'),
-    [Input('dropdown-proceso', 'value')
-    , Input('dropdown-barras-sample', 'value')])
-def update_graph(proceso, sample_size):
+    [Input('dropdown-proceso-barras', 'value')
+    , Input('dropdown-barras-sample', 'value')
+    , Input('dropdown-barras-ambiente', 'value')])
+def update_graph(proceso, sample_size, env):
 
     query_spark = """SELECT REPLACE(process, '_spark', '') as process
                         , AVG(duration) as avg_duration
@@ -217,7 +246,8 @@ def update_graph(proceso, sample_size):
                     FROM {tabla}
                     WHERE process LIKE CONCAT('{process}', '_spark')
                     AND sample_size LIKE '{sample_size}'
-                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_spark, sample_size=sample_size)
+                    AND env LIKE '{env}'
+                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_spark, sample_size=sample_size, env=env)
 
     query_dask = """SELECT REPLACE(process, '_dask', '') as process
                         , AVG(duration) as avg_duration
@@ -225,7 +255,8 @@ def update_graph(proceso, sample_size):
                     FROM {tabla}
                     WHERE process LIKE CONCAT('{process}', '_dask')
                     AND sample_size LIKE '{sample_size}'
-                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_dask, sample_size=sample_size)
+                    AND env LIKE '{env}'
+                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_dask, sample_size=sample_size, env=env)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
@@ -480,9 +511,9 @@ def update_graph(process, ventana, n_registros):
 
 @app.callback(
     Output('histograma-duracion', 'figure'),
-    [Input('dropdown-proceso', 'value')
-    , Input('dropdown-numero-registros', 'value')
-    , Input('dropdown-lineas-sample-size', 'value')])
+    [Input('dropdown-histograma-proceso', 'value')
+    , Input('dropdown-histograma-numero-registros', 'value')
+    , Input('dropdown-histograma-sample-size', 'value')])
 def update_graph(process, n_registros, sample_size):
 
     query_spark = """SELECT 1 as num
@@ -510,11 +541,14 @@ def update_graph(process, n_registros, sample_size):
     fig = make_subplots(rows=1, cols=1,
                         specs=[[{"type":"bar"}]])
 
+    numero_bins=20
+
     fig.add_trace(
         go.Histogram(
             x=tiempo_spark.duration
             , y=tiempo_spark.num
-            # , marker=dict(color=Greys[4])
+            , nbinsx=numero_bins
+            , marker_color=Greys[4]
             # , mode='lines+markers'
             , name='Spark'
             )
@@ -524,7 +558,8 @@ def update_graph(process, n_registros, sample_size):
         go.Histogram(
             x=tiempo_dask.duration
             , y=tiempo_dask.num
-            # , marker=dict(color=Oranges[4])
+            , nbinsx=numero_bins
+            , marker_color=Oranges[4]
             # , mode='lines+markers'
             , name='Dask'
             )
@@ -532,10 +567,10 @@ def update_graph(process, n_registros, sample_size):
         , col=1)
 
 
-    fig.update_xaxes(title_text='Fecha de ejecución', title_font={'size':12}, showgrid=False, row=1, col=1)
-    fig.update_yaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
+    fig.update_yaxes(title_text='Número de ejecuciones', title_font={'size':12}, showgrid=False, row=1, col=1)
+    fig.update_xaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
     # Actualizamos el tamano y titulo del grafico y ubicacion de los titulos y posicion del bloque
-    fig.update_layout(title_text="Duración del proceso"
+    fig.update_layout(title_text="Histograma de la duración del proceso."
         , title_font={'size':25}
         , title_x=0.5
         , height=500
