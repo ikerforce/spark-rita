@@ -104,8 +104,6 @@ if __name__ == '__main__':
     # Obtenemos el numero de nodos que hay en la red
     n_nodos = dd.concat([df['DEST'], df['ORIGIN']], axis=0).drop_duplicates().count().compute()
 
-    t_intermedio = time.time()
-
     encontro_ruta = True
     early_arr = 0
     t_acumulado = 0
@@ -238,6 +236,9 @@ if __name__ == '__main__':
             x = visitados[x]['origen']
 
         df_resp = pd.DataFrame(data=convierte_dict_en_lista(solo_optimo), columns=['DEST', 'ORIGIN', 'ARR_TIME', 'DEP_TIME'])[['ORIGIN', 'DEST', 'ARR_TIME', 'DEP_TIME']]
+
+        write_time = time.time()
+        
         df_resp.to_sql(process, uri, if_exists=config["results_table_mode"], index=False)
 
     t_final = time.time() # Tiempo de finalizacion de la ejecucion
@@ -252,8 +253,8 @@ if __name__ == '__main__':
     # # REGISTRO DE TIEMPO
     # # ----------------------------------------------------------------------------------------------------
     info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
-                    [process + '_p1', t_inicio, t_intermedio, t_intermedio - t_inicio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
-                    [process + '_p2', t_intermedio, t_final, t_final - t_intermedio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')]]
+                    [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
+                    [process + '_write_time', write_time, t_final, t_final - write_time, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'env', 'insertion_ts'])
     df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
