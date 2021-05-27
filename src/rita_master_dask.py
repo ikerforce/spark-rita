@@ -88,18 +88,21 @@ if __name__ == '__main__':
         df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_aeropuerto_origen_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'max', 'DEP_DELAY':'max', 'ACTUAL_ELAPSED_TIME':'max', 'TAXI_IN':'max', 'TAXI_OUT':'max'}
         lista_df = utils.rollup(df, ['ORIGIN', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_mysql(lista_df, uri, process)
     
     elif process == 'demoras_aeropuerto_destino_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT'])
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'min', 'DEP_DELAY':'min', 'ACTUAL_ELAPSED_TIME':'min', 'TAXI_IN':'min', 'TAXI_OUT':'min'}
         lista_df = utils.rollup(df, ['DEST', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_ruta_aeropuerto_dask':
@@ -108,6 +111,7 @@ if __name__ == '__main__':
         df = utils.unir_columnas(df, "ORIGIN", "DEST", "ROUTE_AIRPORTS")
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'mean', 'DEP_DELAY':'mean', 'ACTUAL_ELAPSED_TIME':'mean', 'TAXI_IN':'mean', 'TAXI_OUT':'mean'}
         lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_parquet(lista_df, process, env=args.env)
     
     elif process == 'demoras_ruta_mktid_dask':
@@ -116,17 +120,20 @@ if __name__ == '__main__':
         df = utils.unir_columnas(df, "ORIGIN_CITY_MARKET_ID", "DEST_CITY_MARKET_ID", "ROUTE_MKT_ID")
         agregaciones = {'FL_DATE':'count', 'ARR_DELAY':'std', 'DEP_DELAY':'std', 'ACTUAL_ELAPSED_TIME':'std', 'TAXI_IN':'std', 'TAXI_OUT':'std'}
         lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_mysql(lista_df, uri, process)
     
     elif process == 'flota_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'TAIL_NUM'])
         agregaciones = {'TAIL_NUM' : 'nunique'}
         lista_df = utils.rollup(df, ['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
+        write_time = time.time()
         utils.write_result_to_mysql(lista_df, uri, process)
 
     elif process == 'elimina_nulos_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['TAIL_NUM', 'OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN', 'DEST', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
         df = utils.elimina_nulos(df)
+        write_time = 0.0
         print('Conteo sin nulos: ' + str(df.shape[0].compute()))
     
     else:
@@ -138,7 +145,8 @@ if __name__ == '__main__':
     # REGISTRO DE TIEMPO
     # ----------------------------------------------------------------------------------------------------
     info_tiempo = [[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
-                [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')]]
+                [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')],
+                [process + '_write_time', write_time, t_final, t_final - write_time, config["description"], config["resources"], args.sample_size, args.env, time.strftime('%Y-%m-%d %H:%M:%S')]]
     df_tiempo = pd.DataFrame(data=info_tiempo, columns=['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'env', 'insertion_ts'])
     df_tiempo.to_sql(config['time_table'], uri, if_exists=config["time_table_mode"], index=False)
 
