@@ -229,33 +229,79 @@ print('\tLos resultados se escribirán en la tabla: ' + process)
 
 if process == 'demoras_aerolinea_spark':
     df_resp = aeropuerto_demoras_aerolinea(config['input_path']) # Calculo de demoras en cada ruta
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+
     write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_aeropuerto_origen_spark':
     df_resp = aeropuerto_demoras_origen(config['input_path']) # Calculo de demoras en cada ruta
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+
     write_result_to_mysql(df_resp, creds, config, process)
 
 elif process == 'demoras_aeropuerto_destino_spark':
     df_resp = aeropuerto_demoras_destino(config['input_path']) # Calculo de demoras en cada ruta basados en destino
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+    
     write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_ruta_aeropuerto_spark':
     df_resp = principales_rutas_aeropuerto_fecha(config['input_path']) # Calculo de demoras en cada ruta
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+    
     write_result_to_parquet(df_resp, process)
 
 elif process == 'demoras_ruta_mktid_spark':
     df_resp = principales_rutas_mktid_fecha(config['input_path']) # Calculo de demoras en cada ruta
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+    
     write_result_to_mysql(df_resp, creds, config, process)
 
 elif process == 'flota_spark':
     df_resp = tamano_flota_aerolinea(config['input_path']) # Calculo del tamano de la flota
+
+    df_resp.cache()
+
+    print(df_resp.head(1))
+
+    write_time = time.time()
+    
     write_result_to_mysql(df_resp, creds, config, process)
 
 elif process == 'elimina_nulos_spark':
-    df = elimina_nulos(config['input_path'])
-    print('Conteo sin nulos: ' + str(df.count()))
+    df_resp = elimina_nulos(config['input_path'])
+
+    write_time = 0.0
+    
+    print('Conteo sin nulos: ' + str(df_resp.count()))
 
 else:
+
     print('\n\n\tEl nombre del proceso: ' + process + ' no es válido.\n\n')
 
 t_final = time.time() # Tiempo de finalizacion de la ejecucion
@@ -265,6 +311,7 @@ t_final = time.time() # Tiempo de finalizacion de la ejecucion
 # REGISTRO DE TIEMPO
 # ----------------------------------------------------------------------------------------------------
 rdd_time = sc.parallelize([[process + '_command_time', command_time, t_inicio, t_inicio - command_time, config["description"], config["resources"], args.sample_size, args.env],
+                        [process + '_write_time', write_time, t_final, t_final - write_time, config["description"], config["resources"], args.sample_size, args.env],
                         [process, t_inicio, t_final, t_final - t_inicio, config["description"], config["resources"], args.sample_size, args.env]])
 df_time = rdd_time.toDF(['process', 'start_ts', 'end_ts', 'duration', 'description', 'resources', 'sample_size', 'env'])\
     .withColumn("insertion_ts", F.current_timestamp())
