@@ -85,5 +85,5 @@ def write_result_to_parquet(lista_df, process, env):
     if env != 'cluster':
         full_path = 'resultados/' + process + '/' + date
     else:
-        full_path = 'hdfs://mycluster/resultados/' + process + '/' + date
+        full_path = 'hdfs:///resultados/' + process + '/' + date
     dd.concat(lista_df, axis=0, interleave_partitions=True).repartition(1).to_parquet(full_path, engine='pyarrow')
