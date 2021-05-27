@@ -99,9 +99,9 @@ for proceso in procesos:
                     spark_cmd = """spark-submit \
                                     --driver-memory 2G \
                                     --driver-cores 2 \
-                                    --num-executors 20 \
+                                    --num-executors 6 \
                                     --executor-cores 3 \
-                                    --executor-memory 6G \
+                                    --executor-memory 8G \
                                     --jars sql/mysql-connector-java-8.0.23.jar \
                                     src/rita_master_spark.py \
                                     --env cluster \
@@ -172,9 +172,9 @@ for i in pruebas_rutas:
             spark_cmd = '''spark-submit \
                             --driver-memory 2G \
                             --driver-cores 2 \
-                            --num-executors 20 \
+                            --num-executors 6 \
                             --executor-cores 3 \
-                            --executor-memory 6G \
+                            --executor-memory 8G \
                             --jars sql/mysql-connector-java-8.0.23.jar \
                             src/calculo_ruta_minima/dijkstra_spark.py \
                             --env cluster \
