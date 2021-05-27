@@ -128,7 +128,7 @@ for proceso in procesos:
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time(), env=args.env)
                 else:
-                    dask_cmd = """/home/sshuser/miniconda/envs/dask_yarn/bin/python \
+                    dask_cmd = """~/miniconda/envs/dask_yarn/bin/python3 \
                                     src/rita_master_dask.py \
                                     --env cluster \
                                     --creds {creds} \
@@ -201,7 +201,7 @@ for i in pruebas_rutas:
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time(), env=args.env)
         else:
-            dask_cmd = '''/home/sshuser/miniconda/envs/dask_yarn/bin/python \
+            dask_cmd = '''~/miniconda/envs/dask_yarn/bin/python3 \
                             src/calculo_ruta_minima/dijkstra_dask.py \
                             --sample_size {sample_size} \
                             --process {process} \
