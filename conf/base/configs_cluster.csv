@@ -70,9 +70,9 @@ TOTAL|demoras_aeropuerto_destino_spark|spark|/samples/data_full_spark_casted/|de
 TOTAL|demoras_aeropuerto_origen_dask|dask|hdfs:///samples/data_full_dask_casted/*|demoras_aeropuerto_origen_dask|replace|registro_de_tiempo_dask|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
 TOTAL|demoras_aeropuerto_origen_spark|spark|/samples/data_full_spark_casted/|demoras_aeropuerto_origen_spark|overwrite|registro_de_tiempo_spark|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
 TOTAL|demoras_ruta_aeropuerto_dask|dask|hdfs:///samples/data_full_dask_casted/*|demoras_ruta_aeropuerto_dask|replace|registro_de_tiempo_dask|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
-TOTAL|demoras_ruta_aeropuerto_spark|spark|/samples/data_full_spark_casted/|demoras_ruta_aeropuerto_spark|overwrite|registro_de_tiempo_spark|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
+TOTAL|demoras_ruta_aeropuerto_spark|spark|/samples/data_full_spark_casted/|demoras_ruta_aeropuerto_spark|overwrite|registro_de_tiempo_spark|append|2000||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W (2000 particiones a sql)
 TOTAL|demoras_ruta_mktid_dask|dask|hdfs:///samples/data_full_dask_casted/*|demoras_ruta_mktid_dask|replace|registro_de_tiempo_dask|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
-TOTAL|demoras_ruta_mktid_spark|spark|/samples/data_full_spark_casted/|demoras_ruta_mktid_spark|overwrite|registro_de_tiempo_spark|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
+TOTAL|demoras_ruta_mktid_spark|spark|/samples/data_full_spark_casted/|demoras_ruta_mktid_spark|overwrite|registro_de_tiempo_spark|append|2000||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W (2000 particiones a sql)
 TOTAL|dijkstra_dask|dask|hdfs:///samples/data_full_dask_casted/*|dijkstra_dask|replace|registro_de_tiempo_dask|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
 TOTAL|dijkstra_spark|spark|/samples/data_full_spark_casted/|dijkstra_spark|overwrite|registro_de_tiempo_spark|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
 TOTAL|elimina_nulos_dask|dask|hdfs:///samples/data_full_dask_casted/*|elimina_nulos_dask|replace|registro_de_tiempo_dask|append|20||1 x (16GB + 4 cores) + 3 x (32GB + 8 cores)|AWS 1H + 3W
