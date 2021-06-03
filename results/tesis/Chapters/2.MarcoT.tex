@@ -11,6 +11,8 @@
 
 \subsection{Arquitectura de Spark}
 
+Uno de los elementos centrales de \textit{Spark} es su \textit{Lazy Evaluation}, es decir, que espera hasta el último momento para ejecutar las operaciones indicadas por el usuario. Cada instrucción se añade a un plan de ejecución que se aplica a los datos iniciales que es ejecutado al llamar una acción. Crear este plan y esperar hasta el último momento para ejecutarlo, le permite a \textit{Spark} analizarlo y optimizarla para hacer su ejecución lo más eficiente posible. Un ejemplo concreto es un filtro que se realiza al final del plan de ejecución, cuando este se puede ejecutar antes sin cambiar el proceso general, \textit{Spark} lo pondrá antes en el plan de forma automática para reducir los datos que tiene que procesar y así reducir el tiempo de ejecución.
+
 Una aplicación de \textit{Spark} consiste de un proceso \textit{driver} y un conjunto de procesos llamados \textit{executor}. Ambos tipos de procesos trabajan en conjunto durante la ejecución de la aplicación. El proceso \textit{driver} es la parte central de la aplicación, ya que se encarga de mantener información sobre la aplicación, responder a las instrucciones del usuario y analizar, distribuir y calendarizar el trabajo entre los ejecutores. Este proceso existe en uno solo de los nodos y está en constante comunicación con los demás. \cite{sparkguide}. Los \textit{executors}, por otra parte, se encargan de realizar el trabajo que el \textit{driver} les asigna y de almacenar los datos utilizados durante la ejecución de la aplicación \cite{sparkclusteroverview}.
 
 La abstracción de datos principal en \textit{Spark} son los \textit{Resilient Distributed Datasets (RDDs)} que son colecciones de objetos efímeras, particionadas en un clúster y que se pueden manipular en paralelo a través de \textit{transformaciones}. Además, estas transformaciones tienen una evaluación perezosa (\textit{lazy evaluation}), es decir que no realizan la acción inmediatamente, sino que la añaden a un plan eficiente de ejecución. Al llamar una \textit{acción}, que es una instrucción para calcular un resultado a partir de las transformaciones del plan, \textit{Spark} evalúa la gráfica que fue creada a partir de las transformaciones y lo ejecuta de forma modular y eficiente \cite{sparkberkeley}.
@@ -48,8 +50,20 @@ Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguiero
 	\item Usar \texttt{count} sólo cuando sea necesario.
 	\item Asegurar que las particiones tengan tamaños similares para que los recursos se utilicen de forma equitativa. En algunos casos, puede ser útil usar \texttt{repartition} para evitar el sesgo hacia alguna partición, sin embargo, esto se debe de hacer con cuidado y poca frecuencia ya que la operación es muy costosa.
 	\item Utilizar las funciones nativas de \textit{Spark} en lugar de crear funciones personalizadas cuando sea posible.
-	 	
 \end{itemize}
+
+\subsection{\textit{Hardware} recomendado}
+
+Aunque \textit{PySpark} está diseñado para acoplarse a múltiples configuraciones de \textit{Hardware}, la documentación oficial (\cite{sparkhardware}) propone los siguientes lineamientos para mejorar su desempeño:
+\begin{itemize}
+	\item Mantener el sistema de almacenamiento de datos lo más cercano posible a donde se hará la ejecución de Spark. Idealmente, el alamacenamiento será en los mismos nodos que la ejecución, pero si esto no es posible, es recomendable que estén en la misma red local.
+	\item Tener de 4 a 8 discos por nodo para los casos en los que \textit{PySpark} tenga que almacenar datos temporalmente en disco.
+	\item Asignar mínimo 8GB de memoria por máquina y usar a lo más 75\% de la memoria para \textit{PySpark}, dejando el 25\% restante para el sistema operativo y otras tareas de administración del nodo.
+	\item Usar al menos entre 8 y 16 cores por nodo. 
+\end{itemize}
+
+Después de cumplir las condiciones anteriores en el \textit{Hardware}, hay que seguir las indicaciones de la siguiente sección para optimizar el uso de los recursos.
+
 
 \subsection{Parametrización de trabajos de \textit{PySpark} en el clúster}
 
@@ -58,11 +72,10 @@ Es importante utilizar los recursos del clúster de forma inteligente para aprov
 \begin{itemize}
 	\item \texttt{--driver-memory} determina la memoria que se le asignará al \textit{driver} y su valor predeterminado es 1G. Se recomienda aumentarlo cuando se requiera transmitir resultados grandes al \textit{driver} mediante acciones como \texttt{take(n)} o \texttt{collect()}.
 	\item \texttt{--driver-cores} determina el número de \textit{cores} que se le asignarán al \textit{driver}. El valor predeterminado es 1, pero se recomienda asignar de 2 a 4 \textit{cores} para clústeres más grandes y aplicaciones complejas. 
-	\item \texttt{--num-executors} especifica el número de ejecutores que se crearán para ejecutar las tareas de la aplicación. El número de ejecutores depende de la cantidad de \textit{cores} disponibles en el clúster. Se aconseja dejar, en cada nodo 1 o 2 cores disponibles para tareas independientes del trabajo de \textit{Spark} y asignar entre 2 y 5 \textit{cores} a cada ejecutor dependiendo de las tareas que procesará y el nivel de paralelismo que se busca alcanzar.  
-	\item \texttt{--executor-memory} asigna memoria a cada \textit{ejecutor}. El valor predeterminado es 1G pero se debe incrementar de acuerdo a la tarea y la cantidad de memoria disponible para cada ejecutor. 
+	\item \texttt{--num-executors} especifica el número de ejecutores que se crearán para ejecutar las tareas de la aplicación. El número de ejecutores depende de la cantidad de \textit{cores} disponibles en el clúster. Se aconseja dejar, en cada nodo 1 o 2 cores disponibles para tareas independientes del trabajo de \textit{Spark} y asignar entre 2 y 5 \textit{cores} a cada ejecutor dependiendo de las tareas que procesará y el nivel de paralelismo que se busca alcanzar. De acuerdo a \cite{sparkconfcloudera}, mantenerse en este rango evita replicar muchas veces información (lo cual es necesario con ejecutores pequeños) mientras evita la sobrecarga de escritura del \textit{File System}.
+	\item \texttt{--executor-memory} asigna memoria a cada \textit{ejecutor}. El valor predeterminado es 1G pero se debe incrementar de acuerdo a la tarea y la cantidad de memoria disponible para cada ejecutor. \cite{sparkconfcloudera} recomienda mantener este valor por debajo de 64GB para evitar que demasiada basura se mantenga en memoria.
 	\item \texttt{--executor-cores} determina el número de cores que se asigna a cada ejecutor y va muy de la mano con el parámetro \texttt{--num-executors} por lo que se deben de calcular de manera conjunta. De acuerdo a \cite{sparkconfcloudera}, el número de cores que se le asigna a cada ejecutor determina el número de tareas simultáneas que puede realizar.
 \end{itemize}
-
 
 \section{Dask}
 
