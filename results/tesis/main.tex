@@ -219,7 +219,9 @@ superior and identify the characteristics that enable such performance.
 
 \include{Chapters/4.Res}
 
-\include{Chapters/5.Conc}
+\include{Chapters/5.ExpImp}
+
+\include{Chapters/6.Conc}
 
 
 %----------------------------------------------------------------------------------------
@@ -276,16 +278,20 @@ superior and identify the characteristics that enable such performance.
 
 %AAAAA
 
+% Datos
 \bibitem{linktranstat} On-Time : Reporting Carrier On-Time Performance (1987-present), \url{https://www.transtats.bts.gov/Fields.asp?gnoyr_VQ=FGJ}
 
-\bibitem{daskbestpractices} Dask - Best Practices, \url{https://docs.dask.org/en/latest/dataframe-best-practices.html}
+% Dijkstra
+\bibitem{dijkstraexplicado} Boardman, S. (2014). Shortest path problem (Dijkstra’s algorithm). Retrieved from \url{https://www.pearsonschoolsandfecolleges.co.uk/secondary/Mathematics/16plus/AdvancingMathsForAQA2ndEdition/Samples/SampleMaterial/Chp-02\%20023-043.pdf}
 
-\bibitem{sparkguide} Chambers, B. \& Zaharia, M. (2018). Spark: The definitive guide. Beijing: O'Reilly.
+\bibitem{dijkstrabellford} Samah W.G. AbuSalim et. al. (2020). Comparative Analysis between Dijkstra and Bellman-Ford Algorithms in Shortest Path Optimization. Retrieved April 05, 2021, from \url{https://iopscience.iop.org/article/10.1088/1757-899X/917/1/012077}
 
-\bibitem{sparkclusteroverview} Cluster mode overview. (n.d.). Retrieved March 24, 2021, from \url{https://spark.apache.org/docs/2.4.0/cluster-overview.html}
+% Parquet
+\bibitem{column-oriented} Abadi, D. J., Boncz, P. A., \&; Harizopoulos, S. (n.d.). Column-oriented Database Systems. Paperhub. \url{https://paperhub.s3.amazonaws.com/741f4f9f3201baa76ddf05d3bff631bd.pdf}
 
-\bibitem{sparkberkeley} Zahaira, M., Xin, R. S., Wendell, P., Das, T., Ambrust, M., Dave, A., . . . Stoica, I. (2016, November). Apache Spark: A Unified Engine for Big Data Processing. Retrieved March 24, 2021, from \url{https://people.eecs.berkeley.edu/~alig/papers/spark-cacm.pdf}
+\bibitem{columnar-storage-blog} Rathbone, M. (2019, November 21). Beginners Guide to Columnar File Formats in Spark and Hadoop. Matthew Rathbone's Blog. \url{https://blog.matthewrathbone.com/2019/11/21/guide-to-columnar-file-formats.html}
 
+% Dask
 \bibitem{daskdocs} Anaconda Inc. (2018). Dask. Retrieved March 26, 2021, from \url{https://docs.dask.org/en/latest/index.html}
 
 \bibitem{daskpaper} Rocklin, M. (2015). Dask: Parallel Computation with Blocked algorithms and Task Scheduling. Retrieved March 26, 2021, from \url{https://pdfs.semanticscholar.org/73b5/8192f30bb6be8e798084d4481b97124570ed.pdf}
@@ -296,21 +302,38 @@ superior and identify the characteristics that enable such performance.
 
 \bibitem{daskdistributed} Anaconda Inc. (2016). Dask.distributed. Retrieved March 26, 2021, from \url{https://distributed.dask.org/en/latest/}
 
-\bibitem{sparkibm} Kambhampati, S. (2020, June 30). Explore best practices for Spark performance optimization. Retrieved March 26, 2021, from \url{https://developer.ibm.com/technologies/artificial-intelligence/blogs/spark-performance-optimization-guidelines/}
+\bibitem{daskdistributedsetup} Anaconda Inc. (n.d.). Quickstart. Dask.distributed 2021.05.1+2.g9d4f0bf2 documentation. \url{https://distributed.dask.org/en/latest/quickstart.html#setup-dask-distributed-the-hard-way}. 
 
 \bibitem{daskdataframe} Anaconda Inc. (2018). DataFrame. Retrieved April 02, 2021, from \url{https://docs.dask.org/en/latest/dataframe.html}
 
-\bibitem{dijkstraexplicado} Boardman, S. (2014). Shortest path problem (Dijkstra’s algorithm). Retrieved from \url{https://www.pearsonschoolsandfecolleges.co.uk/secondary/Mathematics/16plus/AdvancingMathsForAQA2ndEdition/Samples/SampleMaterial/Chp-02\%20023-043.pdf}
+\bibitem{daskbestpractices} Dask - Best Practices, \url{https://docs.dask.org/en/latest/dataframe-best-practices.html}
 
-\bibitem{dijkstrabellford} Samah W.G. AbuSalim et. al. (2020). Comparative Analysis between Dijkstra and Bellman-Ford Algorithms in Shortest Path Optimization. Retrieved April 05, 2021, from \url{https://iopscience.iop.org/article/10.1088/1757-899X/917/1/012077}
+% Spark
+\bibitem{sparkberkeley} Zahaira, M., Xin, R. S., Wendell, P., Das, T., Ambrust, M., Dave, A., . . . Stoica, I. (2016, November). Apache Spark: A Unified Engine for Big Data Processing. Retrieved March 24, 2021, from \url{https://people.eecs.berkeley.edu/~alig/papers/spark-cacm.pdf}
 
-\bibitem{column-oriented} Abadi, D. J., Boncz, P. A., \&; Harizopoulos, S. (n.d.). Column-oriented Database Systems. Paperhub. \url{https://paperhub.s3.amazonaws.com/741f4f9f3201baa76ddf05d3bff631bd.pdf}
+\bibitem{sparkhardware} Apache Foundation. (n.d.). Hardware Provisioning. Hardware Provisioning - Spark 2.4.0 Documentation. \url{https://spark.apache.org/docs/2.4.0/hardware-provisioning.html}.
 
-\bibitem{columnar-storage-blog} Rathbone, M. (2019, November 21). Beginners Guide to Columnar File Formats in Spark and Hadoop. Matthew Rathbone's Blog. \url{https://blog.matthewrathbone.com/2019/11/21/guide-to-columnar-file-formats.html}
+\bibitem{sparkconfcloudera} Cloudera. (2021, January 21). How-to: Tune Your Apache Spark Jobs (Part 2). Cloudera Blog. \url{https://blog.cloudera.com/how-to-tune-your-apache-spark-jobs-part-2/}. 
 
-\bibitem{sparkconfcloudera} Cloudera. (2021, January 21). How-to: Tune Your Apache Spark Jobs (Part 2). Cloudera Blog. https://blog.cloudera.com/how-to-tune-your-apache-spark-jobs-part-2/. 
+\bibitem{sparkconfuds} Rao, S. (2020, April 21). Spark performance tuning guidelines. Unified Data Sciences (Big Data). \url{https://www.unifieddatascience.com/spark-performance-tuning-guidelines}. 
 
-\bibitem{sparkconfuds} Rao, S. (2020, April 21). Spark performance tuning guidelines. Unified data sciences (Big Data). https://www.unifieddatascience.com/spark-performance-tuning-guidelines. 
+\bibitem{sparkibm} Kambhampati, S. (2020, June 30). Explore best practices for Spark performance optimization. Retrieved March 26, 2021, from \url{https://developer.ibm.com/technologies/artificial-intelligence/blogs/spark-performance-optimization-guidelines/}
+
+\bibitem{sparkguide} Chambers, B. \& Zaharia, M. (2018). Spark: The definitive guide. Beijing: O'Reilly.
+
+\bibitem{sparkclusteroverview} Cluster mode overview. (n.d.). Retrieved March 24, 2021, from \url{https://spark.apache.org/docs/2.4.0/cluster-overview.html}
+
+
+% AWS
+\bibitem{ec2-instances} Amazon Web Services Inc. (n.d.). Amazon EC2 Instance Types.  \url{https://aws.amazon.com/ec2/instance-types/}.
+
+% Comparacion Spark - Dask
+\bibitem{comparative-evolution} Mehta, P., Dorkenwald, S., Zhao, D., Kaftan, T., Cheung, A., Balazinska, M., Rokem, A., Connolly, A., Vanderplas, J.,  \& AlSayyad, Y. (n.d.). Comparative Evaluation of Big-Data Systems on Scientific Image Analytics Workloads. University of Washington Computer Science \& Engineering community. \url{https://homes.cs.washington.edu/~magda/papers/mehta-vldb17.pdf}. 
+
+\bibitem{dask-spark-neuroimaging} Dugré, M., Hayot-Sasson, V., \& Glatard, T. (2019, October 5). A performance comparison of Dask and Apache Spark for data-intensive neuroimaging pipelines. Arxiv. \url{https://arxiv.org/pdf/1907.13030.pdf}.
+
+% Repo de git
+\bibitem{compara-resultados} Olarra, I. (2021). Proceso de revisión de equivalencia de resultados. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/blob/master/results/revision_equivalencia_resultados.py}. 
 
 
 %BBBBB
