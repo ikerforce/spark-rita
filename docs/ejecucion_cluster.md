@@ -75,73 +75,19 @@ Después de este paso el clúster está listo para ejecutar los procesos.
 
 ## Clúster en Azure
 
-### Creación de VNet para HD Inisght
+Los siguientes pasos describen cómo hacer un clúster similar al de la sección anterior pero en Azure. Debido a las diferencias en la plataforma estos pueden ser distintos.
 
+### Creación del clúster
 
-Comando para creación de _resource group_.
-```
-az group create --name cluster-rita --location southcentralus
-```
+Para crear el clúster, la forma más sencilla es ir a la consola de administración de `Azure` e ingresar al servicio `HD Insight`. Una vez que estemos ahí hay que seleccionar la opción `create cluster` y seguir el `wizard`. Es importante seleccionar la región en la que estén alojados nuestros datos y usar el contenedor de `Azure Blob Sotrage` que los almacene como el contenedor predeterminado del clúster.
 
-Comando para creación de el _security group_.
-```
-az network nsg create -g rita-spark-tesis -n hdisecure -l SouthCentralUS
-```
+El clúster creado 
 
-```
-az deployment group create \
-  --name cluster-rita-deployment \
-  --location southcentralus \
-  --resource-group cluster-rita \
-  --template-file "conf/azure_conf/template.json" \
-  --parameters "conf/azure_conf/parameters.json"
-```
-
-Comando para creación de las reglas
-```
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule1 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "HDInsight.SouthCentralUS" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 300 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule2 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "HDInsight.SouthCentralUS" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 301 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule3 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "168.61.49.99" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 302 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule4 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "23.99.5.239" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 303 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule5 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "168.61.48.131" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 304 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n hdirule6 --protocol "*" --source-port-range "*" --destination-port-range "443" --source-address-prefix "138.91.141.162" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 305 --direction "Inbound"
-az network nsg rule create -g rita-spark-tesis --nsg-name hdisecure -n ssh --protocol "*" --source-port-range "*" --destination-port-range "22" --source-address-prefix "<tu_direccion_ip>" --destination-address-prefix "VirtualNetwork" --access "Allow" --priority 306 --direction "Inbound"
-```
-
-Posteriormente, creamos una red con el siguiente comando:
-```
-az network vnet create \
-  --name hdivnet \
-  --resource-group rita-spark-tesis \
-  --subnet-name default
-```
-
-
-Después, obtenemos el identificador único de la red con el siguiente comando:
-```
-az network nsg show -g rita-spark-tesis -n hdisecure --query "id"
-```
-
-
-Ahora, actualizamos las reglas de la red creada con el siguiente comando (cambiando `"<network_security_group_id>"` por el resultado del comando anterior: 
-```
-az network vnet subnet update -g rita-spark-tesis --vnet-name hdivnet --name default --set networkSecurityGroup.id="<network_security_group_id>"
-```
-
-### Creación y acceso
-
-```
-az group create \
-    --location "southcentralus" \
-    --name "test-cluster"
-
-azure group deployment create -f deployment.json -g "test-cluster" -n "rita-transtat-c"
-```
-
+Una vez creado nos dará la opción de conectarnos por `ssh` con las credenciales que definimos durante el wizard.
 
 ### Instalación de miniconda y paquetes necesarios
 
-Después de hacer la conexión al clúster mediante `ssh` debemos de instalar miniconda y los paquetes necesarios con los siguientes comandos:
+Después de hacer la conexión al clúster mediante `ssh` debemos de instalar miniconda y los paquetes necesarios en cada nodo. Para ello debemos copiar el archivo ``.
 
 1. Descargar el archivo de instalación de miniconda y ejecutar el archivo de instalación de miniconda con el siguiente comando: `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; sh Miniconda3-latest-Linux-x86_64.sh`.
 2. Seguir los pasos del instalador y salir de la consola y volver a entrar por `ssh` para que se efectuen los cambios.
@@ -282,6 +228,18 @@ spark-submit \
     --creds conf/mysql_creds.json \
     --process demoras_ruta_mktid_spark \
     --sample_size 100K
+
+
+spark-submit \
+    --driver-memory=11G \
+    --conf spark.sql.shuffle.partitions=12 \
+    --jars sql/mysql-connector-java-8.0.23.jar \
+    src/rita_master_spark.py \
+    --env local \
+    --creds conf/mysql_creds.json \
+    --process demoras_ruta_mktid_spark \
+    --command_time 0.0 \
+    --sample_size 1M
 
 
 spark-submit \
@@ -436,4 +394,82 @@ python \
     --process demoras_aerolinea_dask \
     --sample_size 1M
 
+python \
+    src/rita_master_dask.py \
+    --scheduler tcp://192.168.3.46:8786 \
+    --env local \
+    --creds conf/mysql_creds.json \
+    --process demoras_ruta_mktid_dask \
+    --command_time 0.0 \
+    --sample_size 100K
+
+
+python \
+    src/rita_master_dask.py \
+    --scheduler tcp://172.31.12.168:8786 \
+    --env cluster \
+    --creds conf/mysql_creds.json \
+    --process demoras_ruta_mktid_dask \
+    --command_time 0.0 \
+    --sample_size 100K
+
+python \
+    src/rita_master_dask.py \
+    --env local \
+    --creds conf/mysql_creds.json \
+    --process demoras_ruta_mktid_dask \
+    --command_time 0.0 \
+    --sample_size 100K
+
+
 mysql -u <local database username> -h <database server ip address> -p
+
+
+
+from dask import dataframe as dd
+df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*')
+import time
+s = time.time()
+df['CRS_ELAPSED_TIME'].mean().compute()
+print(time.time() - s)
+print('ok')
+
+
+
+from dask import dataframe as dd
+df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*.parquet')
+import time
+s = time.time()
+df['DIFERENCIA'] = df['CRS_ELAPSED_TIME'] - df['ACTUAL_ELAPSED_TIME']
+df['DIFERENCIA'].mean().compute()
+df['DIFERENCIA'].max().compute()
+df['DIFERENCIA'].min().compute()
+df['DIFERENCIA'].std().compute()
+print(time.time() - s)
+print('ok')
+
+
+from dask import dataframe as dd
+df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*')
+import time
+s = time.time()
+df['DIFERENCIA'] = df['CRS_ELAPSED_TIME'] - df['ACTUAL_ELAPSED_TIME']
+df['DIFERENCIA'].mean().compute()
+df['DIFERENCIA'].max().compute()
+df['DIFERENCIA'].min().compute()
+df['DIFERENCIA'].std().compute()
+print(time.time() - s)
+print('ok')
+
+
+python3 \
+    src/rita_master_dask.py \
+    --scheduler tcp://172.31.12.168:8786 \
+    --env cluster \
+    --creds conf/mysql_creds.json \
+    --process demoras_ruta_mktid_dask \
+    --command_time 0.0 \
+    --sample_size 1M
+
+
+ssh -i conf/rita-transtat.pem hadoop@ec2-13-52-103-94.us-west-1.compute.amazonaws.com
