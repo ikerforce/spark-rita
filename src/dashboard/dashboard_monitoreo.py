@@ -198,28 +198,6 @@ app.layout = html.Div([
                     ],
                     style=dict(width='20%')),
 
-                html.Div(className='numero-registros',
-                    children=[
-                        html.Label(['Número de ejecuciones:'], style={'font-weight': 'bold', "text-align": "center"}),
-                        dcc.Dropdown(
-                            id='dropdown-numero-registros',
-                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
-                            value='20',
-                            clearable=False)
-                    ],
-                    style=dict(width='20%')),
-
-                html.Div(className='lineas-sample-size',
-                    children=[
-                        html.Label(['Tamaño de la muestra:'], style={'font-weight': 'bold', "text-align": "center"}),
-                        dcc.Dropdown(
-                            id='dropdown-lineas-sample-size',
-                            options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
-                            value='100K',
-                            clearable=False)
-                    ],
-                    style=dict(width='20%')),
-
                 html.Div(className='lineas-ambiente',
                     children=[
                         html.Label(['Ambiente de ejecución:'], style={'font-weight': 'bold', "text-align": "center"}),
@@ -241,6 +219,7 @@ app.layout = html.Div([
             children=[
                 html.Div(className='histograma-proceso',
                     children=[
+                        html.Label(['Nombre del proceso:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
                             id='dropdown-histograma-proceso',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':p, 'value':p} for p in procesos],
@@ -248,8 +227,10 @@ app.layout = html.Div([
                             clearable=False)
                     ],
                     style=dict(width='20%')),
+
                 html.Div(className='histograma-sample-size',
                     children=[
+                        html.Label(['Tamaño de la muestra:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
                             id='dropdown-histograma-sample-size',
                             options=[{'label':'Todos', 'value':'%%'}] + [{'label':s, 'value':s} for s in samples],
@@ -257,11 +238,13 @@ app.layout = html.Div([
                             clearable=False)
                     ],
                     style=dict(width='20%')),
+
                 html.Div(className='numero-registros-movil',
                     children=[
+                        html.Label(['Número de barras:'], style={'font-weight': 'bold', "text-align": "center"}),
                         dcc.Dropdown(
-                            id='dropdown-histograma-numero-registros',
-                            options=[{'label': i, 'value': i} for i in range(20, 201, 20)] + [{'label':'Todos', 'value':'4382378943324'}],
+                            id='dropdown-histograma-numero-bins',
+                            options=[{'label':'1', 'value': 1}] + [{'label': i, 'value': i} for i in range(10, 91, 10)] + [{'label': i, 'value': i} for i in range(100, 251, 50)],
                             value='20',
                             clearable=False)
                     ],
@@ -271,6 +254,7 @@ app.layout = html.Div([
         ),
 
         dcc.Graph('histograma-duracion', config={'displayModeBar': False}),
+
         dcc.Interval(id='interval-component', interval=1*1000)])])
 
 # Callback: A partir de aqui se hace la actualizacion de los datos cada que un usuario visita o actualiza la pagina
@@ -313,6 +297,7 @@ def update_graph(proceso, sample_size, env):
             , error_y=dict(type='data', array=tiempo_spark.stddev_duration)
             , marker=dict(color=Greys[4])
             , name='Spark'
+            , hovertext=tiempo_spark.process
             )
         , row=1
         , col=1)
@@ -323,6 +308,7 @@ def update_graph(proceso, sample_size, env):
             , error_y=dict(type='data', array=tiempo_dask.stddev_duration)
             , marker=dict(color=Oranges[4])
             , name='Dask'
+            , hovertext=tiempo_dask.process
             )
         , row=1
         , col=1)
@@ -353,9 +339,8 @@ def update_graph(proceso, sample_size, env):
 @app.callback(
     Output('escalamiento-datos', 'figure'),
     [Input('dropdown-proceso-escalamiento', 'value')
-    , Input('dropdown-numero-registros', 'value')
-    , Input('dropdown-lineas-sample-size', 'value')])
-def update_graph(process, n_registros, sample_size):
+    , Input('dropdown-lineas-ambiente', 'value')])
+def update_graph(process, env):
 
     query_spark = """SELECT sample_size
                         , avg_duration
@@ -373,7 +358,7 @@ def update_graph(process, n_registros, sample_size):
                     WHERE process LIKE CONCAT('{process}', '_spark')
                     GROUP BY sample_size, process
                     ORDER BY CAST(REPLACE(REPLACE(REPLACE(sample_size, 'M', '000000'), 'K', '000'), 'TOTAL', '80000000') AS UNSIGNED)
-                    ) tabla_temp""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_spark, sample_size=sample_size)
+                    ) tabla_temp""".format(process=process, tabla=tabla_tiempo_spark)
 
     query_dask = """SELECT sample_size
                         , avg_duration
@@ -391,7 +376,7 @@ def update_graph(process, n_registros, sample_size):
                     WHERE process LIKE CONCAT('{process}', '_dask')
                     GROUP BY sample_size, process
                     ORDER BY CAST(REPLACE(REPLACE(REPLACE(sample_size, 'M', '000000'), 'K', '000'), 'TOTAL', '80000000') AS UNSIGNED)
-                    ) tabla_temp""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_dask, sample_size=sample_size)
+                    ) tabla_temp""".format(process=process, tabla=tabla_tiempo_dask)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
@@ -617,9 +602,9 @@ def update_graph(process, n_registros, sample_size, env, ventana):
 @app.callback(
     Output('histograma-duracion', 'figure'),
     [Input('dropdown-histograma-proceso', 'value')
-    , Input('dropdown-histograma-numero-registros', 'value')
+    , Input('dropdown-histograma-numero-bins', 'value')
     , Input('dropdown-histograma-sample-size', 'value')])
-def update_graph(process, n_registros, sample_size):
+def update_graph(process, numero_bins, sample_size):
 
     query_spark = """SELECT 1 as num
                         , REPLACE(process, '_spark', '') as process
@@ -627,8 +612,7 @@ def update_graph(process, n_registros, sample_size):
                     FROM {tabla}, (SELECT @row_number:=0) AS t
                     WHERE process LIKE CONCAT('{process}', '_spark')
                     AND sample_size LIKE '{sample_size}'
-                    ORDER BY insertion_ts DESC
-                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_spark, sample_size=sample_size)
+                    ORDER BY insertion_ts DESC""".format(process=process, tabla=tabla_tiempo_spark, sample_size=sample_size)
 
     query_dask = """SELECT 1 as num
                         , REPLACE(process, '_dask', '') as process
@@ -636,8 +620,7 @@ def update_graph(process, n_registros, sample_size):
                     FROM {tabla}, (SELECT @row_number:=0) AS t
                     WHERE process LIKE CONCAT('{process}', '_dask')
                     AND sample_size LIKE '{sample_size}'
-                    ORDER BY insertion_ts DESC
-                    LIMIT {n_registros}""".format(process=process, n_registros=n_registros, tabla=tabla_tiempo_dask, sample_size=sample_size)
+                    ORDER BY insertion_ts DESC""".format(process=process, tabla=tabla_tiempo_dask, sample_size=sample_size)
 
     tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
     tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
@@ -646,7 +629,7 @@ def update_graph(process, n_registros, sample_size):
     fig = make_subplots(rows=1, cols=1,
                         specs=[[{"type":"bar"}]])
 
-    numero_bins=10
+    numero_bins=int(numero_bins)
 
     fig.add_trace(
         go.Histogram(
