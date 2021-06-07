@@ -73,6 +73,38 @@ s3-dist-cp --src=s3://spark-rita/samples/data_full_spark_casted --dest=hdfs:///s
 
 Después de este paso el clúster está listo para ejecutar los procesos.
 
+### Ejecución de procesos
+
+En primer lugar hay que añadir el archivo de credenciales de la base de datos _mysql_ en la que se almacenarán los resultados. Para esto podemos copiar el archivo `conf/mysql_creds_dummy.json` y modificarlo para que tenga las credenciales de acceso correctas.
+
+Después, para iniciar el proceso _scheduler_ de _Dask_ en el nodo _head_ usamos los siguientes comandos:
+```
+conda activate dask_yarn
+nohup dask-scheduler > dask_scheduler.out &
+cat dask_scheduler.out
+```
+Esto desplegará la dirección del _scheduler_ que será algo similar a esto: `tcp://<direccion_ip>:8786`. Hay que copiar esta dirección para iniciar los procesos _worker_ en el resto de los nodos.
+
+Posteriormente, para iniciar los procesos _worker_ debemos acceder por `ssh` a los nodos _worker_ de la misma forma que accedimos al _head_. La dirección ip de estos nodos está disponible en la consola de administración de _EC2_. Puede ser necesario modificar el _security group_ de las instancias para permitir conexiones `ssh` desde la dirección ip que estemos usando. Para inicar los procesos ejecutamos los siguientes comandos en cada uno de los nodos usando la dirección del _scheduler_ obtenida en el paso anterior:
+```
+conda activate dask_yarn
+nohup dask-worker tcp://172.31.4.106:8786 &> dask_worker.out &
+cat dask_worker.out
+```
+Esto iniciará el proceso y alamacenará los logs en el archivo `dask_worker.out`.
+
+Finalmente, podemos ejecutar el siguiente comando incluyendo el tamaño de muestra que queremos, el nombre del archivo en el que se escribirán los logs y la dirección del _scheduler_.
+```
+nohup python -u src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs <numero_de_ejecuciones> --sample_size <sample_size> --env cluster --scheduler tcp://<direccion_ip>:8786 &> <nombre_de_archivo_de_registro_de_logs>_$(date +%Y-%m-%d-%Hh%Mm%Ss).out &
+```
+
+### Consulta de resultados
+Para acceder a los resultados escritos en _MySQL_ y el registro de tiempo podemos acceder con el comando:
+```
+mysql -u transtat -h transtat-rita.caevbcmhveep.us-west-1.rds.amazonaws.com -p TRANSTAT -P 3306
+```
+
+
 ## Clúster en Azure
 
 Los siguientes pasos describen cómo hacer un clúster similar al de la sección anterior pero en Azure. Debido a las diferencias en la plataforma estos pueden ser distintos.
@@ -87,7 +119,7 @@ Una vez creado nos dará la opción de conectarnos por `ssh` con las credenciale
 
 ### Instalación de miniconda y paquetes necesarios
 
-Después de hacer la conexión al clúster mediante `ssh` debemos de instalar miniconda y los paquetes necesarios en cada nodo. Para ello debemos copiar el archivo ``.
+Después de hacer la conexión al clúster mediante `ssh` debemos de instalar miniconda y los paquetes necesarios en cada nodo. Para ello debemos copiar el archivo `conf/dask_cluster/dask_prep.sh` a cada nodo y ejecutarlo con el comando `sh dask_prep.sh`.
 
 1. Descargar el archivo de instalación de miniconda y ejecutar el archivo de instalación de miniconda con el siguiente comando: `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; sh Miniconda3-latest-Linux-x86_64.sh`.
 2. Seguir los pasos del instalador y salir de la consola y volver a entrar por `ssh` para que se efectuen los cambios.
@@ -149,327 +181,3 @@ hdfs dfs -mkdir hdfs://mycluster/user/sshuser/spark/events/
 
 Cambiar en Ambari las propiedades `Spark Eventlog directory` y `Spark History FS Log directory` por `hdfs://mycluster/spark/events/` en la sección _Advanced spark2-defaults_
 Cambiar en Ambari las propiedades `Spark Eventlog directory` y `Spark History FS Log directory` por `hdfs://mycluster/spark/events/` en la sección Advanced _spark2-thrift-sparkconf_
-
-
-nohup dask-scheduler > dask_scheduler.out &
-cat dask_scheduler.out
-
-nohup dask-worker tcp://172.31.12.168:8786 &> dask_worker.out &
-cat dask_worker.out
-
-nohup python -u src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 10 --sample_size 10M --env cluster --scheduler tcp://172.31.12.168:8786 &> ejecuciones_10M_$(date +%Y-%m-%d-%Hh%Mm%Ss).out &
-
-python src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 1 --sample_size 100K --env cluster --scheduler tcp://172.31.0.11:8786
-
-nohup python -u src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 1 --sample_size 100K --scheduler 10.0.0.18:8786 --env cluster &> ejecuciones.out &
-
-nohup python -u src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 10 --sample_size 100K --scheduler 10.0.0.23:8786 --env cluster &> ejecuciones_100K_$(date +%Y-%m-%d-%Hh%Mm%Ss).out &
-
-nohup python -u src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 100 --sample_size 10M --scheduler 10.0.0.23:8786 --env cluster &> ejecuciones_10M_$(date +%Y-%m-%d-%Hh%Mm%Ss).out &
-
-python src/rita_ejecuciones.py --creds conf/mysql_creds.json --ejecs 1 --sample_size 1M --scheduler tcp://172.31.8.8:8786 --env cluster
-
-aws emr create-cluster --name "Test cluster" --release-label emr-5.33.0 --applications Name=Hive Name=Pig --use-default-roles --ec2-attributes KeyName=myKey --instance-type m5.xlarge --instance-count 3 --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://region.elasticmapreduce/libs/script-runner/script-runner.jar,Args=["s3://mybucket/script-path/my_script.sh"]
-
-scp conf/mysql_creds.json sshuser@10.0.0.4:spark-rita/conf/
-
-mysql -u transtat@transtat-rita -h transtat-rita.mysql.database.azure.com -p TRANSTAT
-
-mysql -u transtat -h transtat-rita.caevbcmhveep.us-west-1.rds.amazonaws.com -p TRANSTAT -P 3306
-
-
-aws s3 cp samples/data_10M_dask_casted s3://spark-rita/samples/data_10M_dask_casted --recursive
-
-aws s3 cp samples/data_full_spark_casted s3://spark-rita/samples/data_full_spark_casted --recursive
-
-aws s3 sync samples/data_10M_dask_casted s3://spark-rita/samples/data_10M_dask_casted --recursive
-
-aws s3 cp samples/data_full_spark_casted s3://spark-rita/samples/data_full_spark_casted --recursive
-
-aws s3 cp samples/data_full_dask_casted s3://spark-rita/samples/data_full_dask_casted --recursive
-
-spark-submit     --driver-memory=2G     --driver-cores=2     --num-executors=3     --executor-cores=3     --executor-memory=4G     --jars sql/mysql-connector-java-8.0.23.jar     src/rita_master_spark.py     --env cluster     --creds conf/mysql_creds.json     --process demoras_ruta_mktid_spark     --sample_size 1M
-
-
-spark-submit \
-    --driver-memory=2G \
-    --driver-cores=2 \
-    --num-executors=2 \
-    --executor-cores=3 \
-    --conf spark.sql.shuffle.partitions=20 \
-    --executor-memory=6G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_origen_spark \
-    --command_time 0.0 \
-    --sample_size 100K
-
-
-python \
-    src/rita_master_dask.py \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_origen_dask \
-    --sample_size 100K
-
-
-python \
-    src/rita_master_dask.py \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_dask \
-    --sample_size 100K
-
-spark-submit \
-    --driver-memory=11G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_spark \
-    --sample_size 100K
-
-
-spark-submit \
-    --driver-memory=11G \
-    --conf spark.sql.shuffle.partitions=12 \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_spark \
-    --command_time 0.0 \
-    --sample_size 1M
-
-
-spark-submit \
-    --driver-memory=8G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_origen_spark \
-    --sample_size 100K
-
-
-334 tardaba
-
-spark-submit \
-    --driver-memory 2G \
-    --driver-cores 2 \
-    --num-executors 2 \
-    --executor-cores 3 \
-    --executor-memory 6G \
-    --conf spark.sql.queryExecutionListeners="" \
-    --conf spark.sql.extensions="" \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/calculo_ruta_minima/dijkstra_spark.py \
-    --env cluster \
-    --sample_size 100K \
-    --process dijkstra_spark \
-    --creds conf/mysql_creds.json \
-    --origin CLE \
-    --dest HNL
-
-
-spark-submit \
-    --driver-memory 8G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/calculo_ruta_minima/dijkstra_spark_pandas.py \
-    --env local \
-    --sample_size 100K \
-    --process dijkstra_spark \
-    --creds conf/mysql_creds.json \
-    --origin CLE \
-    --dest HNL
-
-
-spark-submit \
-    --driver-memory 8G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/calculo_ruta_minima/dijkstra_spark_pandas.py \
-    --env local \
-    --sample_size 1M \
-    --process dijkstra_spark \
-    --creds conf/mysql_creds.json \
-    --origin AVP \
-    --dest LAS
-
-
-spark-submit \
-    --driver-memory 8G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/calculo_ruta_minima/dijkstra_spark.py \
-    --env local \
-    --sample_size 100K \
-    --process dijkstra_spark \
-    --creds conf/mysql_creds.json \
-    --origin CLE \
-    --dest HNL
-
-
-python \
-    src/calculo_ruta_minima/dijkstra_dask.py \
-    --creds conf/mysql_creds.json \
-    --process dijkstra_dask \
-    --sample_size 10M \
-    --origin CLE \
-    --dest HNL
-
-spark-submit \
-    --driver-memory=2G \
-    --driver-cores=2 \
-    --num-executors=20 \
-    --executor-cores=3 \
-    --executor-memory=6G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_destino_spark \
-    --sample_size 1M
-
-spark-submit \
-    --driver-memory=2G \
-    --driver-cores=2 \
-    --num-executors=4 \
-    --executor-cores=3 \
-    --executor-memory=11G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process flota_spark \
-    --sample_size 1M
-
-spark-submit \
-    --driver-memory=2G \
-    --driver-cores=2 \
-    --num-executors=5 \
-    --executor-cores=1 \
-    --executor-memory=2G \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process elimina_nulos_spark \
-    --sample_size 1M
-
-spark-submit \
-    --master local \
-    --driver-memory=8g \
-    --files log4j.properties \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_destino_spark \
-    --sample_size 10M
-
-
-spark-submit \
-    --master local \
-    --driver-memory=8g \
-    --files log4j.properties \
-    --conf spark.sql.shuffle.partitions=50 \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_aeropuerto_destino_spark \
-    --sample_size 10M
-
-
-spark-submit \
-    --jars sql/mysql-connector-java-8.0.23.jar \
-    src/rita_master_spark.py \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process elimina_nulos_spark \
-    --sample_size 1M
-
-python \
-    src/rita_master_dask.py \
-    --creds conf/mysql_creds.json \
-    --process demoras_aerolinea_dask \
-    --sample_size 1M
-
-python \
-    src/rita_master_dask.py \
-    --scheduler tcp://192.168.3.46:8786 \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_dask \
-    --command_time 0.0 \
-    --sample_size 100K
-
-
-python \
-    src/rita_master_dask.py \
-    --scheduler tcp://172.31.12.168:8786 \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_dask \
-    --command_time 0.0 \
-    --sample_size 100K
-
-python \
-    src/rita_master_dask.py \
-    --env local \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_dask \
-    --command_time 0.0 \
-    --sample_size 100K
-
-
-mysql -u <local database username> -h <database server ip address> -p
-
-
-
-from dask import dataframe as dd
-df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*')
-import time
-s = time.time()
-df['CRS_ELAPSED_TIME'].mean().compute()
-print(time.time() - s)
-print('ok')
-
-
-
-from dask import dataframe as dd
-df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*.parquet')
-import time
-s = time.time()
-df['DIFERENCIA'] = df['CRS_ELAPSED_TIME'] - df['ACTUAL_ELAPSED_TIME']
-df['DIFERENCIA'].mean().compute()
-df['DIFERENCIA'].max().compute()
-df['DIFERENCIA'].min().compute()
-df['DIFERENCIA'].std().compute()
-print(time.time() - s)
-print('ok')
-
-
-from dask import dataframe as dd
-df = dd.read_parquet('hdfs:///samples/data_10M_dask_casted/*')
-import time
-s = time.time()
-df['DIFERENCIA'] = df['CRS_ELAPSED_TIME'] - df['ACTUAL_ELAPSED_TIME']
-df['DIFERENCIA'].mean().compute()
-df['DIFERENCIA'].max().compute()
-df['DIFERENCIA'].min().compute()
-df['DIFERENCIA'].std().compute()
-print(time.time() - s)
-print('ok')
-
-
-python3 \
-    src/rita_master_dask.py \
-    --scheduler tcp://172.31.12.168:8786 \
-    --env cluster \
-    --creds conf/mysql_creds.json \
-    --process demoras_ruta_mktid_dask \
-    --command_time 0.0 \
-    --sample_size 1M
-
-
-ssh -i conf/rita-transtat.pem hadoop@ec2-13-52-103-94.us-west-1.compute.amazonaws.com
