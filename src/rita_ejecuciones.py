@@ -72,6 +72,7 @@ else:
 # 1 es spark
 numero_de_ejecuciones = int(args.ejecs)
 procesos.remove('dijkstra')
+# procesos = ['demoras_ruta_aeropuerto', 'demoras_ruta_mktid']
 pruebas_totales = dict(zip(procesos, [orden_pruebas(numero_de_ejecuciones) for i in range(len(procesos))]))
 n_errores = 0
 conteo_proceso = 0
