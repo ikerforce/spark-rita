@@ -5,7 +5,7 @@
 
 \section{Procesos para comparación de desempeño}
 
-Para contrastar el desempeño de los herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Cada uno busca responder una pregunta distinta sobre los vuelos en Estados Unidos, cuya respuesta requiere de distintas operaciones. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
+Para contrastar el desempeño de los herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Estos procesos buscan someter a los \textit{frameworks} a diferentes escenarios para los que se usan comúnmente estas herramientas. Entre estas operaciones está el cálculo de agregaciones sencillas como el conteo de elementos o obtención del máximo y mínimo de un conjunto de datos, el cálculo de estadísticas como el promedio y la desviación estándar, la escritura del resultado a distintas ubicaciones como bases de datos \textit{SQL} o archivos \texttt{parquet} o la impresión de resultados en consola, operaciones utilizadas para limpieza de datos como borrado de nulos y borrado de duplicados y, por último, la ejecución de un algoritmo de búsqueda de ruta mínima que involucra muchas de las operaciones listadas anteriormente. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
 
 Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos que tiene como entradas la \texttt{muestra} de datos que se utilizará, \texttt{n}, el número de ejecuciones a realizar y \texttt{procesos}, la lista de procesos que se ejecutarán:
 
@@ -128,14 +128,13 @@ El proceso se compone de las siguientes operaciones principales:
 	\item Borrado de duplicados.
 	\item Cálculo de registro mínimo.
 	\item Ordenamiento de datos.
-	\item *Uso de \texttt{persist} (Sólo \textit{Dask}).
-	\item *Escritura de datos \texttt{parquet} (Sólo \textit{PySpark}).
+	\item *Almacenamiento temporal de datos mediante \texttt{persist} (\textit{Dask}) y \texttt{checkpoint} (\textit{Spark}).
 	\item Suma de columnas a un escalar.
 	\item Concatenación de \textit{DataFrames}.
 	\item Escritura de datos a SQL.
 \end{itemize}
 
-Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, debido a que la lectura y escritura de archivos \texttt{parquet} es muy rápida, resultó más conveniente almacenar datos intermedios en este tipo de archivos en lugar de usar la función \texttt{cache}. Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} que hacer la escritura de datos.
+Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, se usó la operación \texttt{checkpoint} ya que se deshace de la parte del plan de ejecución que ya fue ejecutada y almacena los datos intermedios, liberando memoria (a diferencia de \texttt{cache}). Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} ya que \textit{Dask} no ejecuta otra vez el plan de ejecución completo sino a partir del último \texttt{persist}.
 
 \subsection{Registro de tiempo y resultados}
 
