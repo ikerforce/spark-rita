@@ -1,0 +1,57 @@
+process|sample_size|rows|columns|
+demoras_aerolinea_spark|10K|||(12135, 11)
+demoras_aerolinea_dask|10K|||(12135, 11)
+demoras_aeropuerto_destino_spark|10K|||(22144, 11)
+demoras_aeropuerto_destino_dask|10K|||(22144, 11)
+demoras_aeropuerto_origen_spark|10K|||(22086, 11)
+demoras_aeropuerto_origen_dask|10K|||(22086, 11)
+demoras_ruta_aeropuerto_spark|10K|||(41147, 11)
+demoras_ruta_aeropuerto_dask|10K|||(41147, 11)
+dijkstra_spark|10K|||VARIABLE
+dijkstra_dask|10K|||VARIABLE
+flota_spark|10K|||(12135, 6)
+flota_dask|10K|||(12135, 6)
+demoras_ruta_mktid_spark|10K|||(38909, 11)
+demoras_ruta_mktid_dask|10K|||(38909, 11)
+demoras_aerolinea_spark|100K|||(49439, 11)
+demoras_aerolinea_dask|100K|||(49439, 11)
+demoras_aeropuerto_destino_spark|100K|||(116746, 11)
+demoras_aeropuerto_destino_dask|100K|||(116746, 11)
+demoras_aeropuerto_origen_spark|100K|||(116656, 11)
+demoras_aeropuerto_origen_dask|100K|||(116656, 11)
+demoras_ruta_aeropuerto_spark|100K|||(297814, 11)
+demoras_ruta_aeropuerto_dask|100K|||(297814, 11)
+dijkstra_spark|100K|||VARIABLE
+dijkstra_dask|100K|||
+flota_spark|100K|||(49439, 6)
+flota_dask|100K|||(49439, 6)
+demoras_ruta_mktid_spark|100K|||(267505, 11)
+demoras_ruta_mktid_dask|100K|||(267505, 11)
+demoras_aerolinea_spark|1M|||(76717, 11)
+demoras_aerolinea_dask|1M|||(76717, 11)
+demoras_aeropuerto_destino_spark|1M|||(436411, 11)
+demoras_aeropuerto_destino_dask|1M|||(436411, 11)
+demoras_aeropuerto_origen_spark|1M|||(436681, 11)
+demoras_aeropuerto_origen_dask|1M|||(436681, 11)
+demoras_ruta_aeropuerto_spark|1M|||(1619826, 11)
+demoras_ruta_aeropuerto_dask|1M|||(1619826, 11)
+dijkstra_spark|1M|||
+dijkstra_dask|1M|||
+flota_spark|1M|||(76717, 6)
+flota_dask|1M|||(76717, 6)
+demoras_ruta_mktid_spark|1M|||(1430282, 11)
+demoras_ruta_mktid_dask|1M|||(1430282, 11)
+demoras_aerolinea_spark|10M|||(78113, 11)
+demoras_aerolinea_dask|10M|||(78113, 11)
+demoras_aeropuerto_destino_spark|10M|||(1042066, 11)
+demoras_aeropuerto_destino_dask|10M|||(1042066, 11)
+demoras_aeropuerto_origen_spark|10M|||(1041665, 11)
+demoras_aeropuerto_origen_dask|10M|||(1041665, 11)
+demoras_ruta_aeropuerto_spark|10M|||(8361958, 11)
+demoras_ruta_aeropuerto_dask|10M|||(8361958, 11)
+dijkstra_spark|10M|||
+dijkstra_dask|10M|||
+flota_spark|10M|||(78113, 6)
+flota_dask|10M|||(78113, 6)
+demoras_ruta_mktid_spark|10M|||(6824834, 11)
+demoras_ruta_mktid_dask|10M|||NA
