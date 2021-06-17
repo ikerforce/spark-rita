@@ -35,6 +35,50 @@ En la primera sección nos centraremos en las siguientes características y capa
 
 Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
 
+\begin{center}
+\begin{figure}
+\begin{tikzpicture}
+  \begin{axis}[
+    xbar,
+    y axis line style = { opacity = 0 },
+    axis x line       = none,
+    y                 = 30,
+    x                 = 10,
+    legend style={at={(0.95,0.25)}},
+    clip              = false,
+    tickwidth         = 0.1pt,
+    ytick             = data,
+    enlarge y limits  = 0.02,
+    enlarge x limits  = 0.02,
+    symbolic y coords = {demoras\_aerolinea, demoras\_aeropuerto\_destino, demoras\_aeropuerto\_origen, demoras\_ruta\_aeropuerto, demoras\_ruta\_mktid, dijkstra, elimina\_nulos, flota},
+    nodes near coords,
+  ]
+  \addplot[fill=orange] coordinates { (2.024,demoras\_aerolinea)
+  						(1.939,demoras\_aeropuerto\_destino)
+  						(3.386,demoras\_aeropuerto\_origen)
+  						(3.291,demoras\_ruta\_aeropuerto)
+  						(4.991,demoras\_ruta\_mktid)
+  						(3.488,dijkstra)
+  						(1.395,elimina\_nulos)
+  						(3.029,flota)};
+                         
+  \addplot[fill=gray] coordinates { (4.678,demoras\_aerolinea)
+  						(4.578,demoras\_aeropuerto\_destino)
+  						(5.406,demoras\_aeropuerto\_origen)
+  						(4.881,demoras\_ruta\_aeropuerto)
+  						(5.901,demoras\_ruta\_mktid)
+  						(16.957,dijkstra)
+  						(2.993,elimina\_nulos)
+  						(6.12,flota)};
+  \legend{Dask, Spark}
+  \end{axis}
+\end{tikzpicture}
+\caption{Duración de los procesos con 10,000 registros}
+\label{barras:duracion10K}
+\end{figure}
+\end{center}
+
+
 \begin{itemize}
 	
 	\item \textbf{Robustez} Con la muestra de datos más pequeña, ambos \textit{frameworks} lograron completar todos los procesos sin fallas, por lo que su estabilidad es comparable.
@@ -103,7 +147,7 @@ Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
         flota & dask & 0.008 & 1.741 & 2.714 & 0.368 \\ % \hline
         flota & spark & 1.177 & 4.725 & 2.714 & 0.368 \\ \hline
     \end{tabular}
-    \label{table:otros100K}}
+    \label{table:otros10K}}
     \caption{Información sobre tiempo de cómputo e inicio de la ejecución con muestra de 100 mil registros.}
 \end{table}
 
@@ -130,7 +174,7 @@ Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
         flota & spark & mysql & 1.395 & 12135 & 6 \\ % \hline
         flota & dask & mysql & 1.288 & 12135 & 6 \\ \hline
     \end{tabular}
-    \label{table:write100K}}
+    \label{table:write10K}}
     \caption{Información sobre tiempo de escritura y tamaño del resultado con muestra de 100 mil registros.}
 \end{table}
 
@@ -140,7 +184,50 @@ En resumen, con la muestra de 10,000 registros, \textit{Dask} fue superior en cu
 
 \subsection{Ejecución local con 100,000 registros}
 
-La siguiente tabla resume la información más importante obtenida de las ejecuciones y permite establecer las siguientes conclusiones:
+Las siguientes tablas resumen la información más importante obtenida de las ejecuciones y permite establecer las siguientes conclusiones:
+
+%\begin{center}
+%\begin{figure}
+%\begin{tikzpicture}
+%  \begin{axis}[
+%    xbar,
+%    y axis line style = { opacity = 0 },
+%    axis x line       = none,
+%    y                 = 30,
+%    x                 = 7,
+%    legend style={at={(0.95,0.25)}},
+%    clip              = false,
+%    tickwidth         = 0.1pt,
+%    ytick             = data,
+%    enlarge y limits  = 0.02,
+%    enlarge x limits  = 0.02,
+%    symbolic y coords = {demoras\_aerolinea, demoras\_aeropuerto\_destino, demoras\_aeropuerto\_origen, demoras\_ruta\_aeropuerto, demoras\_ruta\_mktid, dijkstra, elimina\_nulos, flota},
+%    nodes near coords,
+%  ]
+%  \addplot[fill=orange] coordinates { (2.422,demoras\_aerolinea)
+%  						(2.321,demoras\_aeropuerto\_destino)
+%  						(6.275,demoras\_aeropuerto\_origen)
+%  						(4.816,demoras\_ruta\_aeropuerto)
+%  						(12.429,demoras\_ruta\_mktid)
+%  						(5.713,dijkstra)
+%  						(1.433,elimina\_nulos)
+%  						(3.737,flota)};
+%                         
+%  \addplot[fill=gray] coordinates { (5.187,demoras\_aerolinea)
+%  						(5.107,demoras\_aeropuerto\_destino)
+%  						(6.55,demoras\_aeropuerto\_origen)
+%  						(6.046,demoras\_ruta\_aeropuerto)
+%  						(9.264,demoras\_ruta\_mktid)
+%  						(22.62,dijkstra)
+%  						(3.048,elimina\_nulos)
+%  						(7.16,flota)};
+%  \legend{Dask, Spark}
+%  \end{axis}
+%\end{tikzpicture}
+%\caption{Duración de los procesos con 100,000 registros}
+%\label{barras:duracion100K}
+%\end{figure}
+%\end{center}
 
 \begin{itemize}
 	\item \textbf{Robustez} Con esta cantidad de datos, ambos \textit{frameworks} tuvieron resultados satisfactorios en la ejecución de sus procesos sin fallos por lo que uno sigue sin superar al otro en este rubro.
@@ -247,6 +334,49 @@ En conclusión, para esta muestra de datos, \textit{Dask} mantuvo el mejor desem
 
 De esta ejecución podemos obtener las siguientes conclusiones:
 
+%\begin{center}
+%\begin{figure}
+%\begin{tikzpicture}
+%  \begin{axis}[
+%    xbar,
+%    y axis line style = { opacity = 0 },
+%    axis x line       = none,
+%    y                 = 30,
+%    x                 = 2,
+%    legend style={at={(0.95,0.25)}},
+%    clip              = false,
+%    tickwidth         = 0.1pt,
+%    ytick             = data,
+%    enlarge y limits  = 0.02,
+%    enlarge x limits  = 0.02,
+%    symbolic y coords = {demoras\_aerolinea, demoras\_aeropuerto\_destino, demoras\_aeropuerto\_origen, demoras\_ruta\_aeropuerto, demoras\_ruta\_mktid, dijkstra, elimina\_nulos, flota},
+%    nodes near coords,
+%  ]
+%  \addplot[fill=orange] coordinates { (3.629,demoras\_aerolinea)
+%  						(4.617,demoras\_aeropuerto\_destino)
+%  						(16.611,demoras\_aeropuerto\_origen)
+%  						(17.721,demoras\_ruta\_aeropuerto)
+%  						(55.405,demoras\_ruta\_mktid)
+%  						(31.371,dijkstra)
+%  						(1.817,elimina\_nulos)
+%  						(6.57,flota)};
+%                         
+%  \addplot[fill=gray] coordinates { (6.363,demoras\_aerolinea)
+%  						(7.137,demoras\_aeropuerto\_destino)
+%  						(11.607,demoras\_aeropuerto\_origen)
+%  						(12.019,demoras\_ruta\_aeropuerto)
+%  						(49.728,demoras\_ruta\_mktid)
+%  						(69.953,dijkstra)
+%  						(3.365,elimina\_nulos)
+%  						(8.932,flota)};
+%  \legend{Dask, Spark}
+%  \end{axis}
+%\end{tikzpicture}
+%\caption{Duración de los procesos con 1,000,000 de registros}
+%\label{barras:duracion1M}
+%\end{figure}
+%\end{center}
+
 \begin{itemize}
 	\item \textbf{Robustez} Ambos procesos lograron terminar el 100\% de sus ejecuciones por lo que siguen siendo igual de confiables.
 	
@@ -347,6 +477,51 @@ De esta ejecución podemos obtener las siguientes conclusiones:
 En conclusión, podemos ver que al incrementar la muestra de datos la superioridad de \textit{Spark} en la escritura a \textit{MySQL} que parecía existir anteriormente no es tan clara, pero se acentúa su mejor desempeño al operar con una nueva llave. Por otro lado, \textit{Dask} aún conserva la ventaja de la escritura a \texttt{parquet} y es más rápido en la ejecución del proceso (sin contar el tiempo de escritura) en todos los procesos que no requieren de la creación de una nueva llave pero la ventaja respecto a \textit{Spark} se redujo significativamente, esto es especialmente evidente al ver el tiempo de cómputo. En cuanto a la robustez y variación, ambos \textit{frameworks} tienen resultados similares con \textit{Spark} siendo un poco más consistente en la duración de sus ejecuciones. Por último, en el algoritmo iterativo \textit{Dask} sigue teniendo mejor desempeño gracias a su capacidad de mantener en memoria resultados intermedios.
 
 \subsection{Ejecución local con 10,000,000 registros}
+
+%\begin{center}
+%\begin{figure}
+%\begin{tikzpicture}
+%  \begin{axis}[
+%    xbar,
+%    y axis line style = { opacity = 0 },
+%    axis x line       = none,
+%    y                 = 30,
+%    x                 = 2,
+%    legend style={at={(0.95,0.25)}},
+%    clip              = false,
+%    tickwidth         = 0.1pt,
+%    ytick             = data,
+%    enlarge y limits  = 0.02,
+%    enlarge x limits  = 0.02,
+%    symbolic y coords = {demoras\_aerolinea, demoras\_aeropuerto\_destino, demoras\_aeropuerto\_origen, demoras\_ruta\_aeropuerto, demoras\_ruta\_mktid, dijkstra, elimina\_nulos, flota},
+%    nodes near coords,
+%  ]
+%  \addplot[fill=orange] coordinates { (8.604,demoras\_aerolinea)
+%  						(11.123,demoras\_aeropuerto\_destino)
+%  						(38.7,demoras\_aeropuerto\_origen)
+%  						(93.087,demoras\_ruta\_aeropuerto)
+%  						(49.728,demoras\_ruta\_mktid)
+%  						(135.123,dijkstra)
+%  						(1.817,elimina\_nulos)
+%  						(6.57,flota)};
+%                         
+%  \addplot[fill=gray] coordinates { (6.363,demoras\_aerolinea)
+%  						(7.137,demoras\_aeropuerto\_destino)
+%  						(11.607,demoras\_aeropuerto\_origen)
+%  						(12.019,demoras\_ruta\_aeropuerto)
+%  						(49.728,demoras\_ruta\_mktid)
+%  						(69.953,dijkstra)
+%  						(3.365,elimina\_nulos)
+%  						(8.932,flota)};
+%  \legend{Dask, Spark}
+%  \end{axis}
+%  \coordinate (A) at (1.6,4.15)
+%  \node at (A) {Error de memoria}
+%\end{tikzpicture}
+%\caption{Duración de los procesos con 10,000,000 de registros}
+%\label{barras:duracion10M}
+%\end{figure}
+%\end{center}
 
 \begin{itemize}
 
