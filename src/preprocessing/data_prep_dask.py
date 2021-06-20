@@ -25,15 +25,13 @@ if __name__ == '__main__':
         return math.ceil(int(size.replace('MB', '')) / chunksize_mb)
 
     size = subprocess.check_output(['du','--max-depth=0', '--block-size=MB', input_file]).split()[0].decode('utf-8') # Obtencion del tamaño del directorio
-    n_partitions = define_particiones(size, chunksize_mb=100) # Obtencion del numero de particiones considerando particiones de al rededor de 100MB
+    n_partitions = define_particiones(size, chunksize_mb=100) # Obtencion del numero de particiones considerando particiones de alrededor de 100MB
 
     print("Archivo: " + input_file)
     print("Tamaño del archivo: " + size)
     print("Número de particiones: " + str(n_partitions))
 
     df = dd.read_parquet(input_file, engine='pyarrow', chunksize='100MB')
-
-    df = client.persist(df)
 
     df = df.repartition(n_partitions)
 
@@ -225,7 +223,6 @@ if __name__ == '__main__':
             df[column] = df[column].astype(new_dtypes[column])
 
     output_file = input_file + '_dask_casted'
-    output_file = 'data_dask_casted'
 
     from dask.diagnostics import ProgressBar
     with ProgressBar():
