@@ -96,6 +96,8 @@ for proceso in procesos:
                                     --process {proceso}_spark \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env, c_time=time.time())
+                    os.system(spark_cmd)
+                    os.system('rm -r temp_dir/*')
                 else:
                     spark_cmd = """spark-submit \
                                     --driver-memory 2G \
@@ -110,7 +112,7 @@ for proceso in procesos:
                                     --process {proceso}_spark \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time())
-                os.system(spark_cmd)
+                    os.system(spark_cmd)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -128,6 +130,7 @@ for proceso in procesos:
                                     --env {env} \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time(), env=args.env)
+                    os.system(dask_cmd)
                 else:
                     dask_cmd = """~/miniconda/envs/dask_yarn/bin/python3 \
                                     src/rita_master_dask.py \
@@ -137,7 +140,8 @@ for proceso in procesos:
                                     --command_time {c_time} \
                                     --sample_size {sample_size} \
                                     --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler, c_time=time.time())
-                os.system(dask_cmd)
+                    os.system(dask_cmd)
+                    os.system('rm -r temp_dir/*')
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -169,6 +173,8 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env, c_time=time.time())
+            os.system(spark_cmd)
+            os.system('rm -r temp_dir/*')
         else:
             spark_cmd = '''spark-submit \
                             --driver-memory 2G \
@@ -185,7 +191,7 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, c_time=time.time())
-        os.system(spark_cmd)
+            os.system(spark_cmd)
         print('+----------------------------------+')
     else:
         ruta = rutas_dask.pop()
@@ -201,6 +207,7 @@ for i in pruebas_rutas:
                             --env {env} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time(), env=args.env)
+            os.system(dask_cmd)
         else:
             dask_cmd = '''~/miniconda/envs/dask_yarn/bin/python3 \
                             src/calculo_ruta_minima/dijkstra_dask.py \
@@ -212,7 +219,7 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler, c_time=time.time())
-        os.system(dask_cmd)
+            os.system(dask_cmd)
         print('+----------------------------------+')
 
 if n_errores > 0:
