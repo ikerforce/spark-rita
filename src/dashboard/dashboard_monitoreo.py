@@ -266,53 +266,166 @@ app.layout = html.Div([
 def update_graph(proceso, sample_size, env):
 
     query_spark = """SELECT REPLACE(process, '_spark', '') as process
+                        , REPLACE(REPLACE(REPLACE(process, '_spark', ''), '_command_time', ''), '_write_time', '') as general_process
                         , AVG(duration) as avg_duration
                         , STDDEV(duration) as stddev_duration
                     FROM {tabla}
-                    WHERE process LIKE CONCAT('{process}', '_spark')
+                    WHERE process LIKE CONCAT('{process}', '_spark%%')
                     AND sample_size LIKE '{sample_size}'
                     AND env LIKE '{env}'
-                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_spark, sample_size=sample_size, env=env)
+                    GROUP BY process
+                    ORDER BY process""".format(process=proceso, tabla=tabla_tiempo_spark, sample_size=sample_size, env=env)
 
     query_dask = """SELECT REPLACE(process, '_dask', '') as process
+                        , REPLACE(REPLACE(REPLACE(process, '_dask', ''), '_command_time', ''), '_write_time', '') as general_process
                         , AVG(duration) as avg_duration
                         , STDDEV(duration) as stddev_duration
                     FROM {tabla}
-                    WHERE process LIKE CONCAT('{process}', '_dask')
+                    WHERE process LIKE CONCAT('{process}', '_dask%%')
                     AND sample_size LIKE '{sample_size}'
                     AND env LIKE '{env}'
-                    GROUP BY process""".format(process=proceso, tabla=tabla_tiempo_dask, sample_size=sample_size, env=env)
+                    GROUP BY process
+                    ORDER BY process""".format(process=proceso, tabla=tabla_tiempo_dask, sample_size=sample_size, env=env)
 
-    tiempo_spark = pd.read_sql(query_spark, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
-    tiempo_dask = pd.read_sql(query_dask, con=db_connection) # Consultamos la tabla que tiene la informacion de de visitas a paginas web
+    tiempo_spark = pd.read_sql(query_spark, con=db_connection)
+    tiempo_spark_write_time = tiempo_spark[tiempo_spark['process'].str.contains('write') == True]
+    tiempo_spark_command_time = tiempo_spark[tiempo_spark['process'].str.contains('command') == True]
+    tiempo_spark_total = tiempo_spark[(tiempo_spark['process'].str.contains('command') == False) & (tiempo_spark['process'].str.contains('write') == False)]
 
-    # Iniciamos dos graficos de barras. Uno con la informacion de usuarios conectados por alcaldia y otro con las paginas web que registraron mas visitas
+    tiempo_dask = pd.read_sql(query_dask, con=db_connection)
+    tiempo_dask_write_time = tiempo_dask[tiempo_dask['process'].str.contains('write') == True]
+    tiempo_dask_command_time = tiempo_dask[tiempo_dask['process'].str.contains('command') == True]
+    tiempo_dask_total = tiempo_dask[(tiempo_dask['process'].str.contains('command') == False) & (tiempo_dask['process'].str.contains('write') == False)]
+
+    # Grafica de barras que resume duracion de procesos
     fig = make_subplots(rows=1, cols=1,
                         specs=[[{"type":"bar"}]])
 
     fig.add_trace(
         go.Bar(
-            x=tiempo_spark.process
-            , y=tiempo_spark.avg_duration
-            , error_y=dict(type='data', array=tiempo_spark.stddev_duration)
+            x=tiempo_spark_total.general_process
+            , y=tiempo_spark_total.avg_duration
+            # , error_y=dict(type='data', array=tiempo_spark_total.stddev_duration)
             , marker=dict(color=Greys[4])
-            , name='Spark'
-            , hovertext=tiempo_spark.process
-            )
-        , row=1
-        , col=1)
-    fig.add_trace(
-        go.Bar(
-            x=tiempo_dask.process
-            , y=tiempo_dask.avg_duration
-            , error_y=dict(type='data', array=tiempo_dask.stddev_duration)
-            , marker=dict(color=Oranges[4])
-            , name='Dask'
-            , hovertext=tiempo_dask.process
+            , name='Spark - Ejecución'
+            , hovertext=tiempo_spark_total.process
+            , offset=-0.3
+            , width=0.3
+            , base=0
             )
         , row=1
         , col=1)
 
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_dask_total.general_process
+            , y=tiempo_dask_total.avg_duration
+            # , error_y=dict(type='data', array=tiempo_dask_total.stddev_duration)
+            , marker=dict(color=Oranges[4])
+            , name='Dask - Ejecución'
+            , hovertext=tiempo_dask_total.process
+            , offset=0.0
+            , base=0
+            , width=0.3
+            )
+        , row=1
+        , col=1)
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_spark_write_time.general_process
+            , y=tiempo_spark_write_time.avg_duration
+            # , error_y=dict(type='data', array=tiempo_spark_write_time.stddev_duration)
+            , marker=dict(color=Greys[3])
+            , name='Spark - Write'
+            , hovertext=tiempo_spark_write_time.process
+            , offset=-0.3
+            , width=0.3
+            , base=0
+            )
+        , row=1
+        , col=1)
+
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_dask_write_time.general_process
+            , y=tiempo_dask_write_time.avg_duration
+            # , error_y=dict(type='data', array=tiempo_dask_write_time.stddev_duration)
+            , marker=dict(color=Oranges[3])
+            , name='Dask - Write'
+            , hovertext=tiempo_dask_write_time.process
+            , offset=0.0
+            , width=0.3
+            , base=0
+            )
+        , row=1
+        , col=1)
+
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_spark_command_time.general_process
+            , y=tiempo_spark_command_time.avg_duration
+            # , error_y=dict(type='data', array=tiempo_spark_command_time.stddev_duration)
+            , marker=dict(color=Greys[1])
+            , name='Spark - Command'
+            , hovertext=tiempo_spark_command_time.process
+            , offset=-0.3
+            , width=0.3
+            , base=tiempo_spark_write_time.avg_duration
+            )
+        , row=1
+        , col=1)
+
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_dask_command_time.general_process
+            , y=tiempo_dask_command_time.avg_duration
+            # , error_y=dict(type='data', array=tiempo_dask_command_time.stddev_duration)
+            , marker=dict(color=Oranges[1])
+            , name='Dask - Command'
+            , hovertext=tiempo_dask_command_time.process
+            , offset=0.0
+            , width=0.3
+            , base=tiempo_dask_write_time.avg_duration
+            )
+        , row=1
+        , col=1)
+
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_spark_total.general_process
+            , y=tiempo_spark_total.avg_duration
+            , error_y=dict(type='data', array=tiempo_spark_total.stddev_duration)
+            , marker=dict(color=Greys[6])
+            , name='Spark - Total'
+            , hovertext=tiempo_spark_total.process
+            , offset=-0.3
+            , width=0.2
+            , base=0
+            )
+        , row=1
+        , col=1)
+
+
+    fig.add_trace(
+        go.Bar(
+            x=tiempo_dask_total.general_process
+            , y=tiempo_dask_total.avg_duration
+            , error_y=dict(type='data', array=tiempo_dask_total.stddev_duration)
+            , marker=dict(color=Oranges[6])
+            , name='Dask - Total'
+            , hovertext=tiempo_dask_total.process
+            , offset=0.0
+            , base=0
+            , width=0.2
+            )
+        , row=1
+        , col=1)
 
     fig.update_xaxes(title_text='Proceso', title_font={'size':12}, showgrid=False, row=1, col=1)
     fig.update_yaxes(title_text='Duración (segundos)', title_font={'size':12}, showgrid=False, row=1, col=1)
@@ -322,13 +435,14 @@ def update_graph(proceso, sample_size, env):
         , title_x=0.5
         , height=500
         , autosize=True
+        , barmode='stack'
         # , width=1400
         , template='plotly_white'
         , legend=dict(orientation="h"
             , yanchor="bottom"
-            , y=-0.3
+            , y=-0.25
             , xanchor="left"
-            , x=0.45)
+            , x=0.2)
         )
 
     # Regresamos el bloque de graficos 
@@ -535,6 +649,7 @@ def update_graph(process, n_registros, sample_size, env, ventana):
             , line=dict(width=0)
             , showlegend=False
             )
+
         , row=1
         , col=1)
     fig.add_trace(
@@ -548,6 +663,7 @@ def update_graph(process, n_registros, sample_size, env, ventana):
             )
         , row=1
         , col=1)
+
     fig.add_trace(
         go.Scatter(
             name="Dask Bounds"
@@ -562,6 +678,7 @@ def update_graph(process, n_registros, sample_size, env, ventana):
             )
         , row=1
         , col=1)
+
     fig.add_trace(
         go.Scatter(
             name="Dask Duration"
