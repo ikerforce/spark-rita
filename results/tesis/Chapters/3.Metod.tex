@@ -1,11 +1,11 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para realizar la comparación entre \textit{Dask} y \textit{PySpark} bajo ambientes y condiciones homologadas, uno local y un clúster en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporo una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada proceso se ejecutó 1000 veces, haciendo 100 ejecuciones para cada combinación de muestra y ambiente. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\noindent Este capítulo describe el proceso seguido para comparar el desempeño de \textit{Dask} y \textit{Spark} bajo condiciones homologadas, en dos ambientes, uno local y un clúster en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporó una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada proceso se ejecutó 1000 veces, haciendo 100 ejecuciones para cada combinación de muestra y ambiente. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
 \newpage
 
 \section{Procesos para comparación de desempeño}
 
-Para contrastar el desempeño de los herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Estos procesos buscan someter a los \textit{frameworks} a diferentes escenarios para los que se usan comúnmente estas herramientas. Entre estas operaciones está el cálculo de agregaciones sencillas como el conteo de elementos o obtención del máximo y mínimo de un conjunto de datos, el cálculo de estadísticas como el promedio y la desviación estándar, la escritura del resultado a distintas ubicaciones como bases de datos \textit{SQL} o archivos \texttt{parquet} o la impresión de resultados en consola, operaciones utilizadas para limpieza de datos como borrado de nulos y borrado de duplicados y, por último, la ejecución de un algoritmo de búsqueda de ruta mínima que involucra muchas de las operaciones listadas anteriormente. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
+Para contrastar el desempeño de las herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Estos procesos buscan someter a los \textit{frameworks} a diferentes escenarios para los que se usan comúnmente estas herramientas. Entre estas operaciones está el cálculo de agregaciones sencillas como el conteo de elementos o obtención del máximo y mínimo de un conjunto de datos, el cálculo de estadísticas como el promedio y la desviación estándar, la escritura del resultado a distintas ubicaciones como bases de datos \textit{SQL} o archivos \texttt{parquet} o la impresión de resultados en consola, operaciones utilizadas para limpieza de datos como borrado de nulos y borrado de duplicados y, por último, la ejecución de un algoritmo de búsqueda de ruta mínima que involucra muchas de las operaciones listadas anteriormente. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
 
 Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos que tiene como entradas la \texttt{muestra} de datos que se utilizará, \texttt{n}, el número de ejecuciones a realizar y \texttt{procesos}, la lista de procesos que se ejecutarán:
 
@@ -27,7 +27,7 @@ Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proce
 \end{algorithmic}
 \end{algorithm}
 
-De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local. Para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado.
+De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio, además, para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado y así se evita que compitan por recursos. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local.
 
 Además, para verificar que los resultados de los procesos de \textit{Dask} y \textit{Spark} tengan el mismo resultado, se utilizó un proceso que lee el resultado de cada proceso ejecutado en un \textit{framework} y lo compara con su contraparte. De esta forma se asegura que el resultado es el mismo, no obstante, es importante mencionar que para los procesos que utilizan la desviación estándar, sobre una muestra de datos, puede haber diferencias ya que \textit{Dask} y \textit{Spark} generan muestras distintas. El proceso de revisión de resultados se puede consultar en \cite{compara-resultados}.
 
@@ -40,19 +40,19 @@ Este proceso calcula el número de aviones activos con el que cuenta una aerolí
 	\item Borrado de duplicados.
 	\item Conteo.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \textit{MySQL}.
 \end{itemize}
 
 \subsection{Proceso 2: Demoras por aerolínea}
 
-Este proceso tiene como objetivo obtener estadísticas sobre las demoras de cada aerolínea. Este proceso realiza las siguientes operaciones principales:
+Este proceso tiene como objetivo obtener el promedio de tiempo de demora de cada aerolínea agrupando por las columnas correspondientes a los periodos: año, trimestre, mes y día. Este proceso realiza las siguientes operaciones principales:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
 	\item Conteo.
 	\item Cálculo de promedio.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \texttt{parquet}.
 \end{itemize}
 
 \subsection{Proceso 3: Demora máxima por aeropuerto de origen}
@@ -64,7 +64,7 @@ Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de 
 	\item Conteo.
 	\item Cálculo del máximo.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \textit{MySQL}.
 \end{itemize}
 
 \subsection{Proceso 4: Demora mínima por aeropuerto de destino}
@@ -76,7 +76,7 @@ Este proceso es similar al anterior con la diferencia de que calcula el tiempo m
 	\item Conteo.
 	\item Cálculo del mínimo.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \texttt{parquet}.
 \end{itemize}
 
 \subsection{Proceso 5: Demora promedio por ruta entre aeropuertos}
@@ -89,7 +89,7 @@ Este proceso obtiene el tiempo promedio de demora para cada ruta entre los aerop
 	\item Conteo.
 	\item Cálculo de promedio.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \texttt{parquet}.
 \end{itemize}
 
 \subsection{Proceso 6: Desviación estándar de la demora por ruta entre \texttt{market ids}}
@@ -102,7 +102,7 @@ Este proceso obtiene la desviación estándar del tiempo de demora para cada rut
 	\item Conteo.
 	\item Cálculo de la desviación estándar.
 	\item Agregación de datos agrupando por diferentes columnas.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \textit{MySQL}.
 \end{itemize}
 
 \subsection{Proceso 7: Eliminación de nulos}
@@ -131,10 +131,10 @@ El proceso se compone de las siguientes operaciones principales:
 	\item *Almacenamiento temporal de datos mediante \texttt{persist} (\textit{Dask}) y \texttt{checkpoint} (\textit{Spark}).
 	\item Suma de columnas a un escalar.
 	\item Concatenación de \textit{DataFrames}.
-	\item Escritura de datos a SQL.
+	\item Escritura de datos a \textit{MySQL}.
 \end{itemize}
 
-Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{PySpark}, se usó la operación \texttt{checkpoint} ya que se deshace de la parte del plan de ejecución que ya fue ejecutada y almacena los datos intermedios, liberando memoria (a diferencia de \texttt{cache}). Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} ya que \textit{Dask} no ejecuta otra vez el plan de ejecución completo sino a partir del último \texttt{persist}.
+Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{Spark}, se usó la operación \texttt{checkpoint} ya que se deshace de la parte del plan de ejecución que ya fue ejecutada y almacena los datos intermedios, liberando memoria (a diferencia de \texttt{cache}). Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} ya que \textit{Dask} no ejecuta otra vez el plan de ejecución completo sino a partir del último \texttt{persist}.
 
 \subsection{Registro de tiempo y resultados}
 
@@ -157,7 +157,7 @@ Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución d
 \end{center}
 
 
-La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobreescribe cada que finaliza la ejecución de ese proceso. 
+La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobreescribe cada que finaliza la ejecución de ese proceso en el caso de \textit{MySQL} o se almacenan en uno o más archivos \texttt{parquet} (dependiendo del número de particiones). 
 
 \section{Infraestructura}
 
@@ -256,11 +256,9 @@ Los datos utilizados corresponden al periodo del $1^{ro}$ de enero de 2008 al 30
 
 Estos datos fueron obtenidos en formato \texttt{csv} y convertidos a \texttt{parquet} para reducir su dimensión y acelerar el tiempo de consulta para ambos \textit{frameworks} . Una vez almacenado en 4096 \textit{parquets}, los datos tienen un tamaño de 4.774 GB.
 
-Para evitar que la partición de los datos beneficiara a alguno de las herramientas, se crearon dos copias de los datos y cada una fue particionada y almacenada de acuerdo a los lineamientos especificados en la documentación de la herramienta correspondiente.
+Para evitar que la partición de los datos beneficiara a alguno de las herramientas, se crearon dos copias de los datos y cada una fue particionada y almacenada de acuerdo a los lineamientos especificados en la documentación de la herramienta correspondiente y con los tipos de datos adecuados para cada \textit{framework}. Los archivos de código utilizados para este propósito están disponibles en \cite{tratamiento-datos}.
 
-Además, se creó el archivo \texttt{\_metadata} que permite acelerar la lectura de los archivos.
-
-Por otro lado, para Spark, el conjunto de datos fue almacenado particionado por año y mes para acelerar la consulta sobre estos periodos.
+Además, se creó el archivo \texttt{\_metadata} que permite acelerar la lectura de los archivos desde \textit{Dask}.
 
 \subsection{Muestras de datos}
 
@@ -274,10 +272,10 @@ Para contrastar las herramientas bajo distintas condiciones, los procesos fueron
   10K & 10,000 & 8 \\ 
   100K & 100,000 & 16 \\ 
   1M & 1,000,000 & 71 \\ 
-  10M & 10,000,000 & 2281 \\ 
+  10M & 11,008,740 & 2281 \\ 
   Total & 80,345,298 & 4774 \\ 
    \hline
 \end{tabular}
 \end{center}
 
-La obtención de las muestras se realizó utilizando la función \texttt{sample} de \textit{Spark} sin reemplazo y con la semilla aleatoria 22102001.
+La obtención de las muestras se realizó utilizando la función \texttt{sample} de \textit{Spark} sin reemplazo y con la semilla aleatoria $22102001$. Además, para obtener muestras más cercanas al orden de datos deseado, se ordenaron los datos de acuerdo a una columna de enteros aleatorios y después se mantuvo el número deseado con la función \texttt{limit}. En el caso de la muestra \texttt{10M} sólo se usó la función \texttt{sample} con un porcentaje aproximado del total de datos que se buscaba mantener ya que el ordenamiento provocaba errores de memoria tanto en \textit{Dask} como en \textit{Spark}, lo que no permitió recortarlo a 10,000,000 de datos exactos. Para la muestra \texttt{TOTAL} se mantuvieron todos los registros. El código que se utilizó para este proceso está disponible en \cite{proceso-muestreo}.
