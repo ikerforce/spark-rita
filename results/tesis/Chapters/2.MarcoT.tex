@@ -23,14 +23,14 @@ Por otro lado, \textit{Spark} tiene la capacidad de ejecutar múltiples tareas e
 
 \subsection{DataFrames}
 
-Los \textit{DataFrames} de \textit{Spark} son la API estructurada más popular del \textit{framework} y permiten representar tablas de datos a través de renglones y columnas nombradas y pueden extenderse a múltiples computadoras \cite{sparkguide}. Estas estructuras buscan que se pueda interactuar con los datos de la misma forma que en bases de datos analíticas. Los \textit{DataFrames} son \textit{RDDs} que cumplen con un esquema específico \cite{sparkberkeley}. Se pueden manipular mediante \textit{queries} de \textit{SQL} y con funciones preestablecidas como filtrado de datos y agregaciones \cite{sparkberkeley}. Esta estructura es la que más se utilizará durante esta investigación.
+Los \textit{DataFrames} de \textit{Spark} son la API estructurada más popular del \textit{framework} y representar tablas de datos a través de renglones y columnas nombradas que pueden extenderse a múltiples computadoras \cite{sparkguide}. Estas estructuras buscan que se pueda interactuar con los datos de la misma forma que en bases de datos analíticas. Los \textit{DataFrames} son \textit{RDDs} que cumplen con un esquema específico \cite{sparkberkeley} y se pueden manipular mediante \textit{queries} de \textit{SQL} y funciones preestablecidas como filtrado de datos y agregaciones \cite{sparkberkeley}. Esta estructura es la que más se utilizará durante esta investigación.
 
 \subsection{Mejores prácticas de Apache Spark}
 
-Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguieron las prácticas de \cite{sparkibm}. La siguiente lista corresponde a los puntos más importantes.
+Para optimizar el uso de recursos y reducir los tiempo de ejecución, se siguieron las mejores prácticas listadas en \cite{sparkibm}. A continuación se resumen los puntos más importantes.
 
 \begin{itemize}
-	\item Mantener únicamente las \textit{acciones} necesarias. Dado que estas son evaluadas de forma inmediata, pueden afectar al plan de ejecución y provocar planes poco eficientes.
+	\item Mantener únicamente las \textbf{acciones} necesarias. Dado que estas son evaluadas de forma inmediata, pueden afectar al plan de ejecución y provocar planes poco eficientes.
 	\item Almacenar los datos en un formato columnar (ver \ref{formatocolumnar}) optimizado para lectura y escritura como \texttt{parquet} o \texttt{orc}.
 	\item Evitar un gran número de archivos pequeños.
 	\item Aumentar el número de particiones para aprovechar el paralelismo.
@@ -39,12 +39,12 @@ Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguiero
 	\item Evitar \textit{shuffles}, es decir que los datos tengan que ser transmitidos entre nodos.
 	\item Definir un valor adecuado para el parámetro \texttt{shuffle partitions} usando la fórmula siguiente: \texttt{spark.sql.shuffle.partitions} = quotient (shuffle stage input size/target size)/total cores) * total cores.
 	\item Reducir o filtrar los datos lo más pronto posible.
-	\item Usar \texttt{cache} cuando la misma operación se ejecuta múltiples veces y eliminar los datos en el \texttt{cache} cuando ya no sean necesarios.
+	\item Usar \texttt{cache} (ver \ref{caching}) cuando la misma operación se ejecuta múltiples veces y eliminar los datos en el \texttt{cache} cuando ya no sean necesarios.
 	\item Usar \texttt{BroadcastHashJoin} cuando se esté haciendo un \textit{join} con una tabla pequeña.
 	\item Empezar haciendo el \textit{join} más selectivo para reducir el número de registros utilizados.
 	\item Evitar el uso de \textit{cross joins} (el producto cartesiano de dos tablas, relaciona cada registro de una tabla con todos los de la otra por lo que aumenta significativamente el número de registros).
 	\item Configurar el uso de recursos del clúster dependiendo del administrador de recursos y la versión de Spark.
-	\item Configurar los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster. Esto se aborda más a detalle en la siguiente sección.
+	\item Configurar los parámetros: \texttt{spark.driver.memory}, \texttt{executor-memory}, \texttt{num-executors} y \texttt{executor-cores} de acuerdo a los recursos del clúster. Esto se aborda más a detalle en la sección \ref{section:parametrizacion_de_trabajos_spark}.
 	\item Evitar el uso de operaciones costosas como \texttt{order by}. 
 	\item Seleccionar las columnas usando sus nombres en lugar de seleccionarlas todas con \texttt{*} para evitar cargar columnas que no serán utilizadas.
 	\item Usar \texttt{count} sólo cuando sea necesario.
@@ -54,32 +54,33 @@ Para optimizar el uso de recursos y reducir los tiempo de ejecución se siguiero
 
 \subsection{\textit{Hardware} recomendado}
 
-Aunque \textit{PySpark} está diseñado para acoplarse a múltiples configuraciones de \textit{Hardware}, la documentación oficial (\cite{sparkhardware}) propone los siguientes lineamientos para mejorar su desempeño:
+Aunque \textit{Spark} está diseñado para acoplarse a múltiples configuraciones de \textit{Hardware}, la documentación oficial (\cite{sparkhardware}) propone los siguientes lineamientos para mejorar su desempeño:
 \begin{itemize}
-	\item Mantener el sistema de almacenamiento de datos lo más cercano posible a donde se hará la ejecución de Spark. Idealmente, el alamacenamiento será en los mismos nodos que la ejecución, pero si esto no es posible, es recomendable que estén en la misma red local.
-	\item Tener de 4 a 8 discos por nodo para los casos en los que \textit{PySpark} tenga que almacenar datos temporalmente en disco.
-	\item Asignar mínimo 8GB de memoria por máquina y usar a lo más 75\% de la memoria para \textit{PySpark}, dejando el 25\% restante para el sistema operativo y otras tareas de administración del nodo.
+	\item Mantener el sistema de almacenamiento de datos lo más cercano posible a donde se hará la ejecución de \textit{Spark}. Idealmente, el alamacenamiento será en los mismos nodos que la ejecución, pero si esto no es posible, es recomendable que estén en la misma red local.
+	\item Tener de 4 a 8 discos por nodo para los casos en los que \textit{Spark} tenga que almacenar datos temporalmente en disco.
+	\item Asignar mínimo 8 GB de memoria por máquina y usar a lo más 75\% de la memoria para \textit{Spark}, dejando el 25\% restante para el sistema operativo y otras tareas de administración del nodo.
 	\item Usar al menos entre 8 y 16 cores por nodo. 
 \end{itemize}
 
 Después de cumplir las condiciones anteriores en el \textit{Hardware}, hay que seguir las indicaciones de la siguiente sección para optimizar el uso de los recursos.
 
 
-\subsection{Parametrización de trabajos de \textit{PySpark} en el clúster}
+\subsection{Parametrización de trabajos de \textit{Spark} en el clúster}
+\label{section:parametrizacion_de_trabajos_spark}
 
 Es importante utilizar los recursos del clúster de forma inteligente para aprovechar al máximo los recursos disponibles. En \cite{sparkconfuds}, se recomienda configurar los parámetros de una aplicación de \textit{Spark} de la siguiente forma:
 
 \begin{itemize}
-	\item \texttt{--driver-memory} determina la memoria que se le asignará al \textit{driver} y su valor predeterminado es 1G. Se recomienda aumentarlo cuando se requiera transmitir resultados grandes al \textit{driver} mediante acciones como \texttt{take(n)} o \texttt{collect()}.
+	\item \texttt{--driver-memory} determina la memoria que se le asignará al \textit{driver} y su valor predeterminado es 1 GB. Se recomienda aumentarlo cuando se requiera transmitir resultados grandes al \textit{driver} mediante acciones como \texttt{take(n)} o \texttt{collect()}.
 	\item \texttt{--driver-cores} determina el número de \textit{cores} que se le asignarán al \textit{driver}. El valor predeterminado es 1, pero se recomienda asignar de 2 a 4 \textit{cores} para clústeres más grandes y aplicaciones complejas. 
-	\item \texttt{--num-executors} especifica el número de ejecutores que se crearán para ejecutar las tareas de la aplicación. El número de ejecutores depende de la cantidad de \textit{cores} disponibles en el clúster. Se aconseja dejar, en cada nodo 1 o 2 cores disponibles para tareas independientes del trabajo de \textit{Spark} y asignar entre 2 y 5 \textit{cores} a cada ejecutor dependiendo de las tareas que procesará y el nivel de paralelismo que se busca alcanzar. De acuerdo a \cite{sparkconfcloudera}, mantenerse en este rango evita replicar muchas veces información (lo cual es necesario con ejecutores pequeños) mientras evita la sobrecarga de escritura del \textit{File System}.
-	\item \texttt{--executor-memory} asigna memoria a cada \textit{ejecutor}. El valor predeterminado es 1G pero se debe incrementar de acuerdo a la tarea y la cantidad de memoria disponible para cada ejecutor. \cite{sparkconfcloudera} recomienda mantener este valor por debajo de 64GB para evitar que demasiada basura se mantenga en memoria.
+	\item \texttt{--num-executors} especifica el número de ejecutores que se crearán para computar las tareas de la aplicación. El número de ejecutores depende de la cantidad de \textit{cores} disponibles en el clúster. Se aconseja dejar, en cada nodo 1 o 2 cores disponibles para tareas independientes del trabajo de \textit{Spark} y asignar entre 2 y 5 \textit{cores} a cada ejecutor dependiendo de las tareas que procesará y el nivel de paralelismo que se busca alcanzar. De acuerdo a \cite{sparkconfcloudera}, mantenerse en este rango evita replicar muchas veces información (lo cual es necesario con ejecutores pequeños) mientras se evita la sobrecarga de escritura del \textit{File System}.
+	\item \texttt{--executor-memory} asigna memoria a cada \textit{ejecutor}. El valor predeterminado es 1 GB pero se debe incrementar de acuerdo a la tarea y la cantidad de memoria disponible para cada ejecutor. \cite{sparkconfcloudera} recomienda mantener este valor por debajo de 64 GB para evitar que demasiada basura se mantenga en memoria.
 	\item \texttt{--executor-cores} determina el número de cores que se asigna a cada ejecutor y va muy de la mano con el parámetro \texttt{--num-executors} por lo que se deben de calcular de manera conjunta. De acuerdo a \cite{sparkconfcloudera}, el número de cores que se le asigna a cada ejecutor determina el número de tareas simultáneas que puede realizar.
 \end{itemize}
 
 \section{Dask}
 
-\textit{Dask} es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators} a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas} \cite{daskdocs}. Al usar esta interfaz se genera una gráfica de tareas de forma automática que después es ejecutada en paralelo. Además Dask cuenta con distintas formas de ejecutar las tareas, sin embargo este trabajo se concentra en el modo \textit{Dask Distributed} que fue diseñado para ejecución en clústeres y que funciona en ambientes locales también \cite{daskscheduling}.
+\textit{Dask} es una librería de Python para cómputo en paralelo que extiende herramientas populares en el análisis de datos, como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators}, a tareas que no caben en memoria o a ambientes distribuidos. Además, cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en clústeres con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas} \cite{daskdocs}. Al usar esta interfaz se genera una gráfica de tareas de forma automática que después es ejecutada en paralelo. Además Dask cuenta con distintas formas de ejecutar las tareas, sin embargo este trabajo se concentra en el modo \textit{Dask Distributed} que fue diseñado para ejecución en clústeres y que funciona en ambientes locales también \cite{daskscheduling}.
 
 \subsection{Arquitectura de \textit{Dask}}
 
@@ -90,7 +91,7 @@ Para poder operar con conjuntos de datos más grandes que la memoria disponible,
 
 \subsection{DataFrames}
 
-Un \textit{Dask DataFrame} es ua estructura paralela y extensa, compuesta de múltiples \textit{Pandas DataFrames} más pequeños llamados particiones y que están separados sobre un índice. Los \textit{DataFrames} pueden estar en memoria o en disco en una o múltiples máquinas. Una operación sobre un \textit{Dask DataFrame} ejecuta múltiples operaciones en los \textit{Pandas DataFrames} que lo componen \cite{daskdataframe}, no obstante, es importante notar que los \textit{Dask DataFrames} no implementan todas las capacidades de \textit{Pandas} por lo que puede haber funciones que aún no estén implementadas o operaciones que sean más costosas que en un \textit{Pandas DataFrame} que cabe en memoria.
+Un \textit{Dask DataFrame} es ua estructura paralela y extensa, compuesta de múltiples \textit{Pandas DataFrames} más pequeños llamados particiones y que están separados sobre un índice. Los \textit{DataFrames} pueden estar en memoria o en disco en una o múltiples máquinas. Una operación sobre un \textit{Dask DataFrame} ejecuta múltiples operaciones en los \textit{Pandas DataFrames} que lo componen \cite{daskdataframe}. Una de las grandes ventajas de \textit{Dask} es que al estar conformado de \textit{Pandas DataFrames}, tiene una interfaz muy similar a la de \textit{Pandas}, lo que lo hace fácil de adoptar, no obstante, es importante notar que los \textit{Dask DataFrames} no implementan todas las capacidades de \textit{Pandas} por lo que puede haber funciones que aún no estén implementadas o operaciones que sean más costosas que en un \textit{Pandas DataFrame}.
 
 
 \subsection{Mejores prácticas en Dask}
@@ -98,8 +99,8 @@ Un \textit{Dask DataFrame} es ua estructura paralela y extensa, compuesta de mú
 En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas listadas en \cite{daskbestpractices}:
 \begin{itemize}
 	\item Usar \textit{Pandas} para datos que quepan en memoria.
-	\item Reducir el tamaño de un conjunto de datos grande con \textit{Dask} y ya que el conjunto sea suficientemente pequeño continúa el resto de las operaciones con \textit{Pandas}.
-	\item Seguir las mejores prácticas de Pandas ya que estas normalmente aplican a los \textit{Dask Dataframes}. Esto incluye usar operaciones vectorizadas y evitar el uso de \texttt{apply}.
+	\item Reducir el tamaño de un conjunto de datos grande con \textit{Dask} y ya que el conjunto sea suficientemente pequeño continuar el resto de las operaciones con \textit{Pandas}.
+	\item Seguir las mejores prácticas de Pandas ya que estas normalmente aplican a los \textit{Dask DataFrames}. Esto incluye usar operaciones vectorizadas y evitar el uso de \texttt{apply}.
 	\item Evitar operaciones que requieran \textit{data shuffling} que intercambian los datos y son intensivas en comunicación entre los \textit{dask workers}. 
 	\item Usar \texttt{persist} de manera inteligente para mantener en memoria los datos que serán utilizados nuevamente y así evitar recalcularlos. Es preferible hacer esto después de operaciones como carga de datos, filtrado y operaciones que impliquen un \textit{shuffle} de los datos.
 	\item Utilizar el \texttt{index} de \textit{Dask} cuando sea posible. Esto acelerará las operaciones que usen esa columna. A veces utilizar el método \texttt{set\_index} puede acelerar el cómputo pero hay que tener en cuenta que es una operación muy costosa por lo que se debe hacer con poca frecuencia y se debe usar \texttt{persist} posteriormente.
@@ -114,7 +115,7 @@ En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas list
 \section{Algoritmo de Dijkstra}
 
 
-El algoritmo de Dijkstra fue diseñado por el computólogo Edsger Dijkstra en 1959 para encontrar el camino más corto a través de una gráfica \cite{dijkstraexplicado}. Este algoritmo es utilizado ampliamente en distintas industrias y entre sus ejemplos más populares son la búsqueda de rutas de Google Maps y para protocolos de ruteo para encontrar las rutas menor concurridas en internet. Además tiene ventajas como que encuentra la ruta óptima y que una vez encontrada la ruta al destino especificado, el algoritmo puede detenerse sin la necesidad de visitar el resto de los nodos \cite{dijkstrabellford}. Una de sus desventajas es la gran capacidad de cómputo que requiere, ya que consume mucho CPU y memoria para calcular la ruta óptima en gráficas extensas. Esto lo convierte en un caso de uso ideal para la investigación ya que los \textit{frameworks} buscan satisfacer procesos que requieran grandes cantidades de recursos de cómputo. Además, analizar este escenario provee a la investigación de un caso de uso más complejo \cite{dijkstrabellford}. Los pasos necesarios para ejecución se especifican en \cite{dijkstrabellford} y son los siguientes:
+El algoritmo de Dijkstra fue diseñado por el computólogo Edsger Dijkstra en 1959 para encontrar el camino más corto a través de una gráfica \cite{dijkstraexplicado}. Este algoritmo es utilizado ampliamente en distintas industrias y entre sus ejemplos más populares son la búsqueda de rutas de \textit{Google Maps} y para protocolos de ruteo para encontrar las rutas menos concurridas en internet. Además tiene ventajas como que encuentra la ruta óptima y que una vez encontrada la ruta al destino especificado, el algoritmo puede detenerse sin la necesidad de visitar el resto de los nodos \cite{dijkstrabellford}. Una de sus desventajas es la gran capacidad de cómputo que requiere, ya que consume mucho CPU y memoria para calcular la ruta óptima en gráficas extensas. Esto lo convierte en un caso de uso ideal para la investigación ya que los \textit{frameworks} buscan satisfacer procesos que requieran grandes cantidades de recursos de cómputo. Además, analizar este escenario provee a la investigación de un caso de uso más complejo \cite{dijkstrabellford}. Los pasos necesarios para ejecución se especifican en \cite{dijkstrabellford} y son los siguientes:
 
 El algoritmo tiene los siguientes argumentos de entrada:
 \begin{itemize}
@@ -150,9 +151,9 @@ El algoritmo tiene los siguientes argumentos de entrada:
 
 Para la investigación se implementó un algoritmo con una lógica similar a la de Dijkstra pero con restricciones adicionales. El objetivo del algoritmo es encontrar la ruta más corta en duración total del trayecto entre cualesquiera dos aeropuertos del conjunto de datos.
 
-La ruta óptima será aquella con menor diferencia de tiempo entre el horario de salida del origen y el horario de llegada al destino final. Para penalizar el número de escalas y hacer las rutas calculadas por el algoritmo más factibles, se considera un tiempo mínimo de 2 horas entre la llegada de un vuelo y la salida del siguiente para permitir un tiempo adecuado de transbordo. Además, la gráfica es dinámica ya que al seleccionar un vuelo que conecta dos destinos, se eliminan aquellos que tengan un horario de salida menor al horario de llegada anterior más el tiempo de escala (2 horas). Adicionalmente, en caso de que exista un vuelo directo, este se seleccionará automáticamente como el óptimo y en caso de que haya múltiples horarios se elegirá el horario factible más cercano al horario especificado por el usuario. Por otro lado, el algoritmo deja de explorar la gráfica una vez que se alcance el destino deseado, ya que el algoritmo de Dijkstra asegura que la ruta alcanzada es la óptima aún sin haber visitado todos los nodos.
+La ruta óptima será aquella con menor diferencia de tiempo entre el horario de salida del origen y el horario de llegada al destino final. Para penalizar el número de escalas y hacer las rutas calculadas por el algoritmo más factibles, se considera un tiempo mínimo de 2 horas entre la llegada de un vuelo y la salida del siguiente para permitir un tiempo adecuado de transbordo. Además, la gráfica es dinámica ya que al seleccionar un vuelo que conecta dos destinos, se eliminan aquellos que tengan un horario de salida menor al horario de llegada anterior más el tiempo de escala (2 horas). Adicionalmente, en caso de que existan uno o más vuelos directos, el de menor duración se seleccionará automáticamente como el óptimo. Por otro lado, el algoritmo dejará de explorar la gráfica una vez que se alcance el destino deseado, ya que el algoritmo de Dijkstra asegura que la ruta alcanzada es la óptima aún sin haber visitado todos los nodos.
 
-Las entradas del algoritmo son $M$, una multigráfica en la que los nodos son aeropuertos y cuyas aristas corresponden a los vuelos que las conectan. El peso de las aristas representa la duración de cada uno de los vuelos. Es importante notar que dos nodos pueden estar conectados por múltiples aristas debido a que más de un vuelo y horario conecta los aeropuertos. Además, para reducir el espacio de búsqueda se requiere de un \texttt{horario} deseado de salida. El itinerario que resultará de la ejecución del algoritmo tendrá horario de salida del origen dentro de un intervalo de 7 días a partir de la fecha especificada por la variable \texttt{horario}.
+Las entradas del algoritmo son $M$, una multigráfica en la que los nodos son aeropuertos y cuyas aristas corresponden a los vuelos que las conectan. El peso de las aristas (distancia) representa la duración de cada uno de los vuelos. Es importante notar que dos nodos pueden estar conectados por múltiples aristas debido a que más de un vuelo y horario conecta los aeropuertos. El resultado será el itinerario de vuelo con duración mínima.
 
 Para su ejecución, el algoritmo requiere de las siguientes entradas:
 
@@ -160,16 +161,15 @@ Para su ejecución, el algoritmo requiere de las siguientes entradas:
 	\item $M$ Multigráfica formada de los aeropuertos como nodos y los vuelos como aristas.
 	\item $origen$ Aeropuerto de origen. Este es el nodo a partir del cuál iniciará el cálculo de la ruta.
 	\item $destino$ Aeropuerto de destino final. Al llegar a este nodo se detendrá la ejecución.
-	\item $horario$ Horario aproximado de salida. El itinerario resultante tendrá horario de salida en el intervalo $[horario,\  horario$ $+$ 7 días$]$
 \end{itemize}
 
 \begin{algorithm}[H]
 \caption{Dijkstra modificado}\label{dijkstra_modificado}
 \begin{algorithmic}[1]
 \Procedure{Dijkstra modificado($M$, $origen$, $destino$, $horario$)}{}
-\State Definimos el conjunto de aristas factibles $E_{f}(M)$ como: $E_{f}(M) = \{(u,v)\ |\ salida[(u, v)] \in [horario,\  horario$ $+$ 7 días$]\}$
+\State Definimos el conjunto de aristas factibles $E_{f}(M)$ como: $E_{f}(M) = \{(u,v) \in M\}$
 \If {$(origen, destino) \in E_{f}(M)$}
-	\State $optimo = \{{(origen, destino)}_{0}\ |\ salida[(origen, destino)] = min(salida[(origen, destino)])\}$
+	\State $optimo = \{{(origen, destino)}_{0}\ |\ distancia[(origen, destino)] = min(salida[(origen, destino)])\}$
 \Else
 	\For{\texttt{$v$ in $V(G)$}}
 		\State $distancia[v] \gets \infty$
