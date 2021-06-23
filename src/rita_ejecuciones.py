@@ -141,7 +141,6 @@ for proceso in procesos:
                                     --sample_size {sample_size} \
                                     --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler, c_time=time.time())
                     os.system(dask_cmd)
-                    os.system('rm -r temp_dir/*')
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
