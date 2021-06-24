@@ -15,7 +15,7 @@ spark.sparkContext.setLogLevel("ERROR")
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
-# spark.sparkContext.setCheckpointDir('temp_dir')
+spark.sparkContext.setCheckpointDir('temp_dir')
 
 # Importaciones de Python
 import argparse # Utilizado para leer archivo de configuracion
