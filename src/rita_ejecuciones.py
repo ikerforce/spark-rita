@@ -13,6 +13,7 @@ hora_ejecucion = time.strftime("%d_%m_%Y_%H_%M_%S") #
 parser = argparse.ArgumentParser()
 parser.add_argument("--creds", help="Ruta hacia archivo con credenciales de la base de datos.")
 parser.add_argument("--ejecs", help="Determina el numero_de_ejecuciones que se haran.")
+parser.add_argument("--blacklist", help="Son los procesos que no se ejecutarán.")
 parser.add_argument("--sample_size", help="Determina la muestra con la que se ejecutarán los procesos.")
 parser.add_argument("--env", help="Puede ser local o cluster. Esto determina los recursos utilizados y los archivos de configuración que se utilizarán.")
 parser.add_argument("--scheduler", help="Direccion IP y puerto del scheduler.")
@@ -21,6 +22,11 @@ args = parser.parse_args()
 if args.env == None:
     print('\n\tPor favor especifica el parámetro env.\n')
     len(args.env)
+
+if args.blacklist == None:
+    blacklist = []
+else:
+    blacklist = args.blacklist.split(',')
 
 def convierte_en_dict(l):
     return {l[0]: {'dask':l[1], 'spark':l[2].replace('\n', '')}}
@@ -96,8 +102,10 @@ for proceso in procesos:
                                     --process {proceso}_spark \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, env=args.env, c_time=time.time())
-                    os.system(spark_cmd)
-                    os.system('rm -r temp_dir/*')
+                    if proceso + '_spark' in blacklist:
+                        print('El proceso: {p} será omitido.'.format(p=proceso))
+                    else:
+                        os.system(spark_cmd)
                 else:
                     spark_cmd = """spark-submit \
                                     --driver-memory 2G \
@@ -112,7 +120,10 @@ for proceso in procesos:
                                     --process {proceso}_spark \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time())
-                    os.system(spark_cmd)
+                    if proceso + '_spark' in blacklist:
+                        print('El proceso: {p} será omitido.'.format(p=proceso))
+                    else:
+                        os.system(spark_cmd)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -130,7 +141,10 @@ for proceso in procesos:
                                     --env {env} \
                                     --command_time {c_time} \
                                     --sample_size {sample_size}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, c_time=time.time(), env=args.env)
-                    os.system(dask_cmd)
+                    if proceso + '_dask' in blacklist:
+                        print('El proceso: {p} será omitido.'.format(p=proceso))
+                    else:
+                        os.system(dask_cmd)
                 else:
                     dask_cmd = """~/miniconda/envs/dask_yarn/bin/python3 \
                                     src/rita_master_dask.py \
@@ -140,7 +154,10 @@ for proceso in procesos:
                                     --command_time {c_time} \
                                     --sample_size {sample_size} \
                                     --scheduler {scheduler}""".format(creds=args.creds, proceso=proceso, sample_size=args.sample_size, scheduler=args.scheduler, c_time=time.time())
-                    os.system(dask_cmd)
+                    if proceso + '_dask' in blacklist:
+                        print('El proceso: {p} será omitido.'.format(p=proceso))
+                    else:
+                        os.system(dask_cmd)
                 print('+----------------------------------+')
             except Exception as e:
                 n_errores += 1
@@ -172,8 +189,11 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, env=args.env, c_time=time.time())
-            os.system(spark_cmd)
-            os.system('rm -r temp_dir/*')
+            if 'dijkstra_spark' in blacklist:
+                print('El proceso: dijkstra_spark será omitido.')
+            else:
+                os.system(spark_cmd)
+                os.system('rm -r temp_dir/*')
         else:
             spark_cmd = '''spark-submit \
                             --driver-memory 2G \
@@ -190,7 +210,10 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_spark', creds=args.creds, c_time=time.time())
-            os.system(spark_cmd)
+            if 'dijkstra_spark' in blacklist:
+                print('El proceso: dijkstra_spark será omitido.')
+            else:
+                os.system(spark_cmd)
         print('+----------------------------------+')
     else:
         ruta = rutas_dask.pop()
@@ -206,7 +229,10 @@ for i in pruebas_rutas:
                             --env {env} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, c_time=time.time(), env=args.env)
-            os.system(dask_cmd)
+            if 'dijkstra_dask' in blacklist:
+                print('El proceso: dijkstra_dask será omitido.')
+            else:
+                os.system(dask_cmd)
         else:
             dask_cmd = '''~/miniconda/envs/dask_yarn/bin/python3 \
                             src/calculo_ruta_minima/dijkstra_dask.py \
@@ -218,7 +244,10 @@ for i in pruebas_rutas:
                             --command_time {c_time} \
                             --origin {origin} \
                             --dest {dest}'''.format(origin=ruta[0], dest=ruta[1], sample_size=args.sample_size, process='dijkstra_dask', creds=args.creds, scheduler=args.scheduler, c_time=time.time())
-            os.system(dask_cmd)
+            if 'dijkstra_dask' in blacklist:
+                print('El proceso: dijkstra_dask será omitido.')
+            else:
+                os.system(dask_cmd)
         print('+----------------------------------+')
 
 if n_errores > 0:
