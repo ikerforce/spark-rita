@@ -1,14 +1,38 @@
 \chapter{Mi experiencia de implementación}
 
-\noindent Este capítulo es más personal y tiene como objetivo hacer un análisis cualitativo de la experiencia de implementación utilizando ambos \textit{frameworks}. Esta parte de la investigación es más difícil de medir pero no deja de ser menos importante al decidir entre ambas opciones. En las siguientes secciones compartiré un poco de mi perfil para que  
+\noindent Este capítulo tiene como objetivo hacer un análisis cualitativo de la experiencia de implementación utilizando ambos \textit{frameworks} para comparar la facilidad de uso de cada uno desde la instalación hasta la configuración de trabajos y despliegue. Lo contenido en este capítulo serán las dificultades que experimenté durante la implementación de los procesos con cada herramienta pero también las ventajas que detecté con cada uno de ellos.
+
+\section{Mi perfil}
+
+Antes de contrastar ambos \textit{frameworks} es importante describir brevemente mi perfil y el tiempo de experiencia que he tenido con ambas herramientas para explicar mejor por qué favorezco una herramienta sobre la otra en diferentes aspectos. En primer lugar, tengo más de dos años de experiencia en el uso de \textit{Spark}, tanto profesionalmente como personalmente, y una certificación en su uso, mientras que empecé a usar \textit{Dask} hace un poco más de un año y teniendo este proyecto como única experiencia. Previamente, era un usuario frecuente de \textit{Pandas}, biblioteca con la que tengo casi 4 años de experiencia. Además, el lenguaje de programación que más utilizo es \textit{Python}. También tengo maś de dos años de experiencia con diversos sistemas de bases de datos tipo \textit{SQL}.
 
 \newpage
 
-\section{Ambiente local}
+\section{Instalación}
 
-\noindent ...
+El primer paso en el uso de cualquier herramienta es la instalación de la misma, y creo que la de \textit{Dask} es más amigable para el usuario común, ya que se puede hacer con \texttt{conda} o \texttt{pip} fácilmente y dentro de un ambiente aislado. En el caso de \textit{Spark}, esta se hace descargando un archivo comprimido pero este proceso puede no ser tan intuitiva. En especial para sistemas operativos como \textit{OSX} y \textit{Windows}, la instalación es más complicada.
 
-\section{Ambiente en la nube}
+Por otro lado, consideré que para esta implementación \textit{Spark} es más autocontenido ya que no fue necesario más que descargar un \texttt{jar} de conexión a \textit{MySQL} para realizar las tareas necesarias para la ejecución de los procesos. \textit{Dask}, por otro lado, requirió de paquetes adicionales como \texttt{pymysql} para la lectura y escritura de bases de datos y además también fue necesario instalar \texttt{pyarrow} para leer y escribir a archivos \texttt{parquet}. Aunque la instalación de los paquetes adicionales de \textit{Dask} es bastante sencilla ya que también se pueden realizar con \texttt{conda} y \texttt{pip}, el hecho de que requiera paquetes diferentes puede resultar en problemas entre versiones y dependencias de los paquetes, lo cual sucedió múltiples veces durante esta instalación. 
+
+\section{Uso}
+
+Al empezar a usar \textit{Spark} el avance fue complicado debido a que la \textit{API} de \textit{Python} no es muy similar a las que conocía antes y los errores son más difíciles de entender ya que son largos y tienen un formato más similar al de \textit{Java} más que el de \textit{Python}. Sin embargo, después de algo de experiencia la herramienta se empieza a hacer más intuitiva, y el hecho de que se puede interactuar con los \textit{frameworks} de formas equivalentes con las funciones nativas de \textit{Spark} y con consultas de \textit{SQL} permite que la transición sea más sencilla para usuarios de experiencia con la última. Por último, al principio no es tan fácil distinguir entre las operaciones que son simplemente una transformación de los datos y las acciones que detonan la materialización del resultado y por lo tanto la ejecución del plan de ejecución.
+
+En el caso de \textit{Dask}, debido a que la interfaz es tan parecida a la de \textit{Pandas} y a que extiende muchas de sus capacidades, la transición es más sencilla para usuarios frecuentes de \textit{Pandas} y en algunos casos un código se puede migrar a \textit{Dask} con mínimas modificaciones. Además, el que requiera el uso explícito de la operación \texttt{compute} para materializar las tareas hace más fácil de comprender en qué momento se van a ejecutar una serie de acciones específicas. 
+
+\section{Documentación}
+
+La documentación de \textit{Dask} me pareció intuitiva y fácil de seguir y consultar, ya que contiene ejemplos simples y claros y secciones concretas cuyo objetivo no es crear expertos sino introducir fácilmente el uso de la herramienta y sus capacidades, sin embargo, cuando se busca resolver una duda sobre un tema muy específico o una actualización reciente, este puede ser más difícil de encontrar. Además, la documentación de \textit{Dask} cuenta con más material adicional como videos que ayudan mucho al uso de la herramienta. Por otro lado, la documentación de \textit{Spark} es más especializada y contiene mucha información que puede ser poco relevante para usuarios nuevos pero es útil para usuarios más avanzados, esto puede hacerla más difícil de consultar, aunque también cuenta con secciones introductorias que son útiles para iniciar. 
+
+\section{Comunidad}
+
+\section{Interfaz de usuario}
+
+Ambas herramientas cuentan con una interfaz de usuario en la que se puede monitorear el estado de las tareas y los ejecutores o \textit{workers} encargados de su realización. En el caso de \textit{Spark}
+
+\section{Parametrización de trabajos}
+
+\section{Transición a la nube}
 
 \noindent ...
 
