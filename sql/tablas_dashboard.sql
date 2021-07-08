@@ -1,4 +1,4 @@
-CREATE VIEW resumen_test AS
+CREATE VIEW resumen AS
 SELECT *
 FROM
 (
@@ -6,23 +6,21 @@ FROM
         , sample_size
         , avg(duration) AS avg_duration
         , stddev(duration) AS stddev_duration
-        , count(*) AS count
+        , count(*) AS process_count
         , description
-    FROM registro_de_tiempo_spark_test
+    FROM registro_de_tiempo_spark_rankeado
     GROUP BY process
         , sample_size
-        , description
     UNION
     SELECT process
         , sample_size
         , avg(duration) AS avg_duration
         , stddev(duration) AS stddev_duration
-        , count(*) AS count
+        , count(*) AS process_count
         , description
-    FROM registro_de_tiempo_dask_test 
+    FROM registro_de_tiempo_dask_rankeado
     GROUP BY process
         , sample_size
-        , description
 ) as resumen
 ORDER BY resumen.process
     , resumen.sample_size
@@ -30,8 +28,7 @@ ORDER BY resumen.process
     ;
 
 
-
-CREATE VIEW resumen AS
+CREATE VIEW resumen_sin_rank AS
 SELECT *
 FROM
 (
@@ -139,7 +136,7 @@ AND insertion_ts < '2021-05-31 17:28:58';
 
 
 -- Vista conjunta de tiempo
--- Esta vista une el regitro de tiempo de spark con el de dask
+-- Esta vista une el registro de tiempo de spark con el de dask
 CREATE VIEW registro_de_tiempo AS
 SELECT process
     , start_ts
@@ -175,7 +172,7 @@ SELECT IF(process LIKE '%_command_time', 'command_time', IF(process LIKE '%_writ
     , count(1) as executions
     , AVG(duration) AS avg_duration
     , STDDEV(duration) AS stddev_duration
-FROM registro_de_tiempo
+FROM registro_de_tiempo_rankeado
 GROUP BY sample_size, framework, general_process
 ORDER BY sample_size, framework, general_process
 
@@ -295,12 +292,15 @@ SELECT r_dask.process
     , r_spark.avg_duration / r_dask.avg_duration AS t_ratio_spark_dask
     , r_dask.others_time / r_spark.others_time AS others_r_dask_spark
     , r_spark.others_time / r_dask.others_time AS others_r_spark_dask
+    , r_dask.avg_write_time / r_spark.avg_write_time AS write_r_dask_spark
+    , r_spark.avg_write_time / r_dask.avg_write_time AS write_r_spark_dask
 FROM
 (
     SELECT process
     , avg_duration
     , sample_size
     , others_time
+    , avg_write_time
     FROM resumen_general_dask
 ) r_dask
 LEFT JOIN
@@ -309,6 +309,7 @@ LEFT JOIN
     , avg_duration
     , sample_size
     , others_time
+    , avg_write_time
     FROM resumen_general_spark
 ) r_spark
 ON r_dask.process = r_spark.process
@@ -336,6 +337,8 @@ SELECT resumen_general.process
     , ROUND(ratios_duracion.t_ratio_spark_dask, 3) AS t_ratio_spark_dask
     , ROUND(ratios_duracion.others_r_dask_spark, 3) AS others_r_dask_spark
     , ROUND(ratios_duracion.others_r_spark_dask, 3) AS others_r_spark_dask
+    , ROUND(ratios_duracion.write_r_dask_spark, 3) AS write_r_dask_spark
+    , ROUND(ratios_duracion.write_r_spark_dask, 3) AS write_r_spark_dask
     , resumen_general.coeff_variation
     , resumen_general.avg_write_time
     , resumen_general.stddev_write_time
@@ -408,7 +411,7 @@ FROM ratios_duracion;
 -- Tablas de duracion
 SELECT process, framework, process_count, avg_duration, stddev_duration, coeff_variation, t_ratio_dask_spark, t_ratio_spark_dask FROM resumen_ratios WHERE sample_size LIKE '10M';
 SELECT process, framework, avg_command_time, others_time, others_r_spark_dask, others_r_dask_spark FROM resumen_ratios WHERE sample_size LIKE '10M';
-SELECT * FROM resumen_write WHERE sample_size LIKE '10M';
+SELECT process, framework, destino_escritura, avg_write_time, n_rows, n_columns FROM resumen_write WHERE sample_size LIKE '10M';
 
 SELECT process, framework, process_count, avg_duration, stddev_duration, coeff_variation, t_ratio_dask_spark, t_ratio_spark_dask FROM resumen_ratios WHERE sample_size LIKE '1M';
 SELECT process, framework, avg_command_time, others_time, others_r_spark_dask, others_r_dask_spark FROM resumen_ratios WHERE sample_size LIKE '1M';
@@ -492,11 +495,7 @@ VALUES
     ('flota_spark', '10M', '78113', '6'),
     ('flota_dask', '10M', '78113', '6'),
     ('demoras_ruta_mktid_spark', '10M', '6824834', '11'),
-    ('demoras_ruta_mktid_dask', '10M', '6824834', '11');
-
-
-INSERT INTO result_sizes ( process , sample_size , n_rows , n_columns )
-VALUES
+    ('demoras_ruta_mktid_dask', '10M', '6824834', '11'),
     ('demoras_aerolinea_spark', 'TOTAL', '78133', '11'),
     ('demoras_aerolinea_dask', 'TOTAL', '78133', '11'),
     ('demoras_aeropuerto_destino_spark', 'TOTAL', '1490152', '11'),
@@ -521,6 +520,10 @@ SELECT rr.process
     , rr.destino_escritura
     , rr.avg_write_time
     , rr.stddev_write_time
+    , ROUND(rr.avg_write_time / rr.avg_duration, 3) as w_pct_duration
+    , 1 - ROUND(rr.avg_write_time / rr.avg_duration, 3) as others_pct_duration
+    , rr.write_r_spark_dask
+    , rr.write_r_dask_spark
     , rs.n_rows
     , rs.n_columns
 FROM
@@ -529,8 +532,11 @@ FROM
         , sample_size
         , destino_escritura
         , framework
+        , avg_duration
         , avg_write_time
         , stddev_write_time
+        , write_r_spark_dask
+        , write_r_dask_spark
     FROM resumen_ratios
 ) rr
 LEFT OUTER JOIN
@@ -567,16 +573,3 @@ SELECT process
 FROM TRANSTAT_OLD.registro_de_tiempo_dask
 WHERE process LIKE '%command_time%'
 AND process LIKE '%elimina%'
-
-
-
-22144 0.195 0.024  
-116746 0.249 0.041 
-436411 0.497 0.052 
-1042066 1.007 0.041
-NULL               
-22144 0.951 0.031  
-116746 1.16 0.062  
-436411 1.806 0.057 
-1042066 4.668 0.083
-NULL               
