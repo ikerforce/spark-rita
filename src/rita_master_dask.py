@@ -114,6 +114,7 @@ if __name__ == '__main__':
         lista_df = utils.rollup(df, ['ROUTE_AIRPORTS', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
         write_time = time.time()
         utils.write_result_to_parquet(lista_df, process, env=args.env)
+        del df
     
     elif process == 'demoras_ruta_mktid_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'FL_DATE', 'ARR_DELAY', 'DEP_DELAY', 'ACTUAL_ELAPSED_TIME', 'TAXI_IN', 'TAXI_OUT', 'ORIGIN_CITY_MARKET_ID', 'DEST_CITY_MARKET_ID'])
@@ -125,6 +126,7 @@ if __name__ == '__main__':
         lista_df = utils.rollup(df, ['ROUTE_MKT_ID', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH'], agregaciones)
         write_time = time.time()
         utils.write_result_to_mysql(lista_df, uri, process)
+        # del df
     
     elif process == 'flota_dask':
         df = utils.read_df_from_parquet(config['input_path'], columns=['OP_UNIQUE_CARRIER', 'YEAR', 'QUARTER', 'MONTH', 'DAY_OF_MONTH', 'TAIL_NUM'])
