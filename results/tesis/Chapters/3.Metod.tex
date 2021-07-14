@@ -181,7 +181,7 @@ Para ello se utilizó un equipo con las siguientes características:
 \end{tabular}
 \end{center}
 
-Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos \textit{MySQL}.
+Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos \textit{MySQL} versión \texttt{8.0.25-0 ubuntu0.20.04.1} alojada en el mismo equipo y compartiendo los recursos listados anteriormente.
 
 Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} 3.8.5. Este ambiente se utilizó para las ejecuciones con la versión 2021.1.1 de \textit{Dask} y la versión 2.4.7 de \textit{Spark}. 
 
@@ -223,6 +223,19 @@ Los nodos \textit{worker} son instancias \texttt{m5a.2xlarge}  de \textit{Amazon
 \end{center}
 
 Se puede encontrar más información sobre las instancias en \cite{ec2-instances}.
+
+La base de datos \textit{MySQL} se creó con el servicio \textit{Relational Database Service} de \textit{AWS} con la versión \texttt{8.0.23} alojada en una instancia \texttt{db.t2.micro} con las siguientes características:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+ \hline
+  Procesador & Intel Xeon \\ 
+  Núcleos & 1 \\
+  Memoria & 1 GB \\
+  Almacenamiento & 20 GB  \\ 
+  \hline
+\end{tabular}
+\end{center}
 
 \section{Datos}
 
