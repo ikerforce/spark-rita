@@ -3,9 +3,9 @@
 
 \noindent En este capítulo se analizan los resultados del experimento en ambos ambientes. 
 
-Para cada proceso se registró el tiempo total de ejecución, el tiempo de escritura, el tiempo entre el envío del comando y el tiempo de inicio de la ejecución, el porcentaje de ejecuciones completadas de manera exitosa y cómo estas cantidades escalan al cambiar de ambiente y de número de datos a procesar.
+Para cada proceso se registró el tiempo total de ejecución, el tiempo de escritura, el tiempo entre el envío del comando y el tiempo de inicio de la ejecución, el porcentaje de ejecuciones completadas de manera exitosa y cómo estas métricas evolucionan al cambiar de ambiente y de número de datos a procesar.
 
-Durante esta investigación buscamos conocer la rapidez con la que cada herramienta ejecuta cada tarea pero también cómo cambia esta relación cuando modificamos el número de datos o al cambiar el ambiente de ejecución y así tener una idea de su capacidad de escalamiento. Por otro lado, buscamos ver la consistencia del tiempo de ejecución de los procesos y también conocer qué tan robusto es cada \textit{framework} para determinar si uno es más confiable que el otro para completar las tareas. Por tal motivo, las secciones \ref{section:resultados-ambiente-local} y \ref{section:resultados-ambiente-local} se dividen en una sección que analiza los resultados de cada muestra de forma independiente y concluyen con una sección que aborda el cambio del comportamiento de cada proceso a través de las diferentes muestras.
+Durante esta investigación buscamos conocer la rapidez con la que las herramientas ejecutan los procesos pero también cómo cambia esta relación cuando modificamos el número de datos o el ambiente de ejecución y así tener una idea de su capacidad de escalamiento. Por otro lado, buscamos ver la consistencia del tiempo de ejecución de los procesos y también conocer qué tan robusto es cada \textit{framework} para determinar si uno es más confiable que el otro para completar las tareas. Por tal motivo, las secciones \ref{section:resultados-ambiente-local} y \ref{section:resultados-ambiente-nube} se dividen en dos secciones: en la primera, se analizan los resultados de cada muestra de forma independiente y, en la segunda, se aborda el cambio del comportamiento de cada proceso a través de las diferentes muestras.
 
 En la primera sección, nos centraremos en las siguientes características y capacidades de cada \textit{framework} y después se hará una conclusión general para cada muestra de datos. A continuación se listan los rubros que se evaluarán y en qué consistirá el análisis para determinar el mejor desempeño de una herramienta frente a la otra.
 
@@ -13,9 +13,9 @@ En la primera sección, nos centraremos en las siguientes características y cap
 	
 	\item \textbf{Robustez} Analizar qué tan resistentes a fallos son los procesos y su confiabilidad para terminar las tareas asignadas. Las principal métrica para evaluar esto será el porcentaje de ejecuciones completadas exitosamente en cada proceso.
 	
-	\item \textbf{Variación} Medir la variación del tiempo de ejecución de cada proceso en cada \textit{framework} y establecer cuál de los dos es más consistente en el tiempo de ejecución. Para este análisis se utilizará la desviación estándar de el tiempo de duración y el coeficiente de variación como métricas principales.
+	\item \textbf{Variación} Medir la variación del tiempo de ejecución de cada proceso en cada \textit{framework} y establecer cuál de los dos es más consistente en el tiempo de ejecución. Para este análisis se utilizarán la desviación estándar de el tiempo de duración y el coeficiente de variación como métricas principales.
 	
-	\item \textbf{Inicio de la ejecución} Comparar el tiempo que le toma a cada proceso ejecutar la primera línea de código. Esto dará una idea de qué tanto tiempo le toma a cada herramienta la asignación de recursos y configuraciones previas a la ejecución del código. La principal métrica para comparar será el tiempo registrado entre la ejecución del comando que inicia el proceso y la primera acción ejecutada dentro del proceso.
+	\item \textbf{Inicio de la ejecución} Comparar el tiempo que le toma a cada proceso ejecutar la primera línea de código. Esto dará una idea de qué tanto tiempo le toma a cada herramienta la asignación de recursos y configuraciones previas a la ejecución del código. La principal métrica para comparar será el tiempo registrado entre la ejecución del comando que inicia el proceso y la primera acción ejecutada dentro del proceso. Es importante notar que el tiempo de inicio de la ejecución fue calculado de forma independiente al tiempo de ejecución por lo que no está incluido dentro del mismo.
 	
 	\item \textbf{Escritura} Determinar cuál \textit{framework} es más rápido para escribir el resultado a cada destino. Se analizarán de forma separada los procesos que tienen como destino final una base de datos \textit{MySQL} y los que escriben a archivos \texttt{parquet} como destino final. La principal métrica será el tiempo de escritura registrado por cada proceso. Los procesos que escriben a archivos \texttt{parquet} son: \texttt{demoras\_aeropuerto\_destino}, \texttt{demoras\_aerolinea} y \texttt{demoras\_ruta\_aeropuerto}, mientras que los que escriben a \textit{MySQL} son: \texttt{demoras\_aeropuerto\_origen}, \texttt{demoras\_ruta\_mktid}, \texttt{flota} y \texttt{dijkstra}, aunque en caso del último proceso, el resultado escrito raramente es mayor a 5 registros. Por último, el proceso \texttt{elimina\_nulos} imprime su resultado en consola y no será considerado para el análisis de tiempo de escritura.
 	
@@ -89,11 +89,11 @@ Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
 	
 	\item \textbf{Variación} De acuerdo a los resultados expuestos en la tabla \ref{table:duracion10K}, en la mayoría de los procesos \textit{Dask} registró un coeficiente de variación mayor que \textit{Spark}, no obstante, hay que considerar que sus tiempos de ejecución fueron menores y casi nunca pasaron de 5 segundos de duración, por lo que un coeficiente de variación más grande es razonable. La única excepción a lo anterior fue el proceso \texttt{dijkstra} en el que \textit{Spark} tuvo mayor variación a pesar de tener mayor tiempo de ejecución promedio y en el que ambos \textit{frameworks} registraron la mayor variación debido en gran parte a que este proceso calcula una ruta aleatoria en cada ejecución. Además, es importante notar que la mayoría de los coeficientes de variación se mantuvieron por debajo de 0.03 con la excepción de \texttt{dijsktra} y los procesos \texttt{demoras\_ruta\_mktid}, \texttt{demoras\_ruta\_aeropuerto} y \texttt{flota} de \textit{Dask}, de los cuales dos tuvieron un coeficiente mayor a 0.4.
 	
-	\item \textbf{Inicio de la ejecución} Los resultados registrados en la tabla \ref{table:otros10K} muestran que una de las diferencias más evidentes entre ambos \textit{frameworks} es el tiempo que tardan en iniciar la ejecución. En el caso de \textit{Spark} este es de alrededor de un segundo, mientras que \textit{Dask} registró un promedio menor a una centésima de segundo en casi todos los casos (con la excepción de \texttt{dijkstra} que es cercano a medio segundo). Es importante notar que el tiempo de inicio de la ejecución fue calculado de forma independiente al tiempo de ejecución por lo que no está incluido dentro del mismo.
+	\item \textbf{Inicio de la ejecución} Los resultados registrados en la tabla \ref{table:otros10K} muestran que una de las diferencias más evidentes entre ambos \textit{frameworks} es el tiempo que tardan en iniciar la ejecución. En el caso de \textit{Spark} este es de alrededor de un segundo, mientras que \textit{Dask} registró un promedio menor a una centésima de segundo en casi todos los casos (con la excepción de \texttt{dijkstra} que es cercano a medio segundo y requiere leer parámetros adicionales antes de iniciar la ejecución).
 	
-	\item \textbf{Escritura} \textit{Dask} registró un tiempo mucho menor en la escritura a archivos \texttt{parquet} que \textit{Spark} en todos los casos. La diferencia fue de poco menos de un segundo en los tres procesos que tienen como destino final este tipo de archivo. Por otro lado, cuando el destino de escritura es una base de datos \textit{MySQL}, \textit{Dask} también registró un mejor desempeño aunque la diferencia no es tan evidente como en el caso de archivos \texttt{parquet} ya que es de tan solo unas décimas de segundo. Esta información está expuesta en la tabla \ref{table:write10K}.
+	\item \textbf{Escritura} \textit{Dask} registró un tiempo mucho menor en la escritura a archivos \texttt{parquet} que \textit{Spark} en todos los casos, donde la diferencia fue de poco menos de un segundo en los tres procesos que tienen como destino final este tipo de archivo. Por otro lado, cuando el destino de escritura es una base de datos \textit{MySQL}, \textit{Dask} también registró un mejor desempeño aunque la diferencia no es tan evidente como en el caso de archivos \texttt{parquet} ya que es de tan solo unas décimas de segundo. Esta información está expuesta en la tabla \ref{table:write10K}.
 	
-	\item \textbf{Capacidad de cómputo} La evidencia presentada en la tabla \ref{table:otros10K} permite ver que durante estas ejecuciones, \textit{Dask} registró un tiempo de  cómputo menor en todos los procesos, con una diferencia especialmente evidente en el proceso \texttt{dijkstra} en el que \textit{Spark} fue casi 5 veces más tardado, lo cual sucede debido a que el algoritmo es iterativo y \textit{Dask} tiene una mayor facilidad para utilizar los resultados previos ya que el resultado de cada iteración es un \textit{DataFrame} de \textit{Pandas} almacenado en memoria y \textit{Spark}, por el contrario, tiene como comportamiento predeterminado descartar la información de la ejecución anterior y volver a ejecutar todo el proceso, lo que obliga a utilizar la función \texttt{checkpoint} que escribe los resultados intermedios a disco, lo que puede resultar costoso. Respecto a los otros procesos, a excepción de \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_ruta\_mktid} que involucran la creación de una nueva llave y donde la diferencia en los tiempo de ejecución fue menor a décimas de segundo, \textit{Spark} registró tiempos de casi el doble que los registrados por \textit{Dask}.
+	\item \textbf{Capacidad de cómputo} La evidencia presentada en la tabla \ref{table:otros10K} permite ver que durante estas ejecuciones, \textit{Dask} registró un tiempo de  cómputo menor en todos los procesos, con una diferencia especialmente evidente en el proceso \texttt{dijkstra} en el que \textit{Spark} fue casi 5 veces más tardado, lo cual sucede debido a que el algoritmo es iterativo y \textit{Dask} tiene una mayor facilidad para utilizar los resultados previos ya que el resultado de cada iteración es un \textit{DataFrame} de \textit{Pandas} almacenado en memoria y \textit{Spark}, por el contrario, tiene como comportamiento predeterminado descartar la información de la ejecución anterior y volver a ejecutar todo el proceso, lo que obliga a utilizar la función \texttt{checkpoint} que escribe los resultados intermedios a disco, lo que puede resultar costoso. Respecto a los otros procesos, a excepción de \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_ruta\_mktid} que involucran la creación de una nueva llave y donde la diferencia en los tiempos de ejecución fue menor a décimas de segundo, \textit{Spark} registró tiempos de casi el doble que los registrados por \textit{Dask}.
 	
 	\item \textbf{Duración} Al considerar el tiempo de ejecución total promedio (resumido en el gráfico \ref{barras:duracion10K}), podemos ver que \textit{Dask} también tuvo un mejor desempeño en todos los procesos, especialmente en el proceso \texttt{dijkstra} que fue más de 5 veces más rápido en \textit{Dask}. Por otra parte, los procesos \texttt{demoras\_aerolinea}, \texttt{demoras\_aeropuerto\_destino} y \texttt{demoras\_aeropuerto\_origen} que involucran agregaciones como promedios, obtención del máximo y mínimo y conteos utilizando múltiples llaves para agrupar, tuvieron un tiempo de ejecución al menos 1.5 veces mayor en \textit{Spark} con mayor diferencia en los procesos que tienen \texttt{parquet} como destino. Adicionalmente, los procesos que realizan tareas de preparación de datos como los procesos \texttt{elimina\_nulos} y \texttt{flota} (cuyas tareas son borrado de registros con nulos y eliminación de duplicados respectivamente) también tuvieron un tiempo de ejecución al menos dos veces mayor en \textit{Spark}. Por último, los procesos que involucran agregaciones como promedio y desviación estándar usando una llave nueva generada a partir de columnas existentes (\texttt{demoras\_ruta\_mktid} y \texttt{demoras\_ruta\_aeropuerto}) tuvieron la menor diferencia de tiempo, siendo entre 1 y 1.5 veces mayor en \textit{Spark} que en \textit{Dask}.  
 	
@@ -544,7 +544,7 @@ En conclusión, podemos ver que al incrementar la muestra de datos la superiorid
 	
 	\item \textbf{Capacidad de cómputo} Al ver el tiempo de cómputo presentado en la tabla \ref{table:otros10M}, vemos que a \textit{Dask} le toma cerca de 17\% más tiempo completar el cálculo de los procesos \texttt{demoras\_aerolinea}, \texttt{demoras\_aeropuerto\_destino} y \texttt{demoras\_aeropuerto\_origen}. Además, en el proceso \texttt{flota}, \textit{Spark} es solo un 1\% más tardado y en el proceso \texttt{demoras\_ruta\_aeropuerto} a \textit{Dask} le tomó casi 6 veces el tiempo que a \textit{Spark} completar el cómputo del resultado. El único proceso en el que \textit{Dask} conserva su superioridad es en \textit{dijkstra} donde su tiempo de ejecución es sólo un 20\% del registrado por \textit{Spark}. 
 	
-	\item \textbf{Duración} Con loa resultados de esta ejecución, resumida en el gráfico \ref{barras:duracion10M}, observamos que \textit{Spark} sigue siendo más rápido en los procesos \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_aeropuerto\_origen} considerando el tiempo total, en el primer caso con una diferencia mayor que en la muestra anterior y explicada principalmente por el tiempo de cómputo y, en el caso del proceso \texttt{demoras\_aeropuerto\_origen}, la diferencia se debe principalmente a una escritura más rápida por parte de \texttt{Spark} aunque el tiempo de cómputo también es más rápido que en \textit{Dask}. En el caso de los procesos \texttt{demoras\_aerolinea} y \texttt{demoras\_aeropuerto\_destino}, \textit{Dask} registró un menor tiempo promedio de ejecución a pesar de alcanzar valores más altos en el tiempo de cómputo, por lo que la ventaja de escritura a \texttt{parquet} sobre \textit{Spark} sigue siendo un factor importante en su superioridad sobre \textit{Spark} en el tiempo global de ejecución. Aún así, estos dos procesos tuvieron tiempos 4\% y 19\% mayores en \textit{Spark}, respectivamente. Por otro lado, el tiempo de ejecución total del proceso \texttt{flota} fue sólo un 1\% mayor en \textit{Dask} que en \textit{Spark} y sus tiempos de escritura y cómputo fueron muy similares. Adicionalmente, los procesos \texttt{elimina\_nulos} y \texttt{dijkstra} siguen siendo muy superiores en \textit{Dask} ya que alcanzaron tiempos 44\% y 407\% superiores en \textit{Spark}, respectivamente. Además, es importante ver que el proceso \texttt{elimina\_nulos} ha incrementado menos de 1 segundo en ambos \textit{frameworks} a pesar de que la muestra de datos es 1000 veces mayor a la original. En este proceso \textit{Dask} ha mantenido la ventaja consistentemente. En suma, \textit{Spark} fue más rápido en 2 procesos de 7 pero tuvo diferencias menores al 4\% en dos más, por lo que la diferencia entre \textit{Dask} y \textit{Spark} se redujo aún más.
+	\item \textbf{Duración} Con los resultados de esta ejecución, resumida en el gráfico \ref{barras:duracion10M}, observamos que \textit{Spark} sigue siendo más rápido en los procesos \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_aeropuerto\_origen} considerando el tiempo total, en el primer caso con una diferencia mayor que en la muestra anterior y explicada principalmente por el tiempo de cómputo y, en el caso del proceso \texttt{demoras\_aeropuerto\_origen}, la diferencia se debe principalmente a una escritura más rápida por parte de \texttt{Spark} aunque el tiempo de cómputo también es más rápido que en \textit{Dask}. En el caso de los procesos \texttt{demoras\_aerolinea} y \texttt{demoras\_aeropuerto\_destino}, \textit{Dask} registró un menor tiempo promedio de ejecución a pesar de alcanzar valores más altos en el tiempo de cómputo, por lo que la ventaja de escritura a \texttt{parquet} sobre \textit{Spark} sigue siendo un factor importante en su superioridad sobre \textit{Spark} en el tiempo global de ejecución. Aún así, estos dos procesos tuvieron tiempos 4\% y 19\% mayores en \textit{Spark}, respectivamente. Por otro lado, el tiempo de ejecución total del proceso \texttt{flota} fue sólo un 1\% mayor en \textit{Dask} que en \textit{Spark} y sus tiempos de escritura y cómputo fueron muy similares. Adicionalmente, los procesos \texttt{elimina\_nulos} y \texttt{dijkstra} siguen siendo muy superiores en \textit{Dask} ya que alcanzaron tiempos 44\% y 407\% superiores en \textit{Spark}, respectivamente. Además, es importante ver que el proceso \texttt{elimina\_nulos} ha incrementado menos de 1 segundo en ambos \textit{frameworks} a pesar de que la muestra de datos es 1000 veces mayor a la original. En este proceso \textit{Dask} ha mantenido la ventaja consistentemente. En suma, \textit{Spark} fue más rápido en 2 procesos de 7 pero tuvo diferencias menores al 4\% en dos más, por lo que la diferencia entre \textit{Dask} y \textit{Spark} se redujo aún más.
 
 \end{itemize}
 
@@ -630,10 +630,9 @@ En conclusión, podemos ver que al incrementar la muestra de datos la superiorid
 
 Sintetizando, con esta muestra de datos \textit{Spark} fue superior en la robustez ya que logró completar todos los procesos y \textit{Dask} presentó problemas de memoria en uno de ellos. \textit{Dask}, por su parte, sigue teniendo un mejor desempeño en la escritura a \texttt{parquet}, en el tiempo de inicio de la ejecución, en el la variación del tiempo de ejecución y en el tiempo total de ejecución, aunque la diferencia con \textit{Spark} se sigue reduciendo. Por otro lado, en el tiempo de cómputo, \textit{Spark} fue más rápido en 3 de los 7 procesos y tuvo un desempeño casi igual en un cuarto, por lo que la superioridad de \textit{Dask} ya no es tan evidente, sin embargo, en los procesos \texttt{dijkstra} y \texttt{elimina\_nulos} sí mantuvo una superioridad importante y con una diferencia mucho mayor que las que presentaron los procesos en los que \textit{Spark} fue más rápido.
 
-\subsection{Ejecución local con 80,000,000 registros}
-
 
 \subsection{Cambio del desempeño entre muestras}
+\label{subsection:cambio-muestras-local}
 
 Después de haber revisado de forma independiente cada muestra, podemos pasar al análisis del comportamiento de cada \textit{framework} a través de las distintas muestras y procesos. Esta sección se centrará en los promedio de tiempo de ejecución registrado y el tiempo de escritura y su dinámica al incrementar el tamaño de los datos a procesar. Primero se hará un análisis de cada proceso individual y después se obtendrán conclusiones generales sobre cada herramienta. En esta sección también se incluye información más detallada sobre el número de registros que escribe cada proceso a sus respectivos destinos (\texttt{parquet} o \textit{MySQL}), y es importante mencionar que es normal que el tamaño del resultado no crezca de forma proporcional al tamaño de los datos que se procesan ya que la mayoría de los procesos tienen datos agregados como resultado final.
 
@@ -641,7 +640,7 @@ Después de haber revisado de forma independiente cada muestra, podemos pasar al
 
 Este proceso es uno de los que registró menos tiempo de ejecución en las distintas muestras y uno en el que \textit{Dask} fue superior en la mayoría de las muestras. Sus operaciones más importantes son la eliminación de registros duplicados en una columna y su posterior conteo agrupando por distintas columnas con valores de tiempo. El resultado se escribe a \textit{MySQL}.
 
-La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \textit{Dask} y \textit{Spark} al incrementar el número de datos a procesar, empezando por 10,000 y llegando hasta un poco más de 80 millones. En la gráfica es claro como el incremento de tiempo de ambos \textit{frameworks} es pequeño (de entre 8 y 11 segundos) comparado con el número de registros que tiene que procesar. Aunque el cuarto punto corresponde a un conjunto de datos 1000 veces mayor que el tiempo promedio registrado es cercano a 3 veces mayor en el caso de \textit{Spark} y 4 en el caso de \textit{Dask}, lo cuál muestra una importante capacidad de procesamiento de datos con un pequeño incremento de tiempo transcurrido. Sin embargo, esta tendencia se rompe al considerar el total de los datos, ya que el tiempo de ejecución parece crecer de forma proporcional a los datos (tanto los datos como el tiempo de ejecución son 8 veces mayores que en la muestra anterior). 
+La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \textit{Dask} y \textit{Spark} al incrementar el número de datos a procesar, empezando por 10,000 y llegando hasta aproximadamente 11 millones. En la gráfica es claro como el incremento de tiempo de ambos \textit{frameworks} es pequeño (de entre 8 y 11 segundos) comparado con el número de registros que tiene que procesar. Aunque el cuarto punto corresponde a un conjunto de datos 1000 veces mayor que el inicial, el tiempo promedio registrado es cercano a 3 veces mayor en el caso de \textit{Spark} y 4 en el caso de \textit{Dask}, lo cuál muestra una importante capacidad de procesamiento de datos con un pequeño incremento de tiempo transcurrido. 
 \begin{figure}
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
@@ -661,7 +660,6 @@ La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \tex
       100000 3.737 0.146
       1000000 6.57 0.093
       11000000 14.304 0.125
-      80000000 122.987 8.984
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -671,7 +669,6 @@ La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \tex
       100000 7.16 0.147
       1000000 8.932 0.175
       11000000 14.44 0.27
-      80000000 105.209 3.253
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -680,7 +677,7 @@ La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \tex
 \label{lineas:local-flota}
 \end{figure}
 
-Al analizar los tiempos de escritura a \textit{MySQL}, representados en \ref{lineas:local-flota-write}, podemos ver que no fue un factor importante para el tiempo de ejecución, ya que el aumento de tiempo de la primera a la última muestra no fue significativo. Además no se observa una mejora clara en el desempeño de ninguna de las herramientas conforme los datos aumentan, en particular, en la muestra de 11 millones, ambos \textit{frameworks} presentan un cambio importante en la tendencia que estaban presentando, \textit{Spark} aumentando significativamente el tiempo de ejecución con un pequeño incremento en el número de registros y \textit{Dask} incluso mejorando el tiempo de escritura a pesar del aumento de registros.
+Al analizar los tiempos de escritura a \textit{MySQL}, representados en la figura \ref{lineas:local-flota-write}, podemos ver que no fue un factor importante para el tiempo de ejecución, ya que el aumento de tiempo de la primera a la última muestra no fue significativo. Además no se observa una mejora clara en el desempeño de ninguna de las herramientas conforme los datos aumentan, en particular, en la muestra de 11 millones, ambos \textit{frameworks} presentan un cambio importante en la tendencia que estaban presentando, \textit{Spark} aumentando significativamente el tiempo de ejecución con un pequeño incremento en el número de registros y \textit{Dask} incluso mejorando el tiempo de escritura a pesar del aumento de registros.
 
 \begin{figure}
 \centering
@@ -701,7 +698,6 @@ Al analizar los tiempos de escritura a \textit{MySQL}, representados en \ref{lin
       49439 1.83 0.101
       76717 2.181 0.079
       78113 2.146 0.072
-      78133 2.466 0.619
        
     };
     
@@ -712,7 +708,6 @@ Al analizar los tiempos de escritura a \textit{MySQL}, representados en \ref{lin
       49439 1.901 0.132
       76717 2.024 0.149
       78113 2.154 0.188
-      78133 2.688 0.513
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -725,7 +720,7 @@ Al analizar los tiempos de escritura a \textit{MySQL}, representados en \ref{lin
 
 Este proceso tiene como operaciones principales conteo de una columna y obtención de promedios de otras 5, agrupando respecto a distintas columnas de tiempo. El resultado final se almacena en un archivo \texttt{parquet}.
 
-Al analizar los resultados representados por la figura \ref{lineas:local-demoras-aerolinea}, podemos ver que el incremento de tiempo de la primera a la cuarta muestra es pequeño comparado con el aumento del conjunto de datos (cercano a 1000x), sin embargo, cuando se llega a al última muestra se aprecia un incremento mucho mayor a los observados anteriormente. Adicionalmente, es en la última muestra cuando \textit{Spark} supera el desempeño de \textit{Dask} que se acortaba conforme crecía el número de datos. Con esta información se puede ver cómo \textit{Spark} se vuelve más competitivo conforme aumenta el tamaño del conjunto de datos. 
+Al analizar los resultados representados por la figura \ref{lineas:local-demoras-aerolinea}, podemos ver que el incremento de tiempo de la primera a la cuarta muestra es pequeño comparado con el aumento del conjunto de datos (cercano a 1000x), sin embargo, cuando se llega a al última muestra se aprecia un incremento mucho mayor a los observados anteriormente. Adicionalmente, en la última muestra \textit{Spark} se acerca mucho al desempeño de \textit{Dask}, lo que sugiere que \textit{Spark} se vuelve más competitivo conforme aumenta el tamaño del conjunto de datos. 
 
 \begin{figure}
 \centering
@@ -746,7 +741,6 @@ Al analizar los resultados representados por la figura \ref{lineas:local-demoras
       100000 2.422 1.351
       1000000 3.629 0.06
       11000000 8.604 0.057
-      80000000 50.991 10.137
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -756,7 +750,6 @@ Al analizar los resultados representados por la figura \ref{lineas:local-demoras
       100000 5.187 0.384
       1000000 6.363 0.093
       11000000 8.97 0.169
-      80000000 62.825 1.957
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -765,7 +758,7 @@ Al analizar los resultados representados por la figura \ref{lineas:local-demoras
 \label{lineas:local-demoras-aerolinea}
 \end{figure}
 
-Por otra parte, analizando los resultados de la escritura, representados por la figura \ref{lineas:local-demoras-aerolinea-write}, podemos ver que el tiempo de escritura de ambos \textit{frameworks} es muy bajo y que \textit{Dask} es especialmente constante en el tiempo de escritura. Sin embargo, considerando el poco tiempo que este proceso toma, la escritura a archivos \textit{parquet} no  es un factor importante en la duración total debido a la velocidad de escritura de ambas herramientas y el bajo incremento del tamaño del \textit{DataFrame} resultante.
+Por otra parte, analizando los resultados de la escritura, representados por la figura \ref{lineas:local-demoras-aerolinea-write}, podemos ver que el tiempo de escritura de ambos \textit{frameworks} es muy bajo y que \textit{Dask} es especialmente constante en el tiempo de escritura a pesar del incremento de su tamaño, sin embargo, considerando el poco tiempo que este proceso toma, la escritura a archivos \textit{parquet} no  es un factor importante en la duración total debido a la velocidad de escritura de ambas herramientas y el bajo incremento del tamaño del \textit{DataFrame} resultante.
 
 \begin{figure}
 \centering
@@ -786,7 +779,6 @@ Por otra parte, analizando los resultados de la escritura, representados por la 
       49439 0.205 0.057
       76717 0.248 0.037
       78113 0.221 0.031
-      78133 0.303 0.118
     };
     
   \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -796,7 +788,6 @@ Por otra parte, analizando los resultados de la escritura, representados por la 
       49439 1.151 0.042
       76717 1.231 0.056
       78113 1.81 0.064
-      78133 2.313 0.05
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -809,7 +800,7 @@ Por otra parte, analizando los resultados de la escritura, representados por la 
 
 Este proceso tiene como operaciones principales el conteo en una columna y la obtención del mínimo de otras 5, agrupando de acuerdo a distintos periodos de tiempo representados en diversas columnas. El resultado del proceso se escribe en un archivo \texttt{parquet}.
 
-Entre la primera y la penúltima muestra, el incremento de tiempo del proceso es de aproximadamente 10 segundos, que se traduce en un tiempo aproximadamente 5 y 2 veces mayor para \textit{Dask} y \textit{Spark} respectivamente, a pesar de que el cuarto conjunto de datos es más de 1000 veces mayor que el de la primera muestra. Esto muestra una gran capacidad para procesar más y más datos con los mismos recursos y poco incremento en el tiempo de ejecución por parte de ambos \textit{frameworks}. Sin embargo esta tendencia se rompe cuando se superan los 80 millones de registros. Especialmente en el caso de \textit{Spark}, el tiempo de ejecución del proceso con la muestra más grande es 60 veces mayor a la muestra más pequeña, mientras que en el caso de \textit{Dask} es 40 veces mayor a la de la menor muestra. Sin embargo, \textit{Dask} tiene un mejor desempeño ya que ejecuta todos los procesos más rápido que \textit{Spark}, con una diferencia de pocos segundos en las primeras cuatro muestras pero con una diferencia importante en la última en la que \textit{Spark} es más de tres veces más tardado. En este caso, \textit{Dask} muestra una mayor capacidad para procesar cantidades de datos cada vez más grandes.
+Observando al figura \ref{lineas:local-demoras-aeropuerto-destino}, podemos ver que entre la primera y la última muestra, el incremento de tiempo del proceso es de aproximadamente 10 segundos, que se traduce en un tiempo aproximadamente 5 y 2 veces mayor que el inicial para \textit{Dask} y \textit{Spark} respectivamente, a pesar de que el cuarto conjunto de datos es más de 1000 veces mayor que el de la primera muestra. Esto muestra una gran capacidad para procesar más y más datos con los mismos recursos y poco incremento en el tiempo de ejecución por parte de ambos \textit{frameworks}.  Sin embargo, \textit{Dask} tiene un mejor desempeño ya que ejecuta todos los procesos más rápido que \textit{Spark}, con una diferencia de pocos segundos en las cuatro muestras. En este caso, \textit{Dask} muestra una mayor capacidad para procesar cantidades de datos cada vez más grandes ya que los completa en menor tiempo y mantiene una diferencia de tiempo constante respecto a \textit{Spark}.
 
 \begin{figure}
 \centering
@@ -830,7 +821,6 @@ Entre la primera y la penúltima muestra, el incremento de tiempo del proceso es
       100000 2.321 0.068
       1000000 4.617 1.337
       11000000 11.123 0.12
-      80000000 84.579 17.202
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -840,7 +830,6 @@ Entre la primera y la penúltima muestra, el incremento de tiempo del proceso es
       100000 5.107 0.089
       1000000 7.137 0.418
       11000000 13.28 0.169
-      80000000 273.324 5.563
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -870,7 +859,6 @@ Al analizar el tiempo de escritura, representado en la gráfica \ref{lineas:loca
       116746 0.249 0.041 
       436411 0.497 0.052 
       1042066 1.007 0.041
-      1490152 1.434 0.09
     };
     
   \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -880,7 +868,6 @@ Al analizar el tiempo de escritura, representado en la gráfica \ref{lineas:loca
 	  116746 1.16 0.062  
 	  436411 1.806 0.057 
 	  1042066 4.668 0.083
-	  1490152 26.394 0.345
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -893,7 +880,7 @@ Al analizar el tiempo de escritura, representado en la gráfica \ref{lineas:loca
 
 Este proceso tiene como operaciones principales el conteo en una columna y la obtención del máximo de otras 5, agrupando de acuerdo a distintos periodos de tiempo representados en diversas columnas. El resultado del proceso se escribe a una base de datos \textit{MySQL}.
 
-Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este proceso los \textit{frameworks} tienen un comportamiento similar a través de las distintas muestras. Algo interesante es que, a diferencia de otros procesos, \textit{Spark} supera a \textit{Dask} en desempeño durante las muestras de 1 millón y 11 millones de registros pero \textit{Dask} es más rápido en la última muestra. Además, en la figura \ref{lineas:local-demoras-aeropuerto-origen-write} podemos ver que el tiempo de escritura también se incrementa de forma similar en ambas herramientas y de hecho, \textit{Spark} tiene una mayor capacidad de escritura a \textit{MySQL} que \textit{Dask} aunque la diferencia de tiempo parece mantenerse para las muestras más grandes. Debido a esto último, podemos concluir que la diferencia en el tiempo total de ejecución presentada en la última muestra se debe a un mejor procesamiento de datos por parte de \textit{Dask}, mientras que en las dos muestras anteriores, la superioridad de \textit{Spark} se explica, en parte, por su mayor desempeño en la escritura. 
+Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este proceso los \textit{frameworks} tienen un comportamiento similar a través de las distintas muestras, sin embargo, a diferencia de otros procesos, \textit{Spark} supera a \textit{Dask} en desempeño durante las muestras de 1 millón y 11 millones de registros. Al analizar la figura \ref{lineas:local-demoras-aeropuerto-origen-write} podemos encontrar que la superioridad de \textit{Spark} para escribir a \textit{MySQL} conforme crece el resultado escrito es un factor para que \textit{Spark} haya registrado tiempos de ejecución total menores con las muestras más grandes. 
 
 \begin{figure}
 \centering
@@ -902,8 +889,8 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
 	xlabel = Número de registros (log),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
-	ymode=log,
+	xmode=log,
+	% ymode=log,
 	width=12cm,
 	height=6cm
 	]
@@ -914,7 +901,6 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
       100000 6.275 0.128
       1000000 16.611 0.205
       11000000 38.7 1.933
-      80000000 139.247 9.893
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -924,7 +910,6 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
       100000 6.55 0.262
       1000000 11.607 0.488
       11000000 31.913 1.287
-      80000000 285.318 8.8
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -952,7 +937,6 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
       116656 4.19 0.119
       436681 12.573 0.189
       1041665 28.394 0.355
-      1490410 44.934 6.905
     };
     
   \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -962,7 +946,6 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
 	  116656 2.59 0.255  
 	  436681 6.316 0.479
 	  1041665 23.184 0.774
-	  1490410 33.087 2.261
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -975,7 +958,7 @@ Cómo se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este p
 
 El proceso \texttt{demoras\_ruta\_aeropuertos} tiene como operaciones principales  la creación de una nueva llave a partir de la concatenación de dos columnas existentes y después un conteo en una columna, cálculo del promedio en otras 5, agrupando de acuerdo a la nueva llave y a otras columnas que describen periodos de tiempo. El resultado final se escribe a un archivo \texttt{parquet}.
 
-La figura \ref{lineas:local-demoras-ruta-aeropuerto} muestra como las herramientas tienen un desempeño muy similar en las primeras dos muestras y \textit{Spark} es ligeramente superior a partir de la muestra de 1 millón de datos e incrementa la diferencia significativamente en la muestra de 10 millones de datos. Para la última muestra, \textit{Dask} tiene problemas de memoria que le impiden terminar la ejecución del proceso por lo que \textit{Spark} también tiene un desempeño superior. 
+La figura \ref{lineas:local-demoras-ruta-aeropuerto} muestra como las herramientas tienen un desempeño muy similar en las primeras dos muestras y \textit{Spark} es ligeramente superior a partir de la muestra de 1 millón de datos e incrementa la diferencia significativamente en la muestra de 10 millones de datos. 
 
 Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-write} podemos ver que a \textit{Spark} le toma más tiempo escribir resultados a archivos \texttt{parquet} y a pesar de ello tiene un desempeño superior, por lo que la rapidez de \textit{Spark} viene de su capacidad de procesamiento y creación de una nueva llave.
 
@@ -998,7 +981,6 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
       100000 4.816 0.131
       1000000 17.721 0.584
       11000000 93.087 6.446
-      % 80000000 NA NA
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -1008,7 +990,6 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
       100000 6.046 0.093
       1000000 12.019 0.196
       11000000 43.351 2.047
-      80000000 235.991 3.713
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -1045,7 +1026,6 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
 	  297814 1.858 0.088
 	  1619826 5.618 0.19
 	  8361958 29.807 0.501
-	  19897358 95.66 1.355
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -1056,11 +1036,11 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
 
 \subsubsection{Proceso de cálculo de demoras por ruta entre ciudades}
 
-Este proceso tiene como operaciones principales la creación de una nueva llave a partir de la concatenación de dos columnas existentes y después un conteo en una columna, cálculo de la desviación estándar en otras 5, agrupando de acuerdo a la nueva llave y a otras columnas que describen periodos de tiempo. El resultado final se escribe a un archivo \texttt{parquet}. Es importante mencionar que este es el proceso más demandante de los implementados debido a el tipo de operación que calcula, el número de registros que utiliza, el tamaño de su resultado y la escritura a \textit{MySQL} que ha demostrado ser más costosa que a archivos \texttt{parquet}.
+Este proceso tiene como operaciones principales la creación de una nueva llave a partir de la concatenación de dos columnas existentes y después un conteo en una columna, cálculo de la desviación estándar en otras 5, agrupando de acuerdo a la nueva llave y a otras columnas que describen periodos de tiempo. El resultado final se escribe a una base de datos \textit{MySQL}. Es importante mencionar que este es el proceso más demandante de los implementados debido al tipo de operación que calcula, el número de registros que utiliza, el tamaño de su resultado y la escritura a \textit{MySQL} que ha demostrado ser más costosa que a archivos \texttt{parquet}.
 
 La figura \ref{lineas:local-demoras-ruta-mktid} muestra que al principio, la diferencia entre la rapidez de ejecución de ambos \textit{frameworks} es muy poca, sin embargo, a partir de la muestra de 10 millones de datos, \textit{Dask} tiene problemas de memoria y no logra finalizar la ejecución.
 
-La gráfica \ref{lineas:local-demoras-ruta-mktid} muestra que el tiempo de escritura crece de una forma menos acelerada que el tiempo de ejecución total. Además, es interesante ver cómo en el caso de \textit{Spark} aproximadamente un 40\% del tiempo del tiempo total corresponde al tiempo de escritura. Por otro lado, debido a la falta de información sobre \textit{Dask}, no podemos obtener conclusiones concretas. 
+La gráfica \ref{lineas:local-demoras-ruta-mktid-write} muestra que el tiempo de escritura crece de una forma menos acelerada que el tiempo de ejecución total. Además, es interesante ver cómo en el caso de \textit{Spark} aproximadamente un 40\% del tiempo del tiempo total corresponde al tiempo de escritura. Por otro lado, debido a la falta de información sobre \textit{Dask}, no podemos obtener conclusiones concretas sobre la última ejecución y si tiempo de escritura a \textit{MySQL}. 
 
 \begin{figure}
 \centering
@@ -1081,7 +1061,6 @@ La gráfica \ref{lineas:local-demoras-ruta-mktid} muestra que el tiempo de escri
       100000 12.429 0.309
       1000000 55.405 0.564
       % 11000000 NA NA
-      % 80000000 NA NA
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -1091,7 +1070,6 @@ La gráfica \ref{lineas:local-demoras-ruta-mktid} muestra que el tiempo de escri
       100000 9.264 0.337
       1000000 49.728 0.851
       11000000 251.942 3.392
-      80000000 692.743 20.908
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -1128,7 +1106,6 @@ La gráfica \ref{lineas:local-demoras-ruta-mktid} muestra que el tiempo de escri
 	  267505 4.606 0.325
 	  1430282 40.5 0.839
 	  6824834 222.366 3.282
-	  15378534 414.673 19.074
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -1137,11 +1114,11 @@ La gráfica \ref{lineas:local-demoras-ruta-mktid} muestra que el tiempo de escri
 \label{lineas:local-demoras-ruta-mktid-write}
 \end{figure}
 
-\subsubsection{Proceso de cálculo de demoras por ruta entre ciudades}
+\subsubsection{Proceso de cálculo de eliminación de valores nulos}
 
 Este proceso tiene como operaciones principales la eliminación de valores nulos y después el conteo de registros resultantes. Debido a que sólo escribe el resultado a consola, el tiempo de escritura no fue considerado.
 
-Los resultados de ejecución de este proceso están representados por la figura \ref{lineas:local-elimina-nulos}. Esta gráfica muestra una pequeña superioridad de \textit{Dask} durante las primeras muestras, pero la tendencia se rompe al llegar a la muestra de 80 millones de registros, donde \textit{Spark} registró un tiempo de aproximadamente el 13\% del que le tomó a \textit{Dask}. 
+Los resultados de ejecución de este proceso están representados por la figura \ref{lineas:local-elimina-nulos}. Esta gráfica muestra una pequeña superioridad de \textit{Dask} durante las primeras muestras (menos de dos segundos de diferencia) pero también muestra una evolución similar del tiempo de ejecución respecto al número de registros de ambos \textit{frameworks}. 
 
 \begin{figure}
 \centering
@@ -1162,7 +1139,6 @@ Los resultados de ejecución de este proceso están representados por la figura 
       100000 1.433 0.085
       1000000 1.817 0.039
       11000000 2.941 0.119
-      80000000 175.456 30.511
     };
     
   \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
@@ -1172,7 +1148,6 @@ Los resultados de ejecución de este proceso están representados por la figura 
       100000 3.048 0.054
       1000000 3.365 0.043
       11000000 4.253 0.95
-      80000000 22.14 14.685
     };
     \legend {Dask, Spark}
 \end{axis}
@@ -1225,14 +1200,33 @@ La gráfica \ref{lineas:local-dijkstra} muestra claramente cómo la diferencia d
 \label{lineas:local-dijkstra}
 \end{figure}
 
-\noindent ...
+\subsection{Conclusiones generales sobre las ejecuciones locales}
+
+Esta sección tiene como objetivo resumir los que se observó durante las ejecuciones locales 
+
+\begin{itemize}
+	
+	\item \textbf{Robustez} En este rubro, ambos \textit{frameworks} registraron resultados satisfactorios durante las primeras 3 muestras, sin embargo, al alcanzar los 11 millones de registros, \textit{Dask} tuvo problemas de memoria que le impidieron terminar el proceso. Estos problemas se presentaron durante la escritura a \textit{MySQL}. Mientras tanto, \textit{Spark} logró terminar el 100\% de las ejecuciones sin problema. Lo anterior, muestra que \textit{Spark} parece ser más robusto que \textit{Dask}.
+	
+	\item \textbf{Variación} Este aspecto es uno en el que la relación entre las dos herramientas cambian, debido a que durante las dos muestras más pequeñas es \textit{Spark} quien registra menor variación en la mayoría de los procesos (considerando el coeficiente de variación), aunque esto está fuertemente influenciado por los cortos tiempos de ejecución que registra \textit{Dask}. En la tercera muestra, la tendencia cambia ya que \textit{Dask} registra un coeficiente menor en 4 de los 8 procesos y esta finalmente se invierte cuando \textit{Dask} registra coeficientes más bajos en todos los procesos. Adicional a esto, la mayoría de las veces también la desviación estándar de los procesos registrados por \textit{Dask} es menor, por lo que considero que es el \textit{framework} que registró menos variaciones.
+	
+	\item \textbf{Inicio de la ejecución} La rapidez para iniciar la ejecución de un proceso es sin duda superior en \textit{Dask}, ya que registró tiempos menores en todos los casos y no registró cambios importantes de duración durante las diferentes muestras. \textit{Spark} tampoco mostró tiempos de ejecución muy diferentes al cambiar de muestras y sí registró tiempos más grandes, lo cuál creo que está influenciado por qué requiere de un mayor número de parámetros para iniciar la ejecución (como \texttt{driver-memory}) y además requiere de la carga de algunos recursos adicionales como los \texttt{jars}. Sin embargo, en ambos casos la mayoría de las veces este tiempo fue menor a dos segundos por lo que para procesos con mayor duración este tiempo inicial pierde importancia.
+	
+	\item \textbf{Escritura} Quizá la conclusión más notoria en este aspecto es la superioridad de \textit{Dask} en la escritura de archivos \texttt{parquet}, donde alcanzó tiempos de escritura menores al 50\% de lo requerido por \textit{Spark} para todos los procesos y en todas las muestras y en la mayoría de ellos el tiempo requerido fue menor de menos de un cuarto del requerido por \textit{Spark}. Lo más interesante de esto es que esto sucedió de manera consistente a través de los diferentes procesos y muestras de datos, lo que muestra la clara ventaja de \textit{Dask} para la escritura a este tipo de archivo. En el caso de la escritura a \textit{MySQL} es más difícil determinar cuál de los dos \textit{frameworks} tiene un mejor desempeño ya que los ratios de duración tuvieron grandes diferencias y favorecían a distintas herramientas bajo distintas condiciones, sin embargo, cuando \textit{Dask} registraba tiempos menores de escritura, lograba finalizar el proceso en hasta 87\% del tiempo registrado por \textit{Spark}, pero no menor a eso. Por otro lado, cuando \textit{Spark} fue más rápido, llegó a registrar tiempos de escritura en hasta la mitad del tiempo que \textit{Dask}, por lo que considero que \textit{Spark} fue superior en este aspecto, ya que aún cuando registraba tiempos mayores estos no eran muy diferentes a los de \textit{Dask}. Por último, durante la ejecución de los procesos fue evidente que la escritura a \texttt{parquet} es significativamente más rápida que la escritura a bases de datos en ambos \textit{frameworks}, lo cuál es consistente con lo que aconsejan en sus mejores prácticas. A pesar de lo anterior, la ventaja de \textit{Dask} en la escritura pierde importancia en las muestras de mayor tamaño, esto debido a que el tamaño del resultado no crece de forma proporcional al conjunto de datos procesado, sin embargo, en tareas en las que esto suceda, \textit{Dask} tendría una ventaja importante cuando el destino son archivos \texttt{parquet}.
+		
+	\item \textbf{Capacidad de cómputo} Este aspecto es uno de los que más cambios presentó a través de las distintas muestras, ya que en la primera \textit{Dask} fue superior en todos los procesos aunque con diferencias pequeñas en los que involucraban la creación de una nueva llave y agregaciones respecto a la misma, y en el resto de los procesos \textit{Spark} tuvo tiempos de casi el doble de duración que los de \textit{Dask}. En las siguientes muestras \textit{Spark} registró tiempos menores en los procesos que involucraban una llave nueva y la diferencia de tiempo se incrementó considerablemente respecto a la de \textit{Dask} conforme el tamaño del conjunto de datos aumentaba, pasando de una duración adicional de entre 3\% y 8\% en la muestra de 100,000 hasta 476\% en la de 10 millones en el proceso \texttt{demoras\_ruta\_aeropuerto}. Otro caso especial fue el proceso \texttt{dijkstra}, en el que \textit{Dask} fue significativamente superior debido a su mejor manejo de resultados anteriores en memoria y al mejor desempeño de la función \texttt{persist} que la función \texttt{checkpoint} utilizada con \textit{Spark}. La gran diferencia fue que \textit{Dask} tiene una mayor capacidad para acortar el plan de ejecución en cada iteración, mientras que \texttt{Spark} tiene que escribir forzosamente a disco para lograr esto y esa operación es muy costosa. Por otro lado, en los procesos de agregación (\texttt{demoras\_aerolinea}, \texttt{demoras\_aeropuerto\_destino} y \texttt{demoras\_aeropuerto\_origen}), \textit{Dask} fue superior en el cálculo durante las tres primeras muestras pero \textit{Spark} fue acercándose a su tiempo de ejecución conforme los datos totales crecían hasta superarlo en la muestra de 10 millones, donde \textit{Dask} fue aproximadamente 17\% más tardado en los tres procesos. Por otro lado, en los procesos que involucran operaciones de preparación de datos (\texttt{flota} y \texttt{elimina\_nulos}), \textit{Dask} mantuvo un mejor desempeño durante las 4 muestras, con una diferencia de tiempo considerable en \texttt{elimina\_nulos} donde el resultado es un conteo. En el caso de \texttt{flota}, que involucra una agregación después de la eliminación de duplicados, la diferencia no fue muy grande en las muestras más grandes, llegando a un tiempo adicional de \textit{Spark} de tan solo 1.1\% en la última muestra. En resumen, considero que cuando se superan los 10 millones de registros, \textit{Spark} es más competitivo en el cálculo de tareas de agregación y sin duda en este tipo de tareas cuando la llave de agregación se crea durante el procesamiento, mientas que \textit{Dask} parece ser más rápido en tareas de preparación de datos como eliminación de nulos y duplicados. Por último, en el proceso más complejo y sobre todo que involucra iteraciones, \textit{Dask} es muy superior, por lo que creo que para algoritmos más complejos esta debe ser la herramienta de elección.
+	
+	\item \textbf{Duración} Por último, considerando la duración combinada del tiempo de cómputo y escritura, es interesante notar que procesos similares registran tiempos de ejecución totales muy distintas en las diferentes muestras, como es el caso de los procesos de agregación \texttt{demoras\_aeropuerto\_origen} y \texttt{demoras\_aeropuerto\_destino} que tienen agregaciones y llaves de agregación muy similares pero que difieren en el destino de la escritura que juega un papel muy importante. Algo similar sucede con los procesos \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_ruta\_mktid}, que debido al destino de escritura muestran dinámicas diferentes. En ambas parejas de procesos, el desempeño de \textit{Spark} mejora respecto a la de \textit{Dask} cuando la escritura es a \textit{MySQL}, mientras que cuando la escritura se hace a \texttt{parquet}, \textit{Dask} sigue registrando tiempos menores de ejecución a pesar de que \textit{Spark} logró tiempos menores de ejecución. Esto muestra la importancia de la capacidad de escritura de ambos \textit{frameworks} que se vuelve en un factor decisivo al elegir entre uno y otro. Por otro lado, \textit{Dask} demostró una capacidad muy superior en la ejecución del algoritmo iterativo, por lo que considero que es mejor para tareas de procesamiento más complejas. Finalmente, \textit{Dask} sí mantuvo su superioridad en las tareas de preparación de datos, por lo que considero que para este tipo de tareas esta debe ser la herramienta de elección no sólo por que su ejecución es rápida sino por qué también \textit{Dask} demostró tener capacidades de escritura importantes a archivos \texttt{parquet} y este tipo de procesos normalmente involucran la escritura de grandes conjuntos de datos. 
+	
+\end{itemize}
+
 
 \newpage
 
 \section{Ambiente en la nube}
 \label{section:resultados-ambiente-nube}
 
-Los siguientes resultados fueron obtenidos ejecutando los procesos en el ambiente distribuido en la nube siguiendo la misma metodología. Los resultados y su análisis mantienen la misma estructura que la explicada en  \ref{chapter:resultados}.
+Los siguientes resultados fueron obtenidos ejecutando los procesos en el ambiente distribuido en la nube siguiendo la misma metodología. Los resultados y su análisis mantienen la misma estructura que la explicada en \ref{chapter:resultados}, no obstante, debido a que el ambiente en la nube tiene factores adicionales que pueden afectar el desempeño, como la latencia de red para escribir a la base de datos o para transferir datos entre los servidores, se eliminaron las 5 ejecuciones más rápidas y las 5 ejecuciones que más tiempo tomaron.
 
 \subsection{Ejecución en la nube con 10,000 registros}
 
@@ -1288,7 +1282,7 @@ Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
 	
 	\item \textbf{Robustez} Al igual que con las muestras más pequeñas de la ejecución local, ambos \textit{frameworks} lograron completar el 100\% de sus ejecuciones.
 	
-	\item \textbf{Variación} La tabla \ref{table:nube-duracion10K} muestra que, a excepción del proceso \texttt{dijkstra}, los procesos de \textit{Dask} tuvieron un mayor coeficiente de variación pero también registraron una variación estándar de aproximadamente un tercio de la registrada por los procesos de \textit{Spark}. Los coeficientes más altos de \textit{Dask} están influenciados por su corto tiempo de ejecución, mientras que \textit{Spark} tiene una variación de aproximadamente 5\% de su duración total, lo que muestra una gran consistencia en la duración de las tareas. Sin embargo, en el caso del proceso \texttt{dijkstra}, \textit{Spark} registró una desviación estándar mucho mayor y también un coeficiente de variación mayor.  También es importante notar que la desviación estándar en todos los casos es menor que dos segundos, por lo que ambos tienen una desviación muy pequeña. 
+	\item \textbf{Variación} La tabla \ref{table:nube-duracion10K} muestra que, a excepción del proceso \texttt{dijkstra}, los procesos de \textit{Dask} tuvieron un mayor coeficiente de variación pero también registraron una desviación estándar de aproximadamente un tercio de la registrada por los procesos de \textit{Spark}. Los coeficientes más altos de \textit{Dask} están influenciados por su corto tiempo de ejecución, mientras que \textit{Spark} tiene una variación de aproximadamente 5\% de su duración total, lo que muestra una gran consistencia en la duración de las tareas. Sin embargo, en el caso del proceso \texttt{dijkstra}, \textit{Spark} registró una desviación estándar mucho mayor y también un coeficiente de variación mayor.  También es importante notar que la desviación estándar en todos los casos es menor que dos segundos, por lo que ambos tienen una desviación muy pequeña. 
 	
 	\item \textbf{Inicio de la ejecución} Al observar la tabla \ref{table:nube-otros10K} podemos ver que en el tiempo de inicio de la ejecución también \textit{Dask} sigue siendo significativamente más rápido que \textit{Spark}. En el caso de \textit{Dask}, el tiempo de inicio de la ejecución es cercano a 0.025 segundos en casi todos los casos, mientras que en el caso de \textit{Spark} ronda entre 3.5 y 3 segundos.
 	
@@ -1439,15 +1433,15 @@ Las conclusiones más relevantes sobre esta muestra de datos son las siguientes:
 	
 	\item \textbf{Robustez} Con la muestra de 100,000 registros, ambos \textit{frameworks} lograron completar el 100\% de sus ejecuciones.
 	
-	\item \textbf{Variación} La tabla \ref{table:nube-duracion100K} muestra que en la mayoría de los procesos, \textit{Spark} tuvo una menor variación relativa al tiempo total de ejecución ya que su coeficiente de variación fue de menos de la mitad del registrado por \textit{Dask}, con la excepción del proceso \texttt{dijkstra}. Sin embargo, en tiempo, \textit{Dask} registró una menor variación aunque esta diferencia fue menor a un segundo (a excepción del proceso \textit{dijkstra}). Es importante notar que la variación no es muy diferente entre ambos \textit{frameworks} a pesar de que el tiempo de duración de \textit{Spark} es significativamente mayor. También es importante notar que la variación en el proceso iterativo es la mayor en ambos procesos, pero la registrada por \textit{Spark} es mucho mayor.
+	\item \textbf{Variación} La tabla \ref{table:nube-duracion100K} muestra que en la mayoría de los procesos, \textit{Spark} tuvo una menor variación relativa al tiempo total de ejecución ya que su coeficiente de variación fue de menos de la mitad del registrado por \textit{Dask}, con la excepción del proceso \texttt{dijkstra}. Sin embargo, en tiempo, \textit{Dask} registró una menor variación aunque esta diferencia fue menor a un segundo (a excepción del proceso \texttt{dijkstra}). Es importante notar que la variación no es muy diferente entre ambos \textit{frameworks} a pesar de que el tiempo de duración de \textit{Spark} es significativamente mayor. También es importante notar que la variación en el proceso iterativo es la mayor en ambos procesos, pero la registrada por \textit{Spark} es mucho mayor.
 	
 	\item \textbf{Inicio de la ejecución} Los resultados expuestos en la tabla \ref{table:nube-otros100K} muestran que el tiempo de inicio de la ejecución de \textit{Dask} sigue siendo superior al de \textit{Spark}, registrado una diferencia cercana a 2 segundos en la mayoría de los procesos, con la excpeción de \texttt{dijkstra} donde la diferencia es un poco menor (cercana 1.3 segundos) y también favorable a \textit{Dask}. 
 	
 	\item \textbf{Escritura} Al aumentar el tamaño de la muestra, podemos ver que el tiempo de escritura de \textit{Dask} a archivos \texttt{parquet} aún es menor que el registrado por \textit{Spark}, como se expone en la tabla \ref{table:nube-write100K}. Los resultados muestran que el tiempo de escritura de \textit{Spark} a archivos \texttt{parquet} es de aproximadamente 8.8, 5.9 y 4.5 veces el registrado por \textit{Dask} en los procesos \texttt{demoras\_aerolinea}, \texttt{demoras\_aeropuerto\_destino} y \texttt{demoras\_ruta\_aeropuerto}, respectivamente. Adicionalmente, es importante notar que el ratio de duración de la escritura \textit{Spark} entre el de \textit{Dask} se reduce conforme crece el número de registros que escribe. Por otra parte, en el caso de la escritura a \textit{MySQL}, el tiempo de \textit{Spark} es 155\% superior en el proceso \texttt{flota}, 12\% superior en el proceso \texttt{demoras\_aeropuerto\_origen} y 42\% inferior en el proceso \texttt{demoras\_ruta\_mktid}. En este caso, el desempeño de \textit{Spark} respecto a \textit{Dask} también mejora conforme aumenta el número de registros que se escriben. También vale la pena resaltar que el tiempo de escritura siempre fue menor al 30\% del tiempo total en el caso de \textit{Spark}, mientras que en el caso de \textit{Dask}, este fue mayor al 60\% en los procesos \texttt{demoras\_ruta\_mktid} y \texttt{demoras\_aeropuerto\_origen} y 36\% en el proceso \texttt{flota}. Estos tres procesos fueron en los que la escritura significó la mayor proporción del tiempo total de ejecución y coinciden con que la escritura se hace a \textit{MySQL}. Por último, hay que tomar en cuenta que el tiempo de ejecución de \textit{Spark} fue significativamente mayor, lo que influye en que la proporción del tiempo de escritura sea menor.
 	
-	\item \textbf{Capacidad de cómputo} La tabla \ref{table:nube-otros100K} muestra que \textit{Dask} siempre tuvo un desempeño superior en el tiempo de cálculo del resultado con diferencias de más de 18 segundos en todos los procesos y con los tiempos de \textit{Spark} siendo entre 270\% y 650\% más tardado en los procesos no iterativos y 1000\% más tardado en el proceso \texttt{dijkstra}. También es importante notar que los procesos en los que la diferencia fue menor corresponden a los procesos que requieren generar una nueva llave antes de hacer la agregación.
+	\item \textbf{Capacidad de cómputo} La tabla \ref{table:nube-otros100K} muestra que \textit{Dask} siempre tuvo un desempeño superior en el tiempo de cálculo del resultado con diferencias de más de 18 segundos en todos los procesos y con \textit{Spark} siendo entre 270\% y 650\% más tardado en los procesos no iterativos y 1000\% más tardado en el proceso \texttt{dijkstra}. También es importante notar que los procesos en los que la diferencia fue menor corresponden a los procesos que requieren generar una nueva llave antes de hacer la agregación.
 	
-	\item \textbf{Duración} Al considerar el tiempo de duración total, resumido en la figura \ref{barras:nube-duracion100K}, se puede observar que el desempeño de \textit{Dask} es muy superior en todos los procesos cuando comparamos el tiempo total de duración. Además, en la tabla \ref{table:nube-duracion100K} podemos ver que con este tamaño de muestra, y exceptuando el proceso \textit{demoras\_rutas\_mktid}, los procesos ejecutados en \textit{Dask} tardaron menos del 33\% del tiempo requerido por \textit{Spark} para completar el proceso correspondiente, esto principalmente influenciado por su mayor capacidad para calcular el proceso pero también apoyado por su capacidad de escritura que es mejor que la de \textit{Spark} en casi todos los casos, esos último es evidente cuando observamos que la menor diferencia se presentó en los procesos que escriben a \textit{MySQL} un gran número de registros y en los cuales el tiempo de escritura explica una mayor proporción del tiempo total.
+	\item \textbf{Duración} Al considerar el tiempo de duración total (resumido en la figura \ref{barras:nube-duracion100K}) se puede observar que el desempeño de \textit{Dask} es muy superior en todos los procesos cuando comparamos el tiempo total de duración. Además, en la tabla \ref{table:nube-duracion100K} podemos ver que con este tamaño de muestra, y exceptuando el proceso \texttt{demoras\_rutas\_mktid}, los procesos ejecutados en \textit{Dask} tardaron menos del 33\% del tiempo requerido por \textit{Spark} para completar el proceso correspondiente, esto principalmente influenciado por su mayor capacidad para calcular el proceso pero también apoyado por su capacidad de escritura que es mejor que la de \textit{Spark} en casi todos los casos, esto último es evidente cuando observamos que la menor diferencia se presentó en los procesos que escriben a \textit{MySQL} un gran número de registros y en los cuales el tiempo de escritura explica una mayor proporción del tiempo total.
 	
 En resumen, esta ejecución muestra que \textit{Dask} tuvo un mejor desempeño en cuatro de los rubros: primero, el tiempo de ejecución total registrado fue menor para todos los procesos, mismo que sucedió en el segundo rubro, el tiempo de cómputo del resultado, donde la diferencia fue importante en todos los procesos, tercero, la escritura, donde la superioridad fue muy clara en los procesos con escritura a \texttt{parquet} y tuvo una menor diferencia en la escritura a \textit{MySQL}, sobre todo cuando el resultado era muy grande, en especial en el proceso con el resultado más grande de escritura a \textit{MySQL}, \textit{Spark} logró superar el tiempo registrado por \textit{Dask} y cuarto, el inicio de la ejecución fue menor para \textit{Dask} en todos los procesos. En el caso de la variación, \textit{Spark} fue más constante en sus tiempos de ejecución, pero estos fueron más grandes de los de \textit{Dask}, cuya desviación estándar en segundos fue menor que la de \textit{Spark}. Y por último, en el rubro de robustez, ambos lograron un resultado satisfactorio ya que ejecutaron correctamente el 100\% de sus ejecuciones.
 	
@@ -1590,7 +1584,7 @@ Las conclusiones más importantes de la ejecución con 1,000,000 de registros se
 
 	\item \textbf{Variación} En la tabla \ref{table:nube-duracion1M} podemos ver que \textit{Dask} registró un menor coeficiente de variación en los procesos \texttt{demoras\_aeropuerto\_origen}, \texttt{demoras\_ruta\_mktid} y \texttt{dijkstra} respecto al de \textit{Spark}, estos procesos coinciden con los tres procesos de mayor duración de \textit{Dask}. Por otro lado, el coeficiente registrado por \textit{Spark} es menor en el resto de los procesos pero también es menor el tiempo de ejecución de \textit{Dask}, lo cual puede influenciar el coeficiente de variación alto. Por otra parte, si consideramos la desviación estándar podemos ver que la variación es menor en \textit{Dask} en la mayoría de los procesos con la excepción de \texttt{demoras\_ruta\_aeropuerto}, proceso que implica escritura a \texttt{parquet} y creación de una nueva llave.
 	
-	\item \textbf{Inicio de la ejecución} La información resumida en la tabla \ref{table:nube-otros1M} muestra que una vez más \textit{Dask} tuvo un mentor tiempo de inicio en todos los procesos y tuvo una menor diferencia en el proceso \texttt{dijkstra}.
+	\item \textbf{Inicio de la ejecución} La información resumida en la tabla \ref{table:nube-otros1M} muestra que una vez más \textit{Dask} tuvo un menor tiempo de inicio en todos los procesos y tuvo una menor diferencia en el proceso \texttt{dijkstra}.
 	
 	\item \textbf{Escritura} Observando la tabla \ref{table:nube-write1M} podemos ver que el tiempo de escritura a archivos \texttt{parquet} sigue siendo menor al ejecutar los procesos con \textit{Dask} pero ya no es más rápido al escribir a \textit{MySQL}, en los cuales, con el aumento en el número de registros, mejoró el desempeño de \textit{Spark} respecto a \textit{Dask} en la escritura a \textit{MySQL} superando a este en dos de los tres procesos. Esta muestra parece mostrar que mientras que el desempeño de \textit{Dask} se mantiene al escribir a \texttt{parquet} un mayor número de registros, esto no sucede al escribir a \textit{MySQL}. Por otra parte, al aumentar el número de registros también aumentó la proporción del tiempo total que los \textit{frameworks} dedican a la escritura, este porcentaje alcanzó cantidades mayores a 77\% en dos procesos en el caso de \textit{Dask}, mientras que en el caso de \textit{Spark} el tiempo de escritura nunca fue mayor al 57\% del tiempo total. También cabe mencionar que tanto \textit{Dask} como \textit{Spark} alcanzaron el mayor tiempo de escritura y proporción del tiempo total en el proceso \texttt{demoras\_ruta\_mktid} con 81.822 y 79.6\% respectivamente para \textit{Dask} y 51.365 y 56.4\% para \textit{Spark}. Este proceso escribe a \textit{MySQL} y tiene el segundo mayor número de registros totales (poco más de 1 millón).
 	
@@ -1734,9 +1728,9 @@ Después de analizar los resultados con 10,000,000 de registros se obtuvieron la
 \end{center}
 
 \begin{itemize}
-	\item \textbf{Robustez} Con esta muestra de datos, \textit{Dask} presentó problemas en la ejecución de los procesos \texttt{demoras\_ruta\_mktid} y \texttt{demoras\_ruta\_aeropuerto} por falta de memoria. Esto sucedía después de aproximadamente 5 ejecuciones de dichos procesos y era causado por el caché no eliminado por \textit{Dask} de la ejecución anterior a pesar de que ya había finalizado la ejecución. Después de aproximadamente 5 ejecuciones, la memoria disponible se reducía lo suficiente como para evitar la ejecución del proceso. Además, el proceso no fallaba sino que se mantenía ejecutando por más de 10 veces la duración normal del proceso por lo que se optó por interrumpirlo. La solución para evitar este comportamiento fue reiniciar los \texttt{dask-workers} cuando el caché aumentaba (normalmente tres iteraciones) y así se evitaban los errores de falta de memoria. Sin embargo esto provocó que un monitoreo constante de la memoria disponible y un reinicio manual de los \texttt{dask-workers} fuera necesaria, lo cual no es conveniente para aplicaciones automáticas y con ejecución periódica. Este problema no se presentó en \textit{Spark} que ejecutó los procesos mencionados sin problemas y sin necesidad de intervención. En cuánto a los otros procesos, tanto \textit{Dask} como \textit{Spark} lograron completar el 100\% de las ejecuciones sin contratiempos.
+	\item \textbf{Robustez} Con esta muestra de datos, \textit{Dask} presentó problemas en la ejecución de los procesos \texttt{demoras\_ruta\_mktid} y \texttt{demoras\_ruta\_aeropuerto} por falta de memoria. Esto sucedía después de aproximadamente 5 ejecuciones de dichos procesos y era causado por el caché no eliminado por \textit{Dask} de la ejecución anterior a pesar de que ya había finalizado la ejecución. Después de aproximadamente 5 ejecuciones, la memoria disponible se reducía lo suficiente como para evitar la ejecución del proceso. Además, el proceso no fallaba sino que se mantenía ejecutando por más de 10 veces la duración normal del proceso por lo que se optó por interrumpirlo. La solución para evitar este comportamiento fue reiniciar los \texttt{dask-workers} cuando el caché aumentaba (normalmente tres iteraciones) y así se evitaban los errores de falta de memoria. Sin embargo esto provocó que un monitoreo constante de la memoria disponible y un reinicio manual de los \texttt{dask-workers} fuera necesario, lo cual no es conveniente para aplicaciones automáticas y con ejecución periódica. Este problema no se presentó en \textit{Spark} que ejecutó los procesos mencionados sin problemas y sin necesidad de intervención. En cuánto a los otros procesos, tanto \textit{Dask} como \textit{Spark} lograron completar el 100\% de las ejecuciones sin contratiempos.
 
-	\item \textbf{Variación} Al aumentar la muestra a 10 millones de registros, la consistencia de el tiempo de ejecución de \textit{Dask} se hizo más evidente, ya que el coeficiente de variación registrado por este fue menor en 2 de los 8 procesos y en uno de ellos está fuertemente influenciado por el corto tiempo de ejecución (\texttt{elimina\_nulos}), además, en la desviación estándar el valor también fue menor en 7 de 8 procesos, siendo la única excepción el proceso \texttt{demoras\_ruta\_aeropuerto} dónde la diferencia es menor a un segundo y en el que el coeficiente de variación es menor del 3.5\% para ambos \textit{frameworks}. Esta información se puede consultar en la tabla \ref{table:nube-duracion10M}.
+	\item \textbf{Variación} Al aumentar la muestra a 10 millones de registros, la consistencia del tiempo de ejecución de \textit{Dask} se hizo más evidente, ya que el coeficiente de variación registrado por este fue mayor sólo en 2 de los 8 procesos y en uno de ellos está fuertemente influenciado por el corto tiempo de ejecución (\texttt{elimina\_nulos}), además, en la desviación estándar el valor también fue menor en 7 de 8 procesos, siendo la única excepción el proceso \texttt{demoras\_ruta\_aeropuerto} dónde la diferencia es menor a un segundo y en el que el coeficiente de variación es menor del 3.5\% para ambos \textit{frameworks}. Esta información se puede consultar en la tabla \ref{table:nube-duracion10M}.
 	
 	\item \textbf{Inicio de la ejecución} La información correspondiente a este rubro está resumida en la tabla \ref{table:nube-otros10M} y podemos ver que la tendencia se mantiene respecto a los procesos anteriores, \textit{Dask} sigue teniendo un inicio significativamente más rápido pero el tiempo de inicio no ha incrementado mucho respecto a muestras anteriores para ninguno de los \textit{frameworks}.
 	
@@ -1859,43 +1853,47 @@ Las conclusiones más importantes de la ejecución con el total de los registros
   
   \addplot[fill=gray] coordinates { (84.014,demoras\_aerolinea)
   						(249.494,demoras\_aeropuerto\_destino)
-  						(245.573,demoras\_aeropuerto\_origen)
+  						(245.044,demoras\_aeropuerto\_origen)
   						(290.496,demoras\_ruta\_aeropuerto)
-  						(864.962,demoras\_ruta\_mktid)
-  						(0,dijkstra)
+  						(815.236,demoras\_ruta\_mktid)
   						(34.642,elimina\_nulos)
-  						(77.583,flota)};  
+  						(77.208,flota)};  
   
   \addplot[fill=orange] coordinates { (61.23,demoras\_aerolinea)
   						(68.185,demoras\_aeropuerto\_destino)
-  						(150.662,demoras\_aeropuerto\_origen)
-  						(620.991,demoras\_ruta\_aeropuerto)
-  						(0,dijkstra)
+  						(150.533,demoras\_aeropuerto\_origen)
+  						(615.653,demoras\_ruta\_aeropuerto)
   						(22.807,elimina\_nulos)
-  						(97.995,flota)};
+  						(97.55,flota)};
                          
   \legend{Spark, Dask}
   \end{axis}
-  \coordinate (A) at (1.85,4.6);
+  \coordinate (A) at (1.75,4.6);
+  \coordinate (B) at (-0.8,5.3);
+  \coordinate (C) at (1.75,5.55);
+  \coordinate (D) at (1.75,5.05);
   \node at (A) {\textbf{\color{orange}{Error de memoria}}};
+  \node at (B) {dijkstra};
+  \node at (C) {\textbf{\color{orange}{Error de memoria}}};
+  \node at (D) {\textbf{\color{gray}{Error de memoria}}};
 \end{tikzpicture}
-\caption{Duración de los procesos en el ambiente distribuido con el total de registros}
+\caption{Duración de los procesos en el ambiente distribuido con el total de registros.}
 \label{barras:nube-duracion80M}
 \end{figure}
 \end{center}
 
 \begin{itemize}
-	\item \textbf{Robustez} 
+	\item \textbf{Robustez} Con el total de los registros ambos \textit{frameworks} presentaron problemas para la ejecución de algunos de los procesos. En el caso de \textit{Spark} el problema se presentó en el proceso \texttt{dijkstra} y fue provocado por pérdidas constantes de ejecutores debido a falta de recursos. Este mismo problema se presentó en la ejecución de ese proceso usando \textit{Dask}. Sin embargo, aunque ambos presentaron problemas de falta de memoria, el comportamiento de ellos fue distinto, en el caso de \textit{Spark}, los ejecutores eran reiniciados, mientras que en el de \textit{Dask} estos permanecían sin realizar ninguna acción de forma indefinida y desplegando mensajes de error. De cualquier forma, en ninguno de los dos casos se pudo completar el proceso. Por otro lado, en el caso del proceso \texttt{demoras\_ruta\_mktid}, \textit{Dask} presentó problemas de memoria al escribir a \textit{MySQL} que le impidieron completar este proceso. Este problema también se presentó ocasionalmente en el proceso \texttt{demoras\_ruta\_aeropuerto}, por lo que \textit{Dask} logró completar únicamente 74 de las 100 ejecuciones totales (en este caso se eliminaron las dos ejecuciones más rápidas y las dos que más demoraron). Por lo anterior, podemos concluir que \textit{Spark} mostró mayor robustez con este tamaño de muestra aunque no tuvo un resultado perfecto. 
 	
-	\item \textbf{Variación} 
+	\item \textbf{Variación} La tabla \ref{table:nube-duracion80M} muestra que durante esta ejecución \textit{Spark} registró un coeficiente de variación menor en todos los casos y además, a excepción del proceso \texttt{demoras\_ruta\_mktid}, este fue menor de 0.05, lo cuál muestra una gran consistencia en la ejecución de las tareas. Por otro lado, si consideramos la desviación estándar podemos ver que en la mayor parte de los casos esta fue menor a 7 segundos y que la diferencia de tiempo entre ambos \textit{frameworks} casi siempre fue menor a 2 segundos. Las excepciones de esto fueron los procesos \texttt{demoras\_ruta\_aeropuerto}, en el que \textit{Dask} alcanzó un coeficiente de variación de 0.567 debido principalmente a los problemas de memoria que enfrentó y en el que \textit{Spark} logró mantener la consistencia en la duración, y \texttt{demoras\_ruta\_mktid}, en el que \textit{Spark} alcanzó un coeficiente de variación de 0.492 que se explica por la gran variación que tuvo al escribir a \textit{MySQL}, donde registró una desviación estándar de 401.37 segundos. Considerando lo anterior, podemos ver que ambos procesos alcanzaron niveles altos de consistencia en la ejecución, con \textit{Spark} alcanzando mejores resultados debido a los bajos coeficientes alcanzados y a las desviaciones estándar que fueron menores a 6 segundos la mayoría de las ocasiones.
 	
-	\item \textbf{Inicio de la ejecución} 
+	\item \textbf{Inicio de la ejecución} En cuánto al inicio de la ejecución, podemos ver en la tabla \ref{table:nube-otros80M} que esta sigue teniendo la misma dinámica, con \textit{Dask} registrando menores tiempos de inicio con una diferencia menor a dos segundos respecto al tiempo registrado por \textit{Spark} en todos los casos.
 	
-	\item \textbf{Escritura} 
+	\item \textbf{Escritura} Al considerar los resultados sobre la escritura presentados en la tabla \ref{table:nube-duracion80M}, podemos notar, en primer lugar, que \textit{Dask} sigue registrando un escritura más rápida a archivos \texttt{parquet} con la diferencia de que con esta muestra \textit{Spark} registró el menor ratio de duración al escribir el menor de los resultados, cuando anteriormente esto se registraba en la escritura del resultado de mayor tamaño, sin embargo, al escribir el resultado más grande, el ratio de duración fue muy cercano al mencionado anteriormente. En segundo lugar, se sigue apreciando el mejor desempeño de \textit{Spark} al escribir resultados grandes a \textit{MySQL}, donde los ratios con una menor diferencia entre los \textit{frameworks} que en el caso de escritura a \texttt{parquet}. También es importante mencionar que que la escritura a \texttt{parquet} representa menos del 5\% del tiempo total de ejecución de \textit{Dask} en los tres procesos que lo hacen, mientras que en el caso de \textit{Spark} estos se ubican entre 7.1\% y 63.5\%, lo que demuestra una oportunidad de mejora en la escritura a este tipo de archivos. En el caso de \textit{MySQL} la tendencia no es tan clara ya que no tenemos información sobre la escritura de \textit{Dask} a este destino con el resultado de mayor tamaño, pero es importante mencionar que los errores de ejecución de \textit{Dask} se registraron durante la escritura, por lo que podemos suponer un mejor desempeño de \textit{Spark} al escribir a estas bases de datos.
 	
-	\item \textbf{Capacidad de cómputo} 
+	\item \textbf{Capacidad de cómputo} Regresando a los resultados de la tabla \ref{table:nube-otros80M}, podemos ver que en la mayoría de los casos \textit{Dask} sigue siendo superior a \textit{Spark}, registrando en estos casos duraciones de entre el 32\% y 78\% del tiempo registrado por \textit{Spark}, sin embargo, en los procesos \texttt{demoras\_ruta\_aeropuerto} y \texttt{flota}, \textit{Spark} calculó el resultado en 18\% y 75.9\% del tiempo que dedicó \textit{Dask} a estos procesos. En el caso del proceso \texttt{demoras\_ruta\_aeropuerto} la tendencia se mantuvo y tiene que ver con el mejor desempeño de \textit{Spark} para operar con una llave creada durante la ejecución, pero en el caso del proceso \texttt{flota}, que consiste en un conteo después de eliminar los duplicados, esta es la primera vez que \textit{Spark} alcanza un tiempo de cómputo menor.
 	
-	\item \textbf{Duración} 
+	\item \textbf{Duración} Por último, al observar los datos de la figura \ref{barras:nube-duracion80M}, podemos ver que la diferencia en los tiempos de ejecución se sigue reduciendo respecto a las muestras previas y, además, \textit{Spark} tuvo una menor duración que \textit{Dask} en el proceso \texttt{flota}, lo cuál no había sucedido con muestras más pequeñas y que se explica por el menor tiempo de cómputo. Por otro lado, si observamos la información de la tabla \ref{table:nube-duracion80M}, podemos ver que a excepción del proceso \texttt{demoras\_aeropuerto\_destino}, el tiempo de \textit{Spark} fue mayor en menos de un 163\% y la excepción está en gran medida influenciada por el extenso tiempo de escritura. Además, en los dos procesos que \textit{Spark} alcanzó menores tiempos de ejecución promedio, estos tomaron 47.2\% y 79.1\% del tiempo que \textit{Dask} requirió, sin embargo, la diferencia fue mayor en los procesos que \textit{Dask} registró menor duración. En suma, \textit{Dask} fue significativamente más rápido en 4 de los 6 procesos que ambos \textit{frameworks} lograron completar, por lo que considero que su desempeño sigue siendo superior.
 	
 \end{itemize}
 
@@ -1905,22 +1903,22 @@ Las conclusiones más importantes de la ejecución con el total de los registros
     \begin{tabular}{|l|c c c c c c c|}
     \hline
         \multicolumn{1}{|p{2.2cm}|}{\centering \textbf{proceso}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{framework}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{número de ejecuciones}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{duración promedio}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{desviación estándar}} & \multicolumn{1}{p{2.5cm}}{\centering \textbf{coeficiente de variación}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{$\frac{\texttt{dask}}{\texttt{spark}}$ (duración)}} & \multicolumn{1}{p{2.2cm}|}{\centering \textbf{$\frac{\texttt{spark}}{\texttt{dask}}$ (duración)}} \\ \hline
-        demoras\_aerolinea & dask & 90 & 7.515 & 0.536 & 0.071 & 0.214 & 4.68 \\ % \hline
-        demoras\_aerolinea & spark & 90 & 35.17 & 1.701 & 0.048 & 0.214 & 4.68 \\ % \hline
-        demoras\_aeropuerto\_destino & dask & 90 & 8.209 & 0.592 & 0.072 & 0.227 & 4.402 \\ % \hline
-        demoras\_aeropuerto\_destino & spark & 90 & 36.137 & 1.671 & 0.046 & 0.227 & 4.402 \\ % \hline
-        demoras\_aeropuerto\_origen & dask & 90 & 32.697 & 1.101 & 0.034 & 0.711 & 1.406 \\ % \hline
-        demoras\_aeropuerto\_origen & spark & 90 & 45.969 & 2.322 & 0.051 & 0.711 & 1.406 \\ % \hline
-        demoras\_ruta\_aeropuerto & dask & 90 & 24.123 & 2.082 & 0.086 & 0.52 & 1.925 \\ % \hline
-        demoras\_ruta\_aeropuerto & spark & 90 & 46.432 & 1.655 & 0.036 & 0.52 & 1.925 \\ % \hline
-        demoras\_ruta\_mktid & dask & 90 & 102.73 & 2.755 & 0.027 & 1.128 & 0.886 \\ % \hline
-        demoras\_ruta\_mktid & spark & 90 & 91.062 & 7.062 & 0.078 & 1.128 & 0.886 \\ % \hline
-        dijkstra & dask & 58 & 56.035 & 8.411 & 0.15 & 0.113 & 8.827 \\ % \hline
-        dijkstra & spark & 58 & 494.63 & 870.497 & 1.76 & 0.113 & 8.827 \\ % \hline
-        elimina\_nulos & dask & 90 & 4.582 & 0.497 & 0.109 & 0.176 & 5.681 \\ % \hline
-        elimina\_nulos & spark & 90 & 26.031 & 1.4 & 0.054 & 0.176 & 5.681 \\ % \hline
-        flota & dask & 90 & 12.305 & 0.581 & 0.047 & 0.303 & 3.305 \\ % \hline
-        flota & spark & 90 & 40.662 & 1.601 & 0.039 & 0.303 & 3.305 \\ \hline
+        demoras\_aerolinea & dask & 90 & 61.23 & 3.519 & 0.057 & 0.729 & 1.372 \\ % \hline
+        demoras\_aerolinea & spark & 90 & 84.014 & 1.934 & 0.023 & 0.729 & 1.372 \\ % \hline
+        demoras\_aeropuerto\_destino & dask & 90 & 68.185 & 3.396 & 0.05 & 0.273 & 3.659 \\ % \hline
+        demoras\_aeropuerto\_destino & spark & 90 & 249.494 & 4.854 & 0.019 & 0.273 & 3.659 \\ % \hline
+        demoras\_aeropuerto\_origen & dask & 90 & 150.533 & 4.652 & 0.031 & 0.614 & 1.628 \\ % \hline
+        demoras\_aeropuerto\_origen & spark & 90 & 245.044 & 6.037 & 0.025 & 0.614 & 1.628 \\ % \hline
+        demoras\_ruta\_aeropuerto & dask & 70 & 615.653 & 348.971 & 0.567 & 2.119 & 0.472 \\ % \hline
+        demoras\_ruta\_aeropuerto & spark & 90 & 290.496 & 3.823 & 0.013 & 2.119 & 0.472 \\ % \hline
+        demoras\_ruta\_mktid & dask & NA & NA & NA & NA & NA & NA \\ % \hline
+        demoras\_ruta\_mktid & spark & 90 & 815.236 & 400.972 & 0.492 & NA & NA \\ % \hline
+        dijkstra & dask & NA & NA & NA & NA & NA & NA \\ % \hline
+        dijkstra & spark & NA & NA & NA & NA & NA & NA \\ % \hline
+        elimina\_nulos & dask & 90 & 22.807 & 1.551 & 0.068 & 0.658 & 1.519 \\ % \hline
+        elimina\_nulos & spark & 90 & 34.642 & 1.676 & 0.048 & 0.658 & 1.519 \\ % \hline
+        flota & dask & 90 & 97.55 & 4.027 & 0.041 & 1.263 & 0.791 \\ % \hline
+        flota & spark & 90 & 77.208 & 2.206 & 0.029 & 1.263 & 0.791 \\ \hline
     \end{tabular}}
     \caption{Información sobre la duración total en el ambiente distribuido con el total de registros.}
     \label{table:nube-duracion80M}
@@ -1933,22 +1931,22 @@ Las conclusiones más importantes de la ejecución con el total de los registros
     \begin{tabular}{|l|c c c c c|}
     \hline
         \multicolumn{1}{|p{2.2cm}|}{\centering \textbf{proceso}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{framework}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{tiempo de inicio}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{tiempo de cómputo}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{$\frac{\texttt{dask}}{\texttt{spark}}$ (cómputo)}} & \multicolumn{1}{p{2.2cm}|}{\centering \textbf{$\frac{\texttt{spark}}{\texttt{dask}}$ (cómputo)}} \\ \hline
-        demoras\_aerolinea & dask & 0.026 & 7.105 & 4.371 & 0.229 \\ % \hline
-        demoras\_aerolinea & spark & 2.558 & 31.058 & 4.371 & 0.229 \\ % \hline
-        demoras\_aeropuerto\_destino & dask & 0.026 & 7.281 & 4.229 & 0.236 \\ % \hline
-        demoras\_aeropuerto\_destino & spark & 2.502 & 30.789 & 4.229 & 0.236 \\ % \hline
-        demoras\_aeropuerto\_origen & dask & 0.026 & 7.252 & 4.247 & 0.235 \\ % \hline
-        demoras\_aeropuerto\_origen & spark & 2.573 & 30.802 & 4.247 & 0.235 \\ % \hline
-        demoras\_ruta\_aeropuerto & dask & 0.029 & 21.35 & 1.58 & 0.633 \\ % \hline
-        demoras\_ruta\_aeropuerto & spark & 2.564 & 33.736 & 1.58 & 0.633 \\ % \hline
-        demoras\_ruta\_mktid & dask & 0.03 & 20.908 & 1.899 & 0.527 \\ % \hline
-        demoras\_ruta\_mktid & spark & 2.536 & 39.697 & 1.899 & 0.527 \\ % \hline
-        dijkstra & dask & 1.117 & 55.823 & 8.796 & 0.114 \\ % \hline
-        dijkstra & spark & 2.582 & 491.002 & 8.796 & 0.114 \\ % \hline
-        elimina\_nulos & dask & 0.026 & 4.582 & 5.681 & 0.176 \\ % \hline
-        elimina\_nulos & spark & 2.582 & 26.031 & 5.681 & 0.176 \\ % \hline
-        flota & dask & 0.026 & 9.103 & 3.783 & 0.264 \\ % \hline
-        flota & spark & 2.521 & 34.439 & 3.783 & 0.264 \\ \hline
+        demoras\_aerolinea & dask & 0.024 & 60.316 & 1.294 & 0.773 \\ % \hline
+        demoras\_aerolinea & spark & 2.35 & 78.051 & 1.294 & 0.773 \\ % \hline
+        demoras\_aeropuerto\_destino & dask & 0.024 & 65.402 & 3.028 & 0.33 \\ % \hline
+        demoras\_aeropuerto\_destino & spark & 2.332 & 198.025 & 3.028 & 0.33 \\ % \hline
+        demoras\_aeropuerto\_origen & dask & 0.024 & 65.98 & 3.041 & 0.329 \\ % \hline
+        demoras\_aeropuerto\_origen & spark & 2.386 & 200.656 & 3.041 & 0.329 \\ % \hline
+        demoras\_ruta\_aeropuerto & dask & 0.023 & 588.198 & 0.18 & 5.546 \\ % \hline
+        demoras\_ruta\_aeropuerto & spark & 2.315 & 106.056 & 0.18 & 5.546 \\ % \hline
+        demoras\_ruta\_mktid & dask & NA & NA & NA & NA \\ % \hline
+        demoras\_ruta\_mktid & spark & 2.324 & 199.89 & NA & NA \\ % \hline
+        dijkstra & dask & NA & NA & NA & NA \\ % \hline
+        dijkstra & spark & NA & NA & NA & NA \\ % \hline
+        elimina\_nulos & dask & 0.025 & 22.807 & 1.519 & 0.658 \\ % \hline
+        elimina\_nulos & spark & 2.37 & 34.642 & 1.519 & 0.658 \\ % \hline
+        flota & dask & 0.025 & 93.521 & 0.759 & 1.317 \\ % \hline
+        flota & spark & 2.397 & 71.025 & 0.759 & 1.317 \\ \hline
     \end{tabular}}
     \caption{Información sobre tiempo de cómputo e inicio de la ejecución en el ambiente distribuido con el total de registros.}
     \label{table:nube-otros80M}
@@ -1960,31 +1958,642 @@ Las conclusiones más importantes de la ejecución con el total de los registros
     \begin{tabular}{|l|c c c c c|}
     \hline
         \multicolumn{1}{|p{2.2cm}|}{\centering \textbf{proceso}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{framework}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{destino de escritura}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{tiempo de escritura promedio}} & \multicolumn{1}{p{2.2cm}}{\centering \textbf{número de renglones escritos}} & \multicolumn{1}{p{2.2cm}|}{\centering \textbf{número de columnas escritos}} \\ \hline
-        demoras\_aerolinea & spark & parquet & 4.112 & 76717 & 11 \\ % \hline
-        demoras\_aerolinea & dask & parquet & 0.41 & 76717 & 11 \\ % \hline
-        demoras\_aeropuerto\_destino & spark & parquet & 5.348 & 436411 & 11 \\ % \hline
-        demoras\_aeropuerto\_destino & dask & parquet & 0.928 & 436411 & 11 \\ % \hline
-        demoras\_aeropuerto\_origen & spark & mysql & 15.167 & 436681 & 11 \\ % \hline
-        demoras\_aeropuerto\_origen & dask & mysql & 25.445 & 436681 & 11 \\ % \hline
-        demoras\_ruta\_aeropuerto & spark & parquet & 12.696 & 1619826 & 11 \\ % \hline
-        demoras\_ruta\_aeropuerto & dask & parquet & 2.773 & 1619826 & 11 \\ % \hline
-        demoras\_ruta\_mktid & spark & mysql & 51.365 & 1430282 & 11 \\ % \hline
-        demoras\_ruta\_mktid & dask & mysql & 81.822 & 1430282 & 11 \\ % \hline
-        dijkstra & spark & mysql & 3.628 & Variable & Variable \\ % \hline
-        dijkstra & dask & mysql & 0.212 & Variable & Variable \\ % \hline
+        demoras\_aerolinea & spark & parquet & 5.963 & 78133 & 11 \\ % \hline
+        demoras\_aerolinea & dask & parquet & 0.914 & 78133 & 11 \\ % \hline
+        demoras\_aeropuerto\_destino & spark & parquet & 51.469 & 1490152 & 11 \\ % \hline
+        demoras\_aeropuerto\_destino & dask & parquet & 2.783 & 1490152 & 11 \\ % \hline
+        demoras\_aeropuerto\_origen & spark & mysql & 44.388 & 1490410 & 11 \\ % \hline
+        demoras\_aeropuerto\_origen & dask & mysql & 84.553 & 1490410 & 11 \\ % \hline
+        demoras\_ruta\_aeropuerto & spark & parquet & 184.44 & 19897358 & 11 \\ % \hline
+        demoras\_ruta\_aeropuerto & dask & parquet & 27.455 & 19897358 & 11 \\ % \hline
+        demoras\_ruta\_mktid & dask & NA & NA & NA & NA \\ % \hline
+        demoras\_ruta\_mktid & spark & mysql & 615.346 & 15378534 & 11 \\ % \hline
+        dijkstra & dask & NA & NA & NA & NA \\ % \hline
+        dijkstra & spark & NA & NA & NA & NA \\ % \hline
         elimina\_nulos & spark & sin escritura & NA & NA & NA \\ % \hline
         elimina\_nulos & dask & sin escritura & NA & NA & NA \\ % \hline
-        flota & spark & mysql & 6.223 & 76717 & 6 \\ % \hline
-        flota & dask & mysql & 3.202 & 76717 & 6 \\ \hline
+        flota & spark & mysql & 6.183 & 78133 & 6 \\ % \hline
+        flota & dask & mysql & 4.029 & 78133 & 6 \\ \hline
     \end{tabular}}
     \caption{Información sobre tiempo de escritura y tamaño del resultado en el ambiente distribuido con el total de registros.}
     \label{table:nube-write80M}
 \end{table}
 
-En conclusión,
+En conclusión, las ejecuciones con el total de los datos muestran la superioridad de \textit{Spark} en los siguientes tres rubros: primero la robustez, ya que logró ejecutar sin incidentes dos procesos en los que \textit{Dask} presentó problemas, aunque si desempeño no fue perfecto ya que ninguno de los dos \textit{frameworks} logró ejecutar el proceso \texttt{dijsktra}, segundo, la variación, en la que registró menores coeficientes de variación que \textit{Dask} y obtuvo desviaciones estándar menores a 7 segundos en todos los casos con algunas excepciones, mientras que \textit{Dask} presentó una gran variación en un proceso en el que la de \textit{Spark} fue mínima, y tercero, en la escritura a \textit{MySQL} que no sólo fue más rápida para resultados grandes, sino que fue más estable que la de \textit{Dask}. Por otra parte, \textit{Dask} mantuvo la superioridad en cuatro aspectos: en primer lugar la escritura a \texttt{parquet} que sigue haciendo de manera más rápida, segundo la capacidad de cómputo en la que es más rápido para calcular el resultado en la mayoría de los procesos y mantiene márgenes grandes respecto a \textit{Spark}, en tercer lugar, el inicio de la ejecución sigue siendo más rápido siempre aunque la diferencia se ha mantenido respecto a muestras anteriores, y en último lugar, sigue teniendo una ejecución total más rápida explicada principalmente por el cómputo más rápido del resultado y la notoria ventaja en la escritura a \texttt{parquet}.
 
 
 
-\noindent ...
+\subsection{Cambio del desempeño entre muestras en el ambiente distribuido}
 
-% Gráfica con dos colores a mano
+Una vez finalizado el análisis de cada muestra, vale la pena analizar la evolución de cada \textit{framework} al cambiar el tamaño de la muestra en los distintos procesos. En esta sección se analizará principalmente el tiempo que cada herramienta dedica a la escritura y el tiempo total de ejecución. Al igual que en la sección \ref{subsection:cambio-muestras-local} iniciaré con una revisión de cada proceso individual y después se obtendrán conclusiones generales sobre cada \textit{framework}.
+
+\subsubsection{Proceso de cálculo de flota}
+
+El proceso \texttt{flota} se compone de la eliminación de registros duplicados en una columna y su posterior conteo agrupando por distintas columnas con valores de tiempo, escribiendo el resultado a \textit{MySQL}.
+
+La figura \ref{lineas:nube-flota} muestra una tendencia similar entre ambos \textit{frameoworks} durante las primeras tres iteraciones, manteniendo una diferencia de aproximadamente 30 segundos, sin embargo, al superar los 10 millones de registros esta diferencia se reduce aún más debido a una mejora en el desempeño de \textit{Spark}, el cual aumenta el tiempo de ejecución en menos de 2 segundos a pesar de que el incremento de registros fue superior a 10x. En el caso de \textit{Dask}, pasar de 1 a 11 millones de registros implica un incremento de tiempo de 5 segundos, lo cuál también es muy razonable. No obstante, en el procesamiento del total de datos podemos observar que \textit{Dask} tiene un incremento significativo en el tiempo de procesamiento. Por otro lado, la \ref{lineas:nube-flota-write} muestra que aunque el incremento es mayor en el tiempo de escritura en \textit{Dask} mientras que en el caso de \textit{Spark} este es muy similar sin importar el número de registros, el hecho de que en ambos casos sea menor a 7 segundos muestra que la escritura realmente no fue un factor decisivo ya que las diferencias observadas en las distintas muestras en los tiempos de ejecución totales entre ambos \textit{frameworks} siempre superan los 7 segundos. Por lo tanto, podemos concluir que \textit{Spark} tiene una mayor capacidad de escalamiento ya que sus tiempos de ejecución total y de escritura no cambian mucho con el aumento del número de registros, mientras que en el caso de \textit{Dask} el incremento en el tiempo de escritura es más evidente y también podemos apreciar que, al pasar al procesamiento del total de registros, su desempeño no se logra mantener, ya que registra tiempos más de 5 veces mayores que los observados en la muestra de 11 millones. 
+
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 5.261 0.55
+      100000 6.205 0.193
+      1000000 12.305 0.581
+      11000000 17.272 0.6
+      80000000 97.55 4.027
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 36.574 1.652
+      100000 35.362 0.744
+      1000000 40.662 1.601
+      11000000 42.84 1.883
+      80000000 77.208 2.206
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso flota en diferentes muestras.}
+\label{lineas:nube-flota}
+\end{figure}
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.97,0.3)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      12135 0.973 0.096
+      49439 2.248 0.082
+      76717 3.202 0.155
+      78113 3.204 0.171
+      78133 4.029 0.846
+       
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      12135 5.764 0.331
+      49439 5.734 0.311
+      76717 6.223 0.355
+      78113 5.901 0.275
+      78133 6.183 0.34
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de la escritura de resultados del proceso flota en diferentes muestras.}
+\label{lineas:nube-flota-write}
+\end{figure}
+
+\subsubsection{Proceso de cálculo de demoras por aerolínea}
+
+Este proceso tiene como operaciones principales conteo de una columna y obtención de promedios de otras 5, agrupando respecto a distintas columnas de tiempo. El resultado final se almacena en un archivo \texttt{parquet}.
+
+La figura \ref{lineas:nube-demoras-aerolinea} muestra que ambas herramientas tienen un comportamiento similar en este registro y reaccionan de forma parecida a los cambios en el número de registros, sin embargo, \textit{Dask} registra tiempos aproximadamente 25 segundos inferiores a los de \textit{Spark} durante todas las muestras. Es especialmente interesante que sin importar el número de registros, la diferencia de tiempo es constante. Además, la diferencia de duración entre el primer y la cuarta muestra es menor a 9 segundos en ambos \textit{frameworks} a pesar de que el incremento de registros es mayor a 1000x. Adicional a lo anterior, podemos ver que aunque la tendencia se rompe al llegar a la ejecución con el total de registros, ambas herramientas mantienen una relación similar, con \textit{Dask} logrando ejecuciones más rápidas. En este caso podemos ver que aunque ambas herramientas logran mantener su desempeño cuando el número de datos incrementa, la superioridad de \textit{Dask} es clara.
+
+Centrándonos en el proceso de escritura mostrados en la figura \ref{lineas:local-demoras-aerolinea-write}, podemos ver que el cambio de tiempo de \textit{Dask} a \texttt{parquet} es mínimo a través de los distintos tamaños de conjuntos de datos, mientras que el de \textit{Spark} sufre algunos cambios menores pero en general parece mantenerse constante. De cualquier forma ambos \textit{frameworks} tienen un tiempo de escritura a \textit{parquet} muy corto y la proporción del tiempo total de ejecución que significan se reduce conforme crece el tamaño de los datos iniciales, por lo que la escritura no parece jugar un papel importante en la dinámica descrita en el párrafo anterior. No obstante, si podemos ver que \textit{Dask} es mucho más eficiente en la escritura a archivos \textit{parquet}.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 4.782 0.529
+      100000 4.388 0.304
+      1000000 7.515 0.536
+      11000000 12.453 0.584
+      80000000 61.23 3.519
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 32.222 1.592
+      100000 29.759 0.596
+      1000000 35.17 1.701
+      11000000 36.27 1.811
+      80000000 84.014 1.934
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso demoras\_aerolinea en diferentes muestras.}
+\label{lineas:nube-demoras-aerolinea}
+\end{figure}
+
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      12135 0.406 0.196
+      49439 0.419 0.183
+      76717 0.41 0.147
+      78113 0.521 0.246
+      78133 0.914 0.806
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      12135 4.207 0.844
+      49439 3.714 0.223
+      76717 4.112 0.287
+      78113 4.983 0.281
+      78133 5.963 0.244
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de escritura de resultados del proceso demoras\_aerolinea en diferentes muestras.}
+\label{lineas:nube-demoras-aerolinea-write}
+\end{figure}
+
+\subsubsection{Proceso de cálculo de demoras por aeropuerto de destino}
+
+EL siguiente proceso tiene como operaciones principales el conteo en una columna y la obtención del mínimo de otras 5, agrupando de acuerdo a distintos periodos de tiempo representados en diversas columnas. El resultado del proceso se escribe en un archivo \texttt{parquet}.
+
+Similar a casos anteriores, durante las ejecuciones en las cuatro muestras de menor tamaño, el tiempo de ejecución de ambos \textit{frameworks} tiene una diferencia casi constante (cercana a 28 segundos) y una tendencia similar conforme cambia el tamaño de la muestra. Además, \textit{Dask} alcanza tiempos de ejecución menores consistentemente, lo cual es aún más evidente al pasar a la ejecución con más de 80 millones de datos, donde el tiempo requerido por \textit{Spark} es 265\% superior. Esto se puede ver en la figura \ref{lineas:nube-demoras-aeropuerto-destino}. Al observar la gráfica representada en \ref{lineas:nube-demoras-aeropuerto-destino-write} podemos obtener información que ayuda a explicar la gráfica con las duraciones totales, ya que se puede observar cómo el tiempo de escritura de \textit{Spark} aumenta significativamente con el total de los datos, sin embargo esto sólo explica una parte de la diferencia, por lo que la capacidad de \textit{Dask} de cómputo también juega un papel importante en la diferencia que observamos en los tiempos de ejecución.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 4.713 0.491
+      100000 4.52 0.321
+      1000000 8.209 0.592
+      11000000 14.204 0.513
+      80000000 68.185 3.396
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 31.762 1.582
+      100000 29.403 0.561
+      1000000 36.137 1.671
+      11000000 42.881 1.817
+      80000000 249.494 4.854
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso demoras\_aeropuerto\_destino en diferentes muestras.}
+\label{lineas:nube-demoras-aeropuerto-destino}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      22144 0.448 0.207
+      116746 0.633 0.278
+      436411 0.928 0.231
+      1042066 1.685 0.239
+      1490152 2.783 1.057
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      22144 4.079 0.807
+	  116746 3.72 0.216
+	  436411 5.348 0.312
+	  1042066 10.702 0.289
+	  1490152 51.469 0.998
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de la escritura de resultados del proceso demoras\_aeropuerto\_destino en diferentes muestras.}
+\label{lineas:nube-demoras-aeropuerto-destino-write}
+\end{figure}
+
+\subsubsection{Proceso de cálculo de demoras por aeropuerto de origen}
+
+Este proceso tiene como operaciones principales el conteo en una columna y la obtención del máximo de otras 5, agrupando de acuerdo a distintos periodos de tiempo representados en diversas columnas. El resultado del proceso se escribe a una base de datos \textit{MySQL}.
+
+Algo interesante de este proceso es que a pesar de ser similar al anterior, la gráfica de duración total (\ref{lineas:nube-demoras-aeropuerto-origen}) es muy distinta sobre todo por qué la diferencia de tiempo entre \textit{Dask} y \textit{Spark} se reduce conforme aumenta el tamaño de la muestra procesada (a excepción de la última). Este comportamiento se puede entender mejor al observar la gráfica del tiempo de escritura presentada en \ref{lineas:nube-demoras-aeropuerto-origen-write}, donde se observa que el tiempo de escritura incrementa de forma lineal en ambos casos, con \textit{Dask} teniendo una mayor pendiente. Debido a este incremento, la diferencia de tiempo se reduce en las primeras muestras, sin embargo, al llegar a las ejecuciones con el total de los datos, el tiempo de cálculo del resultado vuelve a ser un factor y el mejor desempeño de \textit{Spark} en la escritura a \textit{MySQL} pierde importancia, por lo que \textit{Spark} una vez más tiene un tiempo de ejecución mayor que el de \textit{Dask}. 
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 6.085 0.478
+      100000 10.849 0.321
+      1000000 32.697 1.101
+      11000000 70.983 2.942
+      80000000 150.533 4.652
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 35.356 1.527
+      100000 33.167 0.56
+      1000000 45.969 2.322
+      11000000 65.451 4.296
+      80000000 245.044 6.037
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso demoras\_aeropuerto\_origen en diferentes muestras.}
+\label{lineas:nube-demoras-aeropuerto-origen}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      22086 1.767 0.141
+      116656 6.91 0.154
+      436681 25.445 1.078
+      1041665 58.308 2.808
+      1490410 84.553 2.915
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      22086 7.525 0.328
+	  116656 7.757 0.299
+	  436681 15.167 1.658
+	  1041665 33.062 4.12
+	  1490410 44.388 4.769
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de la escritura de resultados del proceso demoras\_aeropuerto\_origen en diferentes muestras.}
+\label{lineas:nube-demoras-aeropuerto-origen-write}
+\end{figure}
+
+\subsubsection{Proceso de cálculo de demoras por ruta entre aeropuertos}
+
+El proceso \texttt{demoras\_ruta\_aeropuertos} tiene como operaciones principales  la creación de una nueva llave a partir de la concatenación de dos columnas existentes y después un conteo en una columna, cálculo del promedio en otras 5, agrupando de acuerdo a la nueva llave y a otras columnas que describen periodos de tiempo. El resultado final se escribe a un archivo \texttt{parquet}.
+
+La gráfica \ref{lineas:local-demoras-ruta-aeropuerto}
+muestra que, como antes, la diferencia de tiempo de ejecución entre \textit{Dask} y \textit{Spark} es constante, sin embargo, al llegar a la muestra de 11 millones de datos la diferencia en el tiempo de ejecución de las herramientas es menor a un segundo (con \textit{Dask} manteniendo el menor tiempo) y es en este punto donde la tendencia se invierte y \textit{Spark} termina ejecutando el proceso sobre el total de los datos de forma más rápida. A diferencia de otros procesos, en este caso la escritura no juega un papel importante en el mejor desempeño de \textit{Spark} en el tiempo total, de hecho, como se puede ver en la gráfica \ref{lineas:nube-demoras-ruta-aeropuerto-write}, el tiempo de escritura de \textit{Spark} a \texttt{parquet} incrementa más que el de \textit{Dask} conforme crecen los datos, lo que 
+muestra que una mejora en la escritura de \textit{Spark} podría llevar a un mejor desempeño que el de \textit{Dask} durante las primeras ejecuciones. Sin embargo, el hecho de que el tiempo de escritura sea más grande en \textit{Spark} que \textit{Dask}, muestra que la superioridad de \textit{Spark} viene de su mayor capacidad para generar la nueva llave y usarla para las agregaciones. Por último, es importante notar la variación de tiempo que presenta  \textit{Dask} en la ejecución de este proceso (la desviación estándar está representada como barras de error) en la ejecución con el total de los datos debido a la inestabilidad que sufrió por falta de memoria que fue lo que le impidió terminar el 100\% de las ejecuciones. 
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 6.278 0.549
+      100000 7.721 0.492
+      1000000 24.123 2.082
+      11000000 93.219 3.162
+      80000000 615.653 348.971
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 32.32 1.668
+      100000 31.396 0.57
+      1000000 46.432 1.655
+      11000000 94.119 2.193
+      80000000 290.496 3.823
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso demoras\_ruta\_aeropuerto en diferentes muestras.}
+\label{lineas:nube-demoras-ruta-aeropuerto}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+	41147 0.355 0.124     
+	297814 1.147 0.417    
+	1619826 2.773 0.285   
+	8361958 11.457 0.22   
+	19897358 27.455 1.087
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      41147 4.395 0.894     
+      297814 5.102 0.233    
+      1619826 12.696 0.368  
+      8361958 58.22 0.907   
+      19897358 184.44 2.79  
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de la escritura de resultados del proceso demoras\_ruta\_aeropuerto en diferentes muestras.}
+\label{lineas:nube-demoras-ruta-aeropuerto-write}
+\end{figure}
+
+\subsubsection{Proceso de cálculo de demoras por ruta entre ciudades}
+
+Este proceso es similar al anterior y tiene como operaciones principales la creación de una nueva llave a partir de la concatenación de dos columnas existentes y después un conteo en una columna, cálculo de la desviación estándar en otras 5, agrupando de acuerdo a la nueva llave y a otras columnas que describen periodos de tiempo. El resultado final se escribe a una base de datos \textit{MySQL}.
+
+Si nos fijamos en la gráfica \ref{lineas:nube-demoras-ruta-mktid} podemos ver que la diferencia del tiempo de ejecución de ambos \textit{frameworks} no es muy significativa en las primeras ejecuciones y de hecho este es el primer proceso en el que \textit{Spark} registra un tiempo de ejecución menor desde la muestra de 1 millón de datos. Para explicar esto nos podemos apoyar en la gráfica \ref{lineas:nube-demoras-ruta-mktid-write} en la que observamos que el tiempo de escritura de \textit{Spark} es menor que el de \textit{Dask} desde la segunda muestra de datos y también el incremento que refleja al incrementar la muestra es menor, lo que ayuda a que \textit{Spark} tenga un tiempo de escritura inferior. No obstante, esto no es suficiente para explicar la diferencia de tiempo, por lo que el tiempo que tarda \textit{Spark} en el cálculo del resultado también juega un papel importante en el mejor desempeño, lo que apoya la conclusión del proceso anterior de que \textit{Spark} es mejor que \textit{Dask} para operar sobre una llave creada durante la ejecución del proceso. Finalmente, es importante considerar que \textit{Dask} no fue capaz de finalizar ninguna de las ejecuciones con la muestra de 80 millones, lo que muestra que \textit{Spark} tiene mayor robustez.
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 9.438 0.571   
+      100000 22.635 0.709  
+      1000000 102.73 2.755  
+      11000000 488.529 22.185
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 6.523 1.875   
+      100000 37.79 0.769    
+      1000000 91.062 7.062   
+      11000000 284.435 165.896
+      80000000 815.236 400.972
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso demoras\_ruta\_mktid en diferentes muestras.}
+\label{lineas:nube-demoras-ruta-mktid}
+\end{figure}
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros,
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	% xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[dashed, orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      38909 2.733 0.187     
+      267505 15.401 0.585   
+      1430282 81.822 1.742  
+      6824834 389.748 11.839
+    };
+    
+  \addplot+[dashed, gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      38909 7.772 0.355      
+      267505 10.409 0.556    
+      1430282 51.365 6.765   
+      6824834 238.808 164.908
+      15378534 615.346 401.37
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio de la escritura de resultados del proceso demoras\_ruta\_mktid en diferentes muestras.}
+\label{lineas:nube-demoras-ruta-mktid-write}
+\end{figure}
+
+\subsubsection{Proceso de eliminación de valores nulos}
+
+Ahora pasamos a un proceso tiene como operaciones principales la eliminación de valores nulos y el conteo de registros resultantes. Debido a que sólo escribe el resultado a consola, el tiempo de escritura no fue considerado.
+
+Los resultados de ejecución de este proceso están representados por la figura \ref{lineas:local-elimina-nulos}. Al igual que en la ejecución local, este proceso fue el que registró menor duración en todas las muestras, con \textit{Dask} teniendo un desempeño superior y manteniendo una ventaja cercana a 20 segundos durante las primeras 4 muestras. Algo especialmente interesante de este proceso es que el máximo tiempo promedio registrado por \textit{Dask} (cuando procesa el total de los registros) es inferior que el mínimo registrado por \textit{Spark} (en la muestra de 100 mil registros), lo cual evidencia la velocidad que tiene para completar los registros. No obstante, hay que notar que el incremento de tiempo de \textit{Dask} entre las dos muestras de mayor tamaño es mucho más pronunciado que el registrado por \textit{Spark}, lo que puede sugerir que \textit{Spark} superará el desempeño de \textit{Dask} cuando los datos sigan aumentando. 
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 3.815 0.341
+      100000 3.163 0.122
+      1000000 4.582 0.497
+      11000000 6.357 0.57
+      80000000 22.807 1.551
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 25.113 1.208
+      100000 22.884 0.436
+      1000000 26.031 1.4
+      11000000 26.382 1.425
+      80000000 34.642 1.676
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso elimina\_nulos en diferentes muestras.}
+\label{lineas:local-elimina-nulos}
+\end{figure}
+
+\subsubsection{Proceso de obtención de ruta mínima mediante el algoritmo \textit{Dijkstra}}
+
+El último proceso que analizaremos tiene múltiples operaciones como conteos, filtrados, ordenamientos, etc., que se combinan en un algoritmo iterativoque ayudará a evaluar las distintas operaciones y capacidades de los \textit{frameworks} como almacenamiento temporal de resultados intermedios, creación de nuevos \textit{DataFrames} y manejo de memoria. El resultado de este algoritmo varía de acuerdo a la ruta calculada en el algoritmo, por lo que el tiempo de escritura no se considerará en este análisis.
+
+La gráfica \ref{lineas:local-dijkstra} muestra claramente cómo la diferencia de tiempo de ejecución entre \textit{Dask} y \textit{Spark} crece junto con el tamaño de la muestra. Esto se debe a que el tiempo en cada iteración de \textit{Spark} aumenta significativamente ya que, a diferencia de \textit{Dask}, no tiene la capacidad de mantener en memoria los resultados intermedios del algoritmo y es necesario escribir a disco, lo cual es muy costoso. No obstante, es importante notar que los resultados de \textit{Dask} se convierten en un \textit{DataFrame} de \textit{Pandas} al llamar la operación \texttt{compute}, por lo que podría llegar a ser inestable si los resultados intermedios crecen demasiado.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[trim axis left, trim axis right]
+\begin{axis}[
+	xlabel = Número de registros (log),
+	ylabel = Duración en segundos,
+	legend style={at={(0.45,0.95)}},
+	xmode=log,
+	% ymode=log,
+	width=12cm,
+	height=6cm
+	]
+  \addplot+[orange,mark options={fill=orange},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 6.676 3.149
+      100000 9.692 2.618
+      1000000 56.797 8.323
+      11000000 227.61 36.851
+      % 80000000 NA NA
+    };
+    
+  \addplot+[gray,mark options={fill=gray},error bars/.cd,y dir=both,y explicit] 
+    table[x=x,y=y,y error=error] {
+      x   y   error
+      10000 124.251 97.16
+      100000 111.238 105.217
+      1000000 500.644 822.738
+      11000000 515.123 722.949
+      % 80000000 NA NA
+    };
+    \legend {Dask, Spark}
+\end{axis}
+\end{tikzpicture}
+\caption{Duración promedio del proceso dijkstra en diferentes muestras.}
+\label{lineas:nube-dijkstra}
+\end{figure}
+
+\subsection{Conclusiones generales sobre las ejecuciones en el ambiente distribuido}
+
+Una vez realizadas las pruebas en el ambiente distribuido, podemos resumir las conclusiones más importantes en los siguientes puntos:
+
+\begin{itemize}
+	
+	\item \textbf{Robustez} Al pasar al ambiente distribuido, ambas herramientas lograron ejecutar el 100\% de las ejecuciones en las tres primeras muestras de datos, sin embargo, al llegar a 11 millones de registros \textit{Dask} presentó problemas de memoria debido a un mal manejo del \texttt{cache}, sin embargo, reiniciar eventualmente los \texttt{dask-workers} resolvió el problema y permitió a \textit{Dask} completar el 100\% de sus ejecuciones, mientras que \textit{Spark} logró hacerlo sin ninguna intervención. Por último, en la ejecución utilizando el total de los datos, \textit{Spark} logró ejecutar sin problema todas las ejecuciones aunque en el caso de \texttt{dijkstra} algunas fueron interrumpidas debido a que su tiempo de ejecución excedió 1 hora, sin embargo no presentó errores que sugirieran que la ejecución presentaría problemas. Por otro lado, \textit{Dask} registró problemas en la ejecución del procesos \texttt{demoras\_ruta\_aeropuerto} y \texttt{demoras\_ruta\_mktid}, donde en el primer caso, logró completar el 74\% de las ejecuciones totales (aunque requirió de un monitoreo constante igual que en la muestra anterior) y en caso del segundo proceso, no logró ejecutar ninguna de las ejecuciones. Ambos \textit{frameworks} lograron ejecutar sin problemas el resto de los procesos, sin embargo, \textit{Dask} presentó problemas más importantes en la ejecución y \textit{Spark} requirió menos intervención para completar los procesos por lo que considero que fue más confiable para la ejecución de los procesos.
+	
+	\item \textbf{Variación} Durante las primeras 3 muestras de datos, el comportamiento de los \textit{frameoworks} es más o menos consistente, con \textit{Spark} registrando menores coeficientes de variación pero con \textit{Dask} obteniendo desviaciones estándar menores. Otro factor que influye en esto, es que los tiempos de ejecución de \textit{Dask} son mucho menores, por lo que considero que este es el \textit{framework} que más consistencia muestra. Pasando a la muestra de 11 millones de datos, podemos ver una clara consistencia de \textit{Dask}, ya que registró coeficientes de variación y desviaciones estándar menores en todos la mayor parte de los procesos, sin embargo, este comportamiento cambió al alcanzar las ejecuciones con el total de los registros, ya que \textit{Spark} registró coeficientes menores en las ejecuciones aunque no siempre obtuvo desviaciones estándar menores, sin embargo, en ambas herramientas, la desviación estándar registrada por los procesos fue menor a 6 segundos en la mayoría de los casos y con un coeficiente menor 0.07, por lo que ambos registraron variaciones pequeñas en la mayoría de los casos. Adicional a esto, cabe destacar que en ambos casos la desviación estándar más grande registrada fue en el proceso \texttt{dijkstra}, sin embargo, \textit{Spark} obtuvo variaciones mucho mayores influenciadas en gran medida por sus duraciones más largas. Tomando en cuenta lo anterior, considero que \textit{Dask} tuvo mayor consistencia en la duración de la ejecución, ya que obtuvo desviaciones estándar menores en la mayoría de los casos y además registró variaciones significativamente menores en el proceso iterativo.
+	
+	\item \textbf{Inicio de la ejecución} El comportamiento de los \textit{frameworks} se mantuvo constante durante las diferentes muestras, con ambos registrando tiempos similares del inicio de la ejecución a través de ellas y con \textit{Dask} teniendo tiempos de inicio entre 2 y 3 segundos menores la mayoría de las veces, por lo que considero que \textit{Dask} fue superior en este aspecto.
+	
+	\item \textbf{Escritura} En este rubro, los resultados mostraron que \textit{Dask} fue consistentemente más rápido en la escritura a archivos \texttt{parquet}, dónde su tiempo de escritura tuvo muy pequeños incrementos a pesar de escribir cantidades mayores de datos. En el caso de \textit{Spark}, el incremento de tiempo proporcional a los registros escritos fue mayor que el de \textit{Dask}, lo cuál se convirtió en una desventaja importante para \textit{Spark}, cuyo tiempo de escritura significó una gran proporción del tiempo total e incluso provocó que registrara tiempos globales mayores a pesar de tener tiempos de cómputo inferiores a los de \textit{Dask} en algunos casos. Por otra parte, en el caso de la escritura a \textit{MySQL}, \textit{Spark} realizó la escritura en menos del 70\% del tiempo registrado por \textit{Dask} cuando el resultado escrito fue de 436,681 registros o superior, mientras que \textit{Dask} alcanzó tiempos de escritura inferiores (menos del 90\% del tiempo registrado por \textit{Spark}) cuando el número de registros fue menor o igual a 116,656. Sin embargo, en la mayoría de los casos, cuando el resultado fue menor a 116,656 registros, el tiempo dedicado a la escritura fue menos del 30\% del total, mientras que con resultados más grandes, esta proporción aumentó al 50\% y llegó hasta más del 75\% del tiempo en muchos de los procesos, por lo que creo que la capacidad de \textit{Spark} de escritura es mejor a pesar de que haya sido más lento en la escritura de resultados de menor tamaño. También es importante recalcar que los tiempos de escritura a \texttt{parquet} fueron significativamente menores que los de \textit{MySQL}. En suma, considero que \textit{Dask} fue muy superior en la escritura a \texttt{parquet}, pero que \textit{Spark} lo fue a \textit{MySQL} cuando los conjuntos de datos a escribir eran muy grandes. Además, también es importante recalcar que aunque en muchas ocasiones una de las herramientas superó a la otra en el cálculo del resultado, el destino de escritura compensaba el tiempo, por lo que en ambos casos existen áreas de oportunidad para mejorar los procesos de escritura y así volverse más competitivas ya que alcanzarán tiempos globales menores. 
+		
+	\item \textbf{Capacidad de cómputo} En el ambiente distribuido, \textit{Dask} mostró una mayor velocidad en el cálculo de operaciones de agregación como máximo y mínimo, en los que registró tiempos inferiores al 40\% del tiempos registrado por \textit{Spark} en la ejecución respectiva. Por otro lado, para cálculo de promedios con una llave dada, \textit{Dask} también registró tiempos promedio de entre aproximadamente 15\% (en muestras de 10K y 100K) y 78\% (usando el total de los datos) de lo registrado por \textit{Spark}, sin embargo conforme aumentaba el número de registros la brecha de tiempo entre ambas herramientas se iba cerrando, por lo que si la tendencia continúa de esa manera, \textit{Spark} alcanzará el desempeño de \textit{Dask}, como sucedió en el caso del proceso \texttt{flota}, en el que \textit{Spark} pasó de ser un 618\% más tardado que \textit{Dask} en la primera muestra hasta requerir solo un 75.9\% del tiempo que \textit{Dask} tardó. En el caso del otro proceso de preparación de datos (\texttt{elimina\_nulos}), \textit{Dask} siempre fue más rápido, pero la tendencia también muestra que la diferencia entre ambos \textit{frameworks} también se reduce conforme crecen los datos. Pasando a los procesos que requieren la creación de una nueva llave para realizar las operaciones, en estos se ve una tendencia similar, en las primeras muestras \textit{Dask} es mucho más rápido en el cálculo del proceso, pero es superado por \textit{Spark}, que logra ejecutar los procesos con las muestras superiores a 1 millón en menos de la mitad del tiempo que \textit{Dask}. por último, pasando al proceso \texttt{dijkstra}, \textit{Dask} sin duda fue superior gracias a su mejor manejo de memoria, registrando tiempos de máximo un tercio de los registrados por \textit{Spark}, aunque una vez más la diferencia de tiempo se redujo con cada ejecución. En conclusión, con estas muestras de datos \textit{Dask} obtuvo mejores resultados en general, aunque \textit{Spark} fue muy superior en procesos que involucraron la creación de una nueva llave, sin embargo, también una constante durante las ejecuciones fue una reducción de la brecha de tiempo entre ambos \textit{frameworks}, por lo que \textit{Spark} parece volverse cada vez más competitivo conforme crece el conjunto de datos, sería interesante probar con un conjunto de datos más grande para ver si \textit{Spark} supera a \textit{Dask} o si la brecha se mantiene.
+	
+	\item \textbf{Duración} Durante las distintas muestras, \textit{Dask} registró tiempos de ejecución menores en la mayoría de los procesos, y en muchos de los casos la diferencia de tiempo con \textit{Spark} fue considerable, sin embargo algo que también sucedió a través de los distintos procesos fue que la brecha entre los \textit{frameworks} se redujo conforme el tamaño de las muestras aumentó. Esto se debió en primer lugar a la mejora del tiempo de cómputo de \textit{Spark} pero también a la escritura, ya que el tiempo de escritura a \textit{MySQL} aumentó considerablemente en el caso de \textit{Dask}, mientras que para \textit{Spark} la escritura a \texttt{parquet} no sufrió un incremento tan pronunciado, por lo que la ventaja que tenía \textit{Dask} en la escritura a este tipo de archivos se redujo mientras que la ventaja de \textit{Spark} en la escritura a \textit{MySQL} aumentó. Otro comportamiento interesante fue que durante las primeras cuatro muestras, el incremento de tiempo de \textit{Spark} fue mayor que el de \textit{Dask}, y tiempos de entre 20 y 30 segundos de diferencia entre los \textit{frameworks} fueron algo constante, lo cuál sugiere que existe algún tipo de operación que produce un \textit{overhead} que existe en\ \textit{Spark} pero no en \textit{Dask} y que le da una ventaja inicial al segundo pero que puede perder importancia conforme aumenta la duración de los procesos como fue el caso de los procesos que implican la creación de una nueva llave. Considerando lo anterior, creo que \textit{Dask} ofrece mayor rapidez en la ejecución de la mayor parte de los procesos, especialmente con muestras más pequeñas, y también tiene resultados muy razonable cuando estos son inferiores a \textit{Spark}, ya que rara vez registró tiempos de más del doble de los de \textit{Spark} y muchas veces registró tiempos por debajo de la mitad de duración. Sin embargo, también creo que la tendencia sugiere que \textit{Spark} se volverá cada vez más competitivo frente a \textit{Dask}, por lo que creo que en el futuro valdrá la pena evaluar los resultados de ambos \textit{frameworks} con un conjunto de datos de mayor tamaño. No obstante, sobre todo en los procesos de agregaciones como máximos y mínimos, promedios y el de eliminación de valores nulos, \textit{Dask} aún tiene una ventaja considerable, por lo que creo que puede mantener tiempos inferiores en muestras de mayor tamaño.
+	
+\end{itemize}
