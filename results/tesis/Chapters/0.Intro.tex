@@ -3,6 +3,15 @@
 
 % La introducción no cuenta como primer capítulo
 
-\noindent AQUÍ VA LA INTRODUCCIÓN.
+\noindent El rápido crecimiento de los datos en los últimos años ha generado la necesidad de crear nuevos sistemas que tengan la capacidad de coleccionar, administrar, procesar y entregar datos que puedan resolver problemas del día a día \cite{seagate}, y los avances en el cómputo han permitido lograrlo, sin embargo, el gran avance en los sistemas de almacenamiento combinados con la desaceleración en el desarrollo de procesadores más rápidos ha obligado a usar el cómputo en paralelo para poder procesar la enrome cantidad de datos creada cada día \cite{sparkguide}. \textit{Dask} y \textit{Spark} son dos herramientas populares que combinan la ejecución en paralelo, cómputo en memoria, evaluación perezosa y calendarizadores dinámicos que les permiten atender problemas de \textit{Big Data} \cite{dask-spark-neuroimaging}.
+
+\textit{Spark} es un motor de cómputo con bibliotecas para procesamiento de datos en paralelo que puede funcionar en un equipo local o escalar a clústeres de computadoras. Soporta múltiples lenguajes de programación como \textit{Python} aunque está escrito en \textit{Scala} y es utilizado para aplicaciones como \textit{SQL}, \textit{streaming} y \textit{machine learning} \cite{sparkguide}. Además tiene integración con múltiples sistemas de procesamiento y almacenamiento y tiene desempeño comparable a herramientas diseñadas para propósitos específicos \cite{sparkberkeley}, lo que la convierte en una herramienta versátil y competitiva para el procesamiento de datos. 
+
+\textit{Dask} es una librería desarrollada totalmente en \textit{Python} para cómputo en paralelo que extiende las capacidades de herramientas populares como \textit{NumPy} y \textit{Pandas} a tareas que no caben en memoria o a ambientes distribuidos de cientos de máquinas. Además, cuenta con fuerte integración con proyectos existentes como \textit{Scikit-Learn} que le dan la capacidad de crear aplicaciones de \textit{machine learning} o procesamiento de datos.
+
+
+El objetivo de este trabajo es comparar la abstracción más popular (el \textit{DataFrame}) de ambas herramientas bajo diferentes condiciones para determinar bajo qué circunstancias una es superior a la otra en la ejecución de diversas tareas que incluyen agregaciones, cálculo de estadísticas, preparación de datos y una implementación del algoritmo \texttt{dijkstra}. Los \textit{frameworks} serán probados en el conjunto de datos \textit{Reporting Carrier On-Time Performance (1987-present)} con un tamaño aproximado de 43GB y las pruebas se ejecutarán en un ambiente local y en uno distribuido en la nube.
+
+El análisis se centrará en evaluar las siguientes 6 capacidades en cada uno: robustez de la herramienta, tiempo de ejecución total, tiempo de cómputo, tiempo de escritura, tiempo de inicio de la ejecución y variación de tiempo registrado. Además, también se incluirá una sección con las dificultades y ventajas encontradas durante la implementación de los procesos en cada herramienta para dar una referencia de bajo qué circunstancias es recomendable adoptar cada una de las herramientas y dar a nuevos usuarios una guía para elegir entre ambas herramientas. 
 
 % Se sugiere que el primer párrafo de cada sección no tenga sangría: \noindent
