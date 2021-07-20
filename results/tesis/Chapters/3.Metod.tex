@@ -1,6 +1,6 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para comparar el desempeño de \textit{Dask} y \textit{Spark} bajo condiciones homologadas, en dos ambientes, uno local y un clúster en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporó una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. Cada proceso se ejecutó 1000 veces, haciendo 100 ejecuciones para cada combinación de muestra y ambiente. Cada ejecución fue registrada en una base de datos para su análisis posterior. 
+\noindent Este capítulo describe el proceso seguido para comparar el desempeño de \textit{Dask} y \textit{Spark} bajo condiciones homologadas, en dos ambientes, uno local y un clúster en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{PySpark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporó una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. En total se realizaron 14,280 ejecuciones buscando ejecutar 100 veces cada combinación de muestra y ambiente (existieron algunas excepciones que se especifican más adelante debido a falta de recursos o ejecuciones demasiado prolongadas). Cada ejecución fue registrada en una base de datos para su análisis posterior.
 \newpage
 
 \section{Procesos para comparación de desempeño}
@@ -27,9 +27,9 @@ Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proce
 \end{algorithmic}
 \end{algorithm}
 
-De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{PySpark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio, además, para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado y así se evita que compitan por recursos. La ejecución de procesos se realizó 10 veces, 5 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local.
+De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{Spark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio, además, para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado y así se evita que compitan por recursos. La ejecución de procesos se realizó 9 veces, 4 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local y una adicional conformada del total de los datos que no fue ejecutada localmente debido su inestabilidad que resultaba en tiempos de ejecución excesivos o en errores que evitaban la finalización de los procesos.
 
-Además, para verificar que los resultados de los procesos de \textit{Dask} y \textit{Spark} tengan el mismo resultado, se utilizó un proceso que lee el resultado de cada proceso ejecutado en un \textit{framework} y lo compara con su contraparte. De esta forma se asegura que el resultado es el mismo, no obstante, es importante mencionar que para los procesos que utilizan la desviación estándar, sobre una muestra de datos, puede haber diferencias ya que \textit{Dask} y \textit{Spark} generan muestras distintas. El proceso de revisión de resultados se puede consultar en \cite{compara-resultados}.
+Además, para verificar que los resultados de los procesos de \textit{Dask} y \textit{Spark} tengan el mismo resultado, se utilizó un \textit{script} que lee el resultado de cada proceso ejecutado en un \textit{framework} y lo compara con su contraparte. De esta forma se asegura que el resultado es el mismo, no obstante, es importante mencionar que para los procesos que utilizan la desviación estándar, sobre una muestra de datos, puede haber diferencias ya que \textit{Dask} y \textit{Spark} generan muestras distintas. El proceso de revisión de resultados se puede consultar en \cite{compara-resultados}.
 
 \subsection{Proceso 1: Cálculo del tamaño de la flota por aerolínea}
 
@@ -138,7 +138,7 @@ Las operaciones con asterisco varían debido a que se utilizó, para cada \texti
 
 \subsection{Registro de tiempo y resultados}
 
-Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos SQL junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}), el tamaño de muestra en el que se ejecutó el proceso (\textit{sample\_size}), el ambiente en el que se ejecutó el proceso (local o en clúster) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
+Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos \textit{SQL}¸ junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}), el tamaño de muestra en el que se ejecutó el proceso (\textit{sample\_size}), el ambiente en el que se ejecutó el proceso (local o en clúster) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -183,16 +183,16 @@ Para ello se utilizó un equipo con las siguientes características:
 
 Los procesos fueron ejecutados mediante el proceso descrito en \ref{ejecucion_procesos} y almacenados en una base de datos \textit{MySQL} versión \texttt{8.0.25-0 ubuntu0.20.04.1} alojada en el mismo equipo y compartiendo los recursos listados anteriormente.
 
-Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} 3.8.5. Este ambiente se utilizó para las ejecuciones con la versión 2021.1.1 de \textit{Dask} y la versión 2.4.7 de \textit{Spark}. 
+Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} \texttt{3.8.5}. Este ambiente se utilizó para las ejecuciones con la versión  \texttt{2021.1.1} de \textit{Dask} y la versión \texttt{2.4.7} de \textit{Spark}. 
 
 \subsection{Ambiente en la nube}
 
-El ambiente en la nube tiene como objetivo probar el desempeño de \textit{Dask} y \textit{Spark} en un ambiente distribuido y homogéneo. Para ello se utilizó un clúster de \textit{Spark} en \textit{Amazon Elastic Map Reduce (EMR)} de 4 nodos (1 \textit{head} y 3 \textit{worker}). La versión de \textit{Spark} instalada en el clúster es \texttt{Spark 2.4.7} y la distribución de \textit{Hadoop} es \texttt{Amazon 2.10.1}. Por otro lado, la versión de \textit{Dask} y \textit{Distributed} es \texttt{2021.4.1}. 
+El ambiente en la nube tiene como objetivo probar el desempeño de \textit{Dask} y \textit{Spark} en un ambiente distribuido y homogéneo. Para ello se utilizó un clúster de \textit{Spark} en \textit{Amazon Elastic Map Reduce (EMR)} de 4 nodos (1 \textit{head} y 3 \textit{worker}). La versión de \textit{Spark} instalada en el clúster es \textit{Spark} \texttt{2.4.7} y la distribución de \textit{Hadoop} es \textit{Amazon} \texttt{2.10.1}. Por otro lado, la versión de \textit{Dask} y \textit{Distributed} es \texttt{2021.4.1}. 
 
 
-La gestión de recursos y calendarización de tareas se realiza con \texttt{YARN} para \textit{Spark} y, para \textit{Dask}, se utilizó el \textit{scheduler} nativo de \textit{Distributed} y el despliegue se realizó de acuerdo a la documentación \cite{daskdistributedsetup}.
+La gestión de recursos y calendarización de tareas se realiza con \textit{YARN} para \textit{Spark} y, para \textit{Dask}, se utilizó el \textit{scheduler} nativo de \textit{Distributed} y el despliegue se realizó de acuerdo a la documentación \cite{daskdistributedsetup}.
 
-El nodo \textit{head} es una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2} y aloja al proceso \textit{driver} de \textit{PySpark} y el proceso \textit{scheduler} de \textit{Dask}, por lo que su trabajo es administrar la ejecución de los procesos y gestionar los recursos pero no se encarga de ejecutar tareas de procesamiento. Este nodo tiene las siguientes características de \textit{Hardware}:
+El nodo \textit{head} es una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2} y aloja al proceso \textit{driver} de \textit{Spark} y el proceso \textit{scheduler} de \textit{Dask}, por lo que su trabajo es administrar la ejecución de los procesos y gestionar los recursos pero no se encarga de ejecutar tareas de procesamiento. Este nodo tiene las siguientes características de \textit{Hardware}:
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -207,7 +207,7 @@ El nodo \textit{head} es una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2
 \end{tabular}
 \end{center}
 
-Los nodos \textit{worker} son instancias \texttt{m5a.2xlarge}  de \textit{Amazon EC2} y se encargan de ejecutar las tareas asignadas por el \textit{driver} y \textit{scheduler} de \textit{Dask} y \textit{PySpark} respectivamente. Los tres nodos \textit{worker} tienen las siguientes características de \textit{Hardware}:
+Los nodos \textit{worker} son instancias \texttt{m5a.2xlarge}  de \textit{Amazon EC2} y se encargan de ejecutar las tareas asignadas por el \textit{driver} y \textit{scheduler} de \textit{Dask} y \textit{Spark} respectivamente. Los tres nodos \textit{worker} tienen las siguientes características de \textit{Hardware}:
 
 \begin{center}
 \begin{tabular}{|c|c|}
