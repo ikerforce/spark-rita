@@ -16,7 +16,17 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{algorithm}
+% \usepackage[ruled,vlined, spanish]{algorithm2e}
 \usepackage[noend]{algpseudocode}
+\algrenewcommand\algorithmicprocedure{\textbf{Pseudocódigo}}
+
+\makeatletter
+\newenvironment{algoritmo}[1][htb]{%
+    \renewcommand{\ALG@name}{Algoritmo}% Update algorithm name
+   \begin{algorithm}[#1]%
+  }{\end{algorithm}}
+\makeatother
+
 %\usepackage{subfig} % Subfiguras
 \graphicspath{{Imagenes/}} % En qué carpeta están las imágenes
 
@@ -93,7 +103,7 @@
 
 \textsc{\large Asesora}\\[1em]
 
-\textsc{\LARGE Mtra. Liliana Millán}\\[2em]
+\textsc{\LARGE Mtra. Liliana Millán Núñez}\\[2em]
 
 % Asegúrense de escribir el nombre completo de su asesor
 
