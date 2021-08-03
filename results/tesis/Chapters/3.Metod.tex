@@ -9,7 +9,7 @@ Para contrastar el desempeño de las herramientas, se implementaron 8 procesos q
 
 Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proceso para la ejecución de los algoritmos que tiene como entradas la \texttt{muestra} de datos que se utilizará, \texttt{n}, el número de ejecuciones a realizar y \texttt{procesos}, la lista de procesos que se ejecutarán:
 
-\begin{algorithm}[H]
+\begin{algoritmo}[H]
 \caption{Ejecución de procesos}\label{ejecucion_procesos}
 \begin{algorithmic}[1]
 \Procedure{Ejecuciones(muestra, n, procesos)}{}
@@ -25,7 +25,7 @@ Para ejecutar los datos se creó un \textit{script} que sigue el siguiente proce
 \EndFor
 \EndProcedure
 \end{algorithmic}
-\end{algorithm}
+\end{algoritmo}
 
 De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{Spark} y \textit{Dask} se alternan debido a que la lista \texttt{framework} tiene un orden aleatorio, además, para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado y así se evita que compitan por recursos. La ejecución de procesos se realizó 9 veces, 4 de forma local con tamaños de muestra distintos y 5 en un clúster en la nube con los mismos tamaños de muestra que la prueba local y una adicional conformada del total de los datos que no fue ejecutada localmente debido su inestabilidad que resultaba en tiempos de ejecución excesivos o en errores que evitaban la finalización de los procesos.
 
