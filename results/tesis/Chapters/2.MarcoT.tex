@@ -120,7 +120,7 @@ El algoritmo tiene los siguientes argumentos de entrada:
 	\item $v_{0}$ Vértice de origen a partir del cual se calculará la ruta óptima.
 \end{itemize}
 
-\begin{algorithm}[H]
+\begin{algoritmo}[H]
 \caption{Dijkstra}\label{Dijkstra}
 \begin{algorithmic}[1]
 \Procedure{Dijkstra($G$, $v_{0}$)}{}
@@ -144,7 +144,7 @@ El algoritmo tiene los siguientes argumentos de entrada:
 \EndWhile
 \EndProcedure
 \end{algorithmic}
-\end{algorithm}
+\end{algoritmo}
 
 Para la investigación se implementó un algoritmo con una lógica similar a la de Dijkstra pero con restricciones adicionales. El objetivo del algoritmo es encontrar la ruta más corta en duración total del trayecto entre cualesquiera dos aeropuertos del conjunto de datos.
 
@@ -160,7 +160,7 @@ Para su ejecución, el algoritmo requiere de las siguientes entradas:
 	\item $destino$ Aeropuerto de destino final. Al llegar a este nodo se detendrá la ejecución.
 \end{itemize}
 
-\begin{algorithm}[H]
+\begin{algoritmo}[H]
 \caption{Dijkstra modificado}\label{dijkstra_modificado}
 \begin{algorithmic}[1]
 \Procedure{Dijkstra modificado($M$, $origen$, $destino$, $horario$)}{}
@@ -190,6 +190,6 @@ Para su ejecución, el algoritmo requiere de las siguientes entradas:
 \EndIf
 \EndProcedure
 \end{algorithmic}
-\end{algorithm}
+\end{algoritmo}
 
 \newpage
