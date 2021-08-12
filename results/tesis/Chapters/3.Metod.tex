@@ -1,11 +1,11 @@
 \chapter{Metodología}
 
-\noindent Este capítulo describe el proceso seguido para comparar el desempeño de \textit{Dask} y \textit{Spark} bajo condiciones homologadas, en dos ambientes, uno local y un cúmulo en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellas, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{Spark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporó una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. En total se realizaron 14,280 ejecuciones buscando ejecutar 100 veces cada combinación de muestra y ambiente (existieron algunas excepciones que se especifican más adelante debido a falta de recursos o ejecuciones demasiado prolongadas). Cada ejecución fue registrada en una base de datos para su análisis posterior.
+\noindent Este capítulo describe el proceso que se siguió para comparar el desempeño de \textit{Dask} y \textit{Spark} bajo condiciones homologadas, en dos ambientes, uno local y otro distribuido en la nube. Para tener una mayor visibilidad del desempeño de cada una de ellos, en distintos escenarios, se crearon 8 procesos distintos que consisten en filtración, agrupación, conteos y cálculo de estadísticas sobre los datos seleccionados. Los 8 procesos fueron escritos de forma independiente en \textit{Spark} y \textit{Dask} utilizando funciones equivalentes en ambos \textit{frameworks}. También se incorporó una variación en el tamaño de las muestras para observar el desempeño de cada herramienta con distintos volúmenes de datos. En total se realizaron 14,280 ejecuciones buscando ejecutar 100 veces cada combinación de muestra y ambiente (existieron algunas excepciones que se especifican más adelante debido a falta de recursos o ejecuciones demasiado prolongadas). Cada ejecución fue registrada en una base de datos para su análisis posterior.
 \newpage
 
 \section{Procesos para comparación de desempeño}
 
-Para contrastar el desempeño de las herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Estos procesos buscan someter a los \textit{frameworks} a diferentes escenarios para los que se usan comúnmente estas herramientas. Entre estas operaciones se encuentran las siguientes:
+Para contrastar el desempeño de las herramientas, se implementaron 8 procesos que realizan distintas operaciones sobre el conjunto de datos. Estos procesos buscan someter a los \textit{frameworks} a diferentes escenarios para los que se usan comúnmente estas herramientas. Entre estas operaciones se estuvieron las siguientes:
 \begin{itemize}
 	\item Cálculo de agregaciones sencillas como el conteo de elementos u obtención de los valores máximo y mínimo.
 	\item Cálculo de estadísticas como el promedio y la desviación estándar.
@@ -13,9 +13,9 @@ Para contrastar el desempeño de las herramientas, se implementaron 8 procesos q
 	\item Limpieza de datos como eliminación de nulos y borrado de duplicados.
 \end{itemize}
 
-Además se implementó un proceso de cálculo de ruta mínima que involucra muchas de las operaciones listadas. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
+Además se implementó un proceso de cálculo de ruta mínima que involucró muchas de las operaciones listadas. En las siguientes secciones se explica de forma más detallada cada uno de los procesos y se listan las operaciones que los componen.
 
-Para ejecutar los datos se creó un \textit{script} que sigue el proceso descrito en el algoritmo \ref{ejecucion_procesos} para la ejecución de los distintos procesos. Este \textit{script} tiene como entradas la muestra de datos que se utilizará (\texttt{muestra}), el número de ejecuciones a realizar (\texttt{n}) y la lista de procesos que se ejecutarán (\texttt{procesos}). Además, dentro del algoritmo, se define la lista \texttt{framework} compuesta de unos y ceros con un orden aleatorio que indica si el proceso será ejecutado con \textit{Dask} (en caso de cero) o con \textit{Spark} (en caso de 1). 
+Para ejecutar los datos se creó un \textit{script} que sigue el proceso descrito en el algoritmo \ref{ejecucion_procesos} para la ejecución de los distintos procesos. Este \textit{script} tuvo como entradas la muestra de datos (\texttt{muestra}), el número de ejecuciones a realizar (\texttt{n}) y la lista de procesos que se ejecutaron (\texttt{procesos}). Además, dentro del algoritmo, se definió la lista \texttt{framework} compuesta de unos y ceros con un orden aleatorio que indicaba si el proceso iba a ser ejecutado con \textit{Dask} (en caso de cero) o con \textit{Spark} (en caso de uno). 
 
 \begin{figure}
 \begin{algoritmo}[H]
@@ -38,13 +38,13 @@ Para ejecutar los datos se creó un \textit{script} que sigue el proceso descrit
 \caption{Proceso de ejecución del experimento.}
 \end{figure}
 
-De esta forma, cada proceso se ejecuta $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{Spark} y \textit{Dask} se alternan. Además, para iniciar la ejecución de un proceso es necesario que el anterior haya finalizado, lo que evita que compitan por recursos. El algoritmo \ref{ejecucion_procesos} se ejecutó 9 veces, 4 de forma local con tamaños de muestra distintos y 5 en un cúmulo en la nube con los mismos tamaños de muestra que la prueba local y una adicional conformada del total de los datos que no fue ejecutada localmente debido su inestabilidad, que provocaba tiempos de ejecución excesivos o en errores que evitaban la finalización de los procesos. En la mayoría de los casos el valor de $n$ fue $100$, sin embargo, para algunas muestras esta tuvo que ser reducida para procesos específicos debido a que su ejecución era muy tardada o a que esta presentaba errores.
+De esta forma, cada proceso se ejecutó $n$ veces en cada \textit{framework} y las ejecuciones entre \textit{Spark} y \textit{Dask} se alternaron. Además, para iniciar la ejecución de un proceso fue necesario que el anterior finalizara, lo que evitó que compitieran por recursos. El algoritmo \ref{ejecucion_procesos} se ejecutó 9 veces, 4 de forma local con tamaños de muestra distintos y 5 en un ambiente distribuido en la nube con los mismos tamaños de muestra que la prueba local y una adicional conformada del total de los datos que no fue ejecutada localmente debido su inestabilidad, que provocó tiempos de ejecución excesivos o errores que evitaron la finalización de los procesos. En la mayoría de los casos el valor de $n$ fue $100$. Sin embargo, en algunas muestras este fue reducido para procesos específicos debido a que la ejecución era muy tardada o presentaba errores.
 
-Adicionalmente, para verificar que los resultados de los procesos de \textit{Dask} y \textit{Spark} tuvieran el mismo resultado, se utilizó un \textit{script} que lee el resultado de cada proceso ejecutado en un \textit{framework} y lo compara con su contraparte. De esta forma se asegura que el resultado es el mismo, no obstante, es importante mencionar que para los procesos que utilizan la desviación estándar, sobre una muestra de datos, puede haber diferencias ya que \textit{Dask} y \textit{Spark} generan muestras distintas. El proceso de revisión de resultados se puede consultar en \cite{compara-resultados}.
+Adicionalmente, para verificar que los resultados de los procesos de \textit{Dask} y \textit{Spark} tuvieran el mismo resultado, se utilizó un \textit{script} que leía el resultado de cada proceso ejecutado en un \textit{framework} y lo comparaba con su contraparte. De esta forma, se aseguró que el resultado fuera el mismo. No obstante, es importante mencionar que para los procesos que utilizan la desviación estándar, sobre una muestra de datos, puede haber diferencias ya que \textit{Dask} y \textit{Spark} generaron muestras distintas. El proceso de revisión de resultados se puede consultar en \cite{compara-resultados}.
 
 \subsection{Proceso 1: Cálculo del tamaño de la flota por aerolínea}
 
-Este proceso calcula el número de aviones activos con los que cuenta una aerolínea en un tiempo específico. La agregación se hace por día, mes, trimestre y año. Para obtener el número de equipos únicos se cuenta el número de matrículas distintas correspondientes a cada aerolínea. El proceso se compone de las siguientes operaciones:
+Este proceso calculó el número de aviones activos con los que contaba una aerolínea en un tiempo específico. La agregación se hizo por día, mes, trimestre y año. Para obtener el número de equipos únicos se contó el número de matrículas distintas correspondientes a cada aerolínea. El proceso estuvo compuesto de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -56,7 +56,7 @@ Este proceso calcula el número de aviones activos con los que cuenta una aerol�
 
 \subsection{Proceso 2: Demoras por aerolínea}
 
-Este proceso tiene como objetivo obtener el promedio de tiempo de demora de cada aerolínea agrupando por las columnas correspondientes a los periodos: año, trimestre, mes y día. Este proceso realiza las siguientes operaciones principales:
+Este proceso tuvo como objetivo obtener el promedio de tiempo de demora de cada aerolínea agrupando por las columnas correspondientes a los periodos: año, trimestre, mes y día. Este proceso realizó las siguientes operaciones principales:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -68,7 +68,7 @@ Este proceso tiene como objetivo obtener el promedio de tiempo de demora de cada
 
 \subsection{Proceso 3: Demora máxima por aeropuerto de origen}
 
-Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de origen y obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso se compone de las siguientes operaciones:
+Este proceso calculó el tiempo máximo de demora agrupando por el aeropuerto de origen y obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso estuvo compuesto de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -80,7 +80,7 @@ Este proceso calcula el tiempo máximo de demora agrupando por el aeropuerto de 
 
 \subsection{Proceso 4: Demora mínima por aeropuerto de destino}
 
-Este proceso es similar al anterior con la diferencia de que calcula el tiempo mínimo de demora y que hace la agrupación de acuerdo al aeropuerto de destino y obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso se compone de las siguientes operaciones:
+Este proceso fue similar al anterior, con las diferencias de que calculó el tiempo mínimo de demora y que hizo la agrupación de acuerdo al aeropuerto de destino. Esto obteniendo el resultado para los periodos por año, trimestre, mes y día. El proceso estuvo conformado de las siguientes operaciones:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -92,7 +92,7 @@ Este proceso es similar al anterior con la diferencia de que calcula el tiempo m
 
 \subsection{Proceso 5: Demora promedio por ruta entre aeropuertos}
 
-Este proceso obtiene el tiempo promedio de demora para cada ruta entre los aeropuertos. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular el promedio del las demoras en el periodo correspondiente.
+Este proceso obtuvo el tiempo promedio de demora para cada ruta entre los aeropuertos. El primer paso fue obtener la ruta que se recorrió en cada vuelo y después se calculó el promedio de las demoras en el periodo correspondiente.
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -105,7 +105,7 @@ Este proceso obtiene el tiempo promedio de demora para cada ruta entre los aerop
 
 \subsection{Proceso 6: Desviación estándar de la demora por ruta entre \texttt{market ids}}
 
-Este proceso obtiene la desviación estándar del tiempo de demora para cada ruta entre áreas identificadas por el indicador \texttt{market id} que corresponde a las áreas geográficas cuyos aeropuertos sirven al mismo mercado de personas. El primer paso es obtener la ruta que se recorre en cada vuelo y después calcular la desviación estándar de los indicadores de demoras en el periodo correspondiente.
+Este proceso obtuvo la desviación estándar del tiempo de demora para cada ruta entre áreas identificadas por el indicador \texttt{market id} que corresponde a las áreas geográficas cuyos aeropuertos sirven al mismo mercado de personas. El primer paso fue obtener la ruta que se recorrió en cada vuelo y después se calculó la desviación estándar de los indicadores de demoras en el periodo correspondiente.
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -118,7 +118,7 @@ Este proceso obtiene la desviación estándar del tiempo de demora para cada rut
 
 \subsection{Proceso 7: Eliminación de nulos}
 
-Este proceso tiene como objetivo eliminar todos los registros que tengan algún valor nulo en cualquiera de las columnas seleccionadas. 
+Este proceso tuvo como objetivo eliminar todos los registros que tuvieran algún valor nulo en cualquiera de las columnas seleccionadas. 
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -128,9 +128,9 @@ Este proceso tiene como objetivo eliminar todos los registros que tengan algún 
 
 \subsection{Proceso 8: Cálculo de la menor ruta en tiempo utilizando el algoritmo de ruta mínima \textit{Dijkstra}}
 
-El último proceso consiste en calcular la ruta mínima (minimizando el tiempo transcurrido entre la salida del origen y la llegada al destino final) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación del algoritmo \ref{dijkstra_modificado} utilizando \textit{DataFrames} junto con las operaciones predefinidas en cada uno de los \textit{frameworks} (como \texttt{min}, \texttt{orderBy}, \texttt{filter} y operaciones aritméticas) para manipularlos y una función definida por el usuario (\texttt{udf}) que se utilizó para cambiar el formato de la fecha de los vuelos.
+El último proceso consistió en calcular la ruta mínima (minimizando el tiempo transcurrido entre la salida del origen y la llegada al destino final) entre dos aeropuertos cualesquiera. Para esto se hizo una implementación del algoritmo \ref{dijkstra_modificado} utilizando \textit{DataFrames} junto con las operaciones predefinidas en cada uno de los \textit{frameworks} (como \texttt{min}, \texttt{orderBy}, \texttt{filter} y operaciones aritméticas) para manipularlos y una función definida por el usuario (\texttt{udf}) que se utilizó para cambiar el formato de la fecha de los vuelos.
 
-El proceso se compone de las siguientes operaciones principales:
+El proceso estuvo compuesto de las siguientes operaciones principales:
 
 \begin{itemize}
 	\item Lectura de datos desde \texttt{parquet}.
@@ -145,11 +145,11 @@ El proceso se compone de las siguientes operaciones principales:
 	\item Escritura de datos a \textit{MySQL}.
 \end{itemize}
 
-Las operaciones con asterisco varían debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{Spark}, se usó la operación \texttt{checkpoint} ya que se deshace de la parte del plan de ejecución que ya fue ejecutada y almacena los datos intermedios, liberando memoria (a diferencia de \texttt{cache}). Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} ya que \textit{Dask} no ejecuta otra vez el plan de ejecución completo sino a partir del último \texttt{persist}.
+Las operaciones con asterisco variaron debido a que se utilizó, para cada \textit{framework}, la operación que mejor desempeño tenía en cuanto a tiempo para almacenar datos intermedios. En el caso de \textit{Spark}, se usó la operación \texttt{checkpoint}, ya que se deshacía de la parte del plan de ejecución que ya había sido ejecutada y almacenaba los datos intermedios, liberando memoria (a diferencia de \texttt{cache}). Para \textit{Dask}, por otro lado, resultó más conveniente usar la función \texttt{persist} ya que \textit{Dask} no ejecutaba otra vez el plan de ejecución completo sino a partir del último \texttt{persist}.
 
 \subsection{Registro de tiempo y resultados}
 
-Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribe en una base de datos \textit{SQL}¸ junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}), el tamaño de muestra en el que se ejecutó el proceso (\textit{sample\_size}), el ambiente en el que se ejecutó el proceso (local o en cúmulo) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información almacenada en la base de datos.
+Al finalizar la ejecución de cada proceso, se obtuvo el tiempo de ejecución del mismo (\textit{duration}). Después, esta información se escribió en una base de datos \textit{SQL}¸ junto con los detalles del ambiente en que se ejecutó (\textit{description} y \textit{resources}), la fecha de inicio (\textit{start\_ts}) y término de la ejecución (\textit{end\_ts}) en tiempo UNIX, la fecha de inserción del registro (\textit{insertion\_ts}), el tamaño de muestra en el que se ejecutó el proceso (\textit{sample\_size}), el ambiente en el que se ejecutó el proceso (local o en la nube) y el nombre del proceso que se ejecutó (\textit{process}). La siguiente tabla muestra un ejemplo de la información que se almacenó en la base de datos.
 
 \begin{figure}
 \begin{center}
@@ -167,15 +167,15 @@ Al finalizar la ejecución de cada proceso, se obtiene el tiempo de ejecución d
   \hline
 \end{tabular}
 \end{center}
-\caption{Ejemplo de la información que se registra al terminar la ejecución de una prueba del experimento.}
+\caption{Ejemplo de la información que se registró al terminar la ejecución de una prueba del experimento.}
 \end{figure}
 
 
-La información de la ejecución se registra en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados, por otro lado, se almacenan en una tabla específica que se sobreescribe cada que finaliza la ejecución de ese proceso en el caso de \textit{MySQL} o se almacenan en uno o más archivos \texttt{parquet} (dependiendo del número de particiones). 
+La información de la ejecución se registró en una de dos tablas dependiendo del \textit{framework} elegido. Los resultados se almacenaron en una tabla específica que se sobreescribió, en el caso de \textit{MySQL}, con la finalización de la ejecución de el proceso correspondiente o se almacenaron en uno o más archivos \texttt{parquet} (dependiendo del número de particiones), en el caso de los procesos que tenían este tipo de archivo como destino. 
 
 \section{Infraestructura}
 
-Los \textit{frameworks} fueron comparados en dos ambientes distintos para probar su funcionamiento en modo \textit{standalone} y distribuido en un cúmulo. El primer ambiente es el local y el segundo el cúmulo en la nube. Las siguientes secciones explicarán las características de los ambientes y las ejecuciones en ellas.
+Los \textit{frameworks} fueron comparados en dos ambientes distintos para probar su funcionamiento en modo \textit{standalone} y distribuido en un grupo de computadoras. El primer ambiente fue el local y el segundo fue el distribuido en la nube. Las siguientes secciones explicarán las características de los ambientes y las ejecuciones en ellas.
 
 \subsection{Ambiente local}
 
@@ -201,12 +201,12 @@ Además, se utilizó un ambiente de \textit{Anaconda} con \textit{Python} \textt
 
 \subsection{Ambiente en la nube}
 
-El ambiente en la nube tiene como objetivo probar el desempeño de \textit{Dask} y \textit{Spark} en un ambiente distribuido y homogéneo. Para ello se utilizó un cúmulo de \textit{Spark} en \textit{Amazon Elastic Map Reduce (EMR)} de 4 nodos (1 \textit{head} y 3 \textit{worker}). La versión de \textit{Spark} instalada en el cúmulo es \textit{Spark} \texttt{2.4.7} y la distribución de \textit{Hadoop} es \textit{Amazon} \texttt{2.10.1}. Por otro lado, la versión de \textit{Dask} y \textit{Distributed} es \texttt{2021.4.1}. 
+El ambiente en la nube tuvo como objetivo probar el desempeño de \textit{Dask} y \textit{Spark} en un ambiente distribuido y homogéneo. Para ello se utilizó un grupo de 4 nodos (1 \textit{head} y 3 \textit{worker}) en \textit{Amazon Elastic Map Reduce (EMR)}. La versión de \textit{Spark} instalada en el grupo de computadoras fue \textit{Spark} \texttt{2.4.7} y la distribución de \textit{Hadoop} fue \textit{Amazon} \texttt{2.10.1}. Por otro lado, la versión de \textit{Dask} y \textit{Distributed} fue \texttt{2021.4.1}. 
 
 
-La gestión de recursos y calendarización de tareas se realiza con \textit{YARN} para \textit{Spark} y, para \textit{Dask}, se utilizó el \textit{scheduler} nativo de \textit{Distributed} y el despliegue se realizó de acuerdo a la documentación \cite{daskdistributedsetup}.
+La gestión de recursos y calendarización de tareas se realizó con \textit{YARN} para \textit{Spark} y, para \textit{Dask}, se utilizó el \textit{scheduler} nativo de \textit{Distributed} y el despliegue se realizó de acuerdo a la documentación \cite{daskdistributedsetup}.
 
-El nodo \textit{head} es una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2} y aloja al proceso \textit{driver} de \textit{Spark} y el proceso \textit{scheduler} de \textit{Dask}. Su trabajo es administrar la ejecución de los procesos y gestionar los recursos pero no se encarga de ejecutar tareas de procesamiento. Este nodo tiene las siguientes características de \textit{Hardware}:
+El nodo \textit{head} fue una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2} y alojó al proceso \textit{driver} de \textit{Spark} y al proceso \textit{scheduler} de \textit{Dask}. Su trabajo fue administrar la ejecución de los procesos y gestionar los recursos pero no se encargó de ejecutar tareas de procesamiento. Este nodo tuvo las siguientes características de \textit{Hardware}:
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -221,7 +221,7 @@ El nodo \textit{head} es una instancia \texttt{m5a.xlarge} de \textit{Amazon EC2
 \end{tabular}
 \end{center}
 
-Los nodos \textit{worker} son instancias \texttt{m5a.2xlarge}  de \textit{Amazon EC2} y se encargan de ejecutar las tareas asignadas por el \textit{driver} y \textit{scheduler} de \textit{Dask} y \textit{Spark} respectivamente. Los tres nodos \textit{worker} tienen las siguientes características de \textit{Hardware}:
+Los nodos \textit{worker} fueron instancias \texttt{m5a.2xlarge} de \textit{Amazon EC2} y se encargaron de ejecutar las tareas asignadas por el \textit{driver} y \textit{scheduler} de \textit{Dask} y \textit{Spark} respectivamente. Los tres nodos \textit{worker} tuvieron las siguientes características de \textit{Hardware}:
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -254,7 +254,7 @@ La base de datos \textit{MySQL} se creó con el servicio \textit{Relational Data
 \section{Datos}
 
 Todas las operaciones se hicieron sobre la base de datos: 
-\textit{Reporting Carrier On-Time Performance (1987-present)}, disponible en \cite{linktranstat}. Este conjunto de datos está compuesto de 109 columnas que contienen información de demoras de vuelos dentro de Estados Unidos en el que cada registro corresponde a un vuelo único. Para el experimento se mantuvieron las 109 columnas, sin embargo se utilizan únicamente las contenidas en la siguiente lista:
+\textit{Reporting Carrier On-Time Performance (1987-present)}, disponible en \cite{linktranstat}. Este conjunto de datos está compuesto de 109 columnas que contienen información de demoras de vuelos dentro de Estados Unidos en el que cada registro corresponde a un vuelo único. Para el experimento se mantuvieron las 109 columnas. Sin embargo, se utilizan únicamente las contenidas en la siguiente lista:
 
 \begin{itemize}
 	\item YEAR: (Entero) Año en el que sucedió el vuelo.
@@ -277,11 +277,11 @@ Todas las operaciones se hicieron sobre la base de datos:
 	\item DEST\_CITY\_MARKET\_ID: (Entero) Número que identifica de forma única la ciudad mercado de un aeropuerto de destino. Sirve para unir aeropuertos que sirven al mismo mercado de ciudades.
 \end{itemize}
 
-Los datos utilizados corresponden al periodo del $1^\text{ro}$ de enero de 2008 al 30 de Noviembre de 2020 y se componen de 80,345,298 registros.
+Los datos utilizados correspondieron al periodo del $1^\text{ro}$ de enero de 2008 al 30 de Noviembre de 2020 y estuvieron compuestos de 80,345,298 registros.
 
 \subsection{Tratamiento de los datos}
 
-Estos datos fueron obtenidos en formato \texttt{csv} y convertidos a \texttt{parquet} para reducir su dimensión y acelerar el tiempo de consulta para ambos \textit{frameworks} . Una vez almacenado en 4096 \textit{parquets}, los datos tienen un tamaño de 4.774 GB.
+Estos datos fueron obtenidos en formato \texttt{csv} y convertidos a \texttt{parquet} para reducir su dimensión y acelerar el tiempo de consulta para ambos \textit{frameworks}. Una vez almacenado en 4096 \textit{parquets}, los datos tuvieron un tamaño de 4.774 GB.
 
 Para evitar que la partición de los datos beneficiara a alguno de las herramientas, se crearon dos copias de los datos. Cada una fue particionada y almacenada de acuerdo a los lineamientos especificados en la documentación de la herramienta correspondiente y con los tipos de datos adecuados para cada \textit{framework}. Los archivos de código utilizados para este propósito están disponibles en \cite{tratamiento-datos}. También se creó el archivo \texttt{\_metadata} que permite acelerar la lectura de los archivos desde \textit{Dask}.
 
