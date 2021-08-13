@@ -642,10 +642,11 @@ La figura \ref{lineas:local-flota} muestra cómo varía la diferencia entre \tex
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -680,10 +681,12 @@ Al analizar los tiempos de escritura a \textit{MySQL}, representados en la figur
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -723,10 +726,11 @@ Al analizar los resultados representados por la figura \ref{lineas:local-demoras
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -761,10 +765,13 @@ Por otra parte, analizando los resultados de la escritura, representados por la 
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -803,10 +810,11 @@ Observando al figura \ref{lineas:local-demoras-aeropuerto-destino}, podemos ver 
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -841,10 +849,12 @@ Al analizar el tiempo de escritura, representado en la figura \ref{lineas:local-
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -883,10 +893,11 @@ Como se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este pr
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -919,10 +930,12 @@ Como se ve en la figura \ref{lineas:local-demoras-aeropuerto-origen}, en este pr
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -963,10 +976,11 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -999,10 +1013,12 @@ Por otro lado, al observar la figura \ref{lineas:local-demoras-ruta-aeropuerto-w
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -1043,10 +1059,11 @@ La figura \ref{lineas:local-demoras-ruta-mktid-write} muestra que el tiempo de e
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -1080,10 +1097,12 @@ La figura \ref{lineas:local-demoras-ruta-mktid-write} muestra que el tiempo de e
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -1121,10 +1140,11 @@ Los resultados de ejecución de este proceso están representados por la figura 
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -1163,10 +1183,11 @@ La figura \ref{lineas:local-dijkstra} muestra claramente cómo la diferencia de 
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -1996,10 +2017,11 @@ La figura \ref{lineas:nube-flota} muestra una tendencia similar entre ambos \tex
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2035,10 +2057,12 @@ La figura \ref{lineas:nube-flota} muestra una tendencia similar entre ambos \tex
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.97,0.3)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2082,10 +2106,11 @@ Centrándonos en el proceso de escritura mostrado en la figura \ref{lineas:local
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2122,10 +2147,12 @@ Centrándonos en el proceso de escritura mostrado en la figura \ref{lineas:local
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2166,10 +2193,11 @@ Similar a casos anteriores, durante las ejecuciones en las cuatro muestras de me
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2204,10 +2232,12 @@ Similar a casos anteriores, durante las ejecuciones en las cuatro muestras de me
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2249,10 +2279,11 @@ Algo interesante de este proceso es que a pesar de ser similar al anterior, la f
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2287,10 +2318,12 @@ Algo interesante de este proceso es que a pesar de ser similar al anterior, la f
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2332,10 +2365,11 @@ muestra que, como antes, la diferencia de tiempo de ejecución entre \textit{Das
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2370,10 +2404,12 @@ muestra que, como antes, la diferencia de tiempo de ejecución entre \textit{Das
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2415,10 +2451,11 @@ Si nos fijamos en la figura \ref{lineas:nube-demoras-ruta-mktid} podemos ver que
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2453,10 +2490,12 @@ Si nos fijamos en la figura \ref{lineas:nube-demoras-ruta-mktid} podemos ver que
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros,
+	xlabel = Número de registros escritos ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
-	% xmode=log,
+	xmode=log,
+	log basis x={10},
+	max space between ticks=40pt,
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2496,10 +2535,11 @@ Los resultados de ejecución de este proceso están representados por la figura 
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=6cm
@@ -2541,10 +2581,11 @@ La figura \ref{lineas:nube-dijkstra} muestra una diferencia de tiempo importante
 \centering
 \begin{tikzpicture}[trim axis left, trim axis right]
 \begin{axis}[
-	xlabel = Número de registros (log),
+	xlabel = Número de registros procesados ($\text{log}_{10}$),
 	ylabel = Duración en segundos,
 	legend style={at={(0.45,0.95)}},
 	xmode=log,
+	log basis x={10},
 	% ymode=log,
 	width=12cm,
 	height=10cm
