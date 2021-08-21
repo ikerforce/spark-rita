@@ -73,12 +73,12 @@
 %	PORTADA
 %----------------------------------------------------------------------------------------
 
-\title{Confianza institucional, inclusión social, intensidad religiosa y percepción tecnológica como factores de innovación para el crecimiento económico} % Con este nombre se guardará el proyecto en writeLaTex
+\title{Comparación de Dask y Spark en el procesamiento de grandes volúmenes de datos} % Con este nombre se guardará el proyecto en writeLaTex
 
 \begin{titlepage}
 \begin{center}
 
-\textsc{\Large Instituto Tecnológico Autónomo de México}\\[2em]
+\textbf{INSTITUTO TECNOLÓGICO AUTÓNOMO DE MÉXICO}\\[2em]
 
 %Figura
 \begin{figure}[h]
@@ -89,28 +89,28 @@
 
 % Pueden modificar el tamaño del logo cambiando la escala
 
-\textbf{\LARGE Comparación de Dask y Spark en el procesamiento de grandes volúmenes de datos}\\[2em]
+{\LARGE Comparación de Dask y Spark en el procesamiento de grandes volúmenes de datos}\\[2em]
 
-\textsc{\large Tesis}\\[1em]
+\textbf{\large TESIS}\\[2em]
 
 \textsc{\large que para obtener el título de}\\[1em]
 
-\textsc{\LARGE Licenciado en Matemáticas Aplicadas}\\[1em]
+\textsc{\large LICENCIADO EN MATEMÁTICAS APLICADAS}\\[1em]
 
-\textsc{\large Presenta}\\[1em]
+\textsc{\small PRESENTA}\\[2em]
 
-\textsc{\LARGE Iker Antonio Olarra Maldonado}\\[1em]
+\textbf{\large IKER ANTONIO OLARRA MALDONADO}\\[2em]
 
-\textsc{\large Asesora}\\[1em]
+% \textsc{\large Asesora}\\[1em]
 
-\textsc{\LARGE Mtra. Liliana Millán Núñez}\\[2em]
+\textsc{\textbf{ASESORA}: MTRA. LILIANA MILLÁN NÚÑEZ}\\[2em]
 
 % Asegúrense de escribir el nombre completo de su asesor
 
 \end{center}
 
 \vspace*{\fill}
-\textsc{Ciudad de México \hspace*{\fill} 2021}
+\textsc{CIUDAD DE MÉXICO \hspace*{\fill} 2021}
 
 \end{titlepage}
 
@@ -124,11 +124,15 @@
 \begingroup
 
 \noindent
-«Con fundamento en los artículos 21 y 27 de la Ley Federal del Derecho de Autor y como titular de los derechos moral y patrimonial de la obra titulada ``\textbf{Comparación de Dask y Spark en procesamiento de grandes volúmenes de datos}'', otorgo de manera gratuita y permanente al Instituto Tecnológico Autónomo de México y a la Biblioteca Raúl Bailléres Jr., la autorización para que fijen la obra en cualquier medio, incluido el electrónico, y la divulguen entre sus usuarios, profesores, estudiantes o terceras personas, sin que pueda percibir por tal divulgación una contraprestación.»
+``Con fundamento en los artículos 21 y 27 de la Ley Federal del Derecho de Autor y como titular de los derechos moral y patrimonial de la obra titulada \textbf{``Comparación de Dask y Spark en el procesamiento de grandes volúmenes de datos''}, otorgo de manera gratuita y permanente al Instituto Tecnológico Autónomo de México y a la Biblioteca Raúl Bailléres Jr., la autorización para que fijen la obra en cualquier medio, incluido el electrónico, y la divulguen entre sus usuarios, profesores, estudiantes o terceras personas, sin que pueda percibir por tal divulgación una contraprestación.''
 
 % Asegúrense de cambiar el título de su tesis en el párrafo anterior
 
 \centering 
+
+\vspace{3em}
+
+\textsc{\textbf{Iker Antonio Olarra Maldonado}}
 
 \vspace{5em}
 
@@ -136,11 +140,11 @@
 
 \textsc{Fecha}
  
-\vspace{8em}
+\vspace{5em}
 
 \rule[1em]{20em}{0.5pt} % Línea para la firma
 
-\textsc{Iker Antonio Olarra Maldonado}
+\textsc{Firma}
 
 \endgroup
 \vspace*{\fill}
@@ -173,12 +177,12 @@
 
 \chapter*{Resumen}
 
-\noindent El volumen de datos y las capacidades de almacenamiento han aumentado de forma considerable en las últimas décadas. Esto ha incrementado la necesidad de desarrollar \textit{software} de procesamiento de datos que utilice cómputo en paralelo y distribuido para poder procesar los conjuntos masivos de datos creados diariamente. Dos de las herramientas de código abierto más populares para el desarrollo de aplicaciones de ciencia de datos y de ejecución de algoritmos distribuidos son \textit{Dask} y \textit{Spark}. En esta investigación se realizó un total de 14,280 ejecuciones divididas en 8 procesos y en muestras del conjunto de datos \textit{Reporting Carrier On-Time Performance (1987-present)} de 43 GB que involucraron operaciones como cálculo de agregaciones, obtención de estadísticas, preparación de datos, escritura de resultados a bases de datos y archivos \texttt{parquet} y un algoritmo iterativo de ruta mínima, con el objetivo de compararlos. Estos procesos fueron ejecutados en un ambiente local en modo \textit{standalone} y en un ambiente distribuido en la nube con un nodo \textit{head} y tres nodos \textit{worker}.
+\noindent El volumen de datos y las capacidades de almacenamiento han aumentado de forma considerable en las últimas décadas. Esto ha incrementado la necesidad de desarrollar \textit{software} de procesamiento de datos que utilice cómputo en paralelo y distribuido para poder procesar los conjuntos masivos de datos creados diariamente. Dos de las herramientas de código abierto más populares para el desarrollo de aplicaciones de ciencia de datos y de ejecución de algoritmos distribuidos son \textit{Dask} y \textit{Spark}. Con el objetivo de compararlos, se realizaron un total de 14,280 ejecuciones divididas en 8 procesos y en muestras del conjunto de datos \textit{Reporting Carrier On-Time Performance (1987-present)} de 43 GB, que involucraron operaciones como cálculo de agregaciones, obtención de estadísticas, preparación de datos, escritura de resultados a bases de datos y archivos \texttt{parquet} y un algoritmo iterativo de ruta mínima. Estos procesos fueron ejecutados en un ambiente local en modo \textit{standalone} y en un ambiente distribuido en la nube con un nodo \textit{head} y tres nodos \textit{worker}.
 
 Los resultados mostraron que cuando la muestra de datos es de un millón de datos o menor, \textit{Dask} tiene un desempeño superior. Ya que combina tiempos de ejecución cortos, poca variación, 
-escritura rápida, menor tiempo de inicio de la ejecución, un cómputo más veloz de los resultados y gran estabilidad. Por otro lado, para muestras mayores, \textit{Spark} fue superior en tres aspectos. Primero, en la ejecución de agregaciones más complejas que involucraban la creación de una nueva llave y agregaciones utilizándola; segundo, en la escritura a \textit{MySQL} donde registró menores tiempos que \textit{Dask} cuando los resultados eran de aproximadamente 500,000 registros o mayores, y tercero, fue más robusto ya que completó un mayor porcentaje de las ejecuciones que \textit{Dask}. Por otro lado, \textit{Dask} mantuvo un mejor desempeño en los otros rubros y mostró una velocidad mucho mayor en la escritura de archivos \texttt{parquet}, en la ejecución del algoritmo iterativo gracias a un mejor manejo de la memoria, en el cálculo de agregaciones como máximos, mínimos y promedios y en tareas de preparación de datos como eliminación de valores nulos. Adicionalmente, la ejecución de los procesos mostró una gran importancia de la capacidad de escritura, ya que esta muchas veces fue decisiva para hacer que un \textit{framework} completara un proceso más rápidamente que el otro. Además, se identificó una tendencia a que la brecha de tiempo entre ambos \textit{frameworks}, que casi siempre fue favorable a \textit{Dask}, se redujera conforme aumentaba el número de registros procesados. Lo que sugiere que \textit{Spark} se vuelve más competitivo conforme el tamaño del conjunto de datos aumenta.
+escritura rápida, menor tiempo de inicio de la ejecución, un cómputo más veloz de los resultados y gran estabilidad. Por otro lado, para muestras mayores, \textit{Spark} fue superior en tres aspectos. Primero, en la ejecución de agregaciones más complejas que involucraban la creación de una nueva llave y agregaciones utilizándola; segundo, en la escritura a \textit{MySQL} donde registró menores tiempos que \textit{Dask} cuando los resultados eran de aproximadamente 500,000 registros o mayores, y tercero, fue más robusto ya que completó un mayor porcentaje de las ejecuciones que \textit{Dask}. Por otro lado, \textit{Dask} mantuvo un mejor desempeño en los otros rubros y mostró una velocidad mucho mayor en la escritura de archivos \texttt{parquet}, en la ejecución del algoritmo iterativo gracias a un mejor manejo de la memoria, en el cálculo de agregaciones como máximos, mínimos y promedios y en tareas de preparación de datos como eliminación de valores nulos. Adicionalmente, la capacidad de escritura se mostró como de gran importancia para la ejecución de los procesos. Ya que esta muchas veces fue decisiva para hacer que un \textit{framework} completara un proceso más rápidamente que el otro. Además, se identificó una tendencia a que la brecha de tiempo entre ambos \textit{frameworks}, que casi siempre fue favorable a \textit{Dask}, se redujera conforme aumentaba el número de registros procesados. Lo que sugiere que \textit{Spark} se vuelve más competitivo conforme el tamaño del conjunto de datos aumenta.
 
-Considerando ahora la facilidad de implementación y de adopción de las herramientas, \textit{Dask} resultó más sencillo de instalar, empezar a utilizar y de integrar con herramientas de \textit{Python} existente. Además la documentación clara y concisa, su comunidad pequeña pero activa, un portal de usuario intuitivo y su parametrización automática fueron ventajas que la convierten en una herramienta fácil de adoptar y utilizar, sin embargo, tiene desventajas como su inestabilidad y su necesidad de paquetes adicionales para resolver casos de uso comunes. \textit{Spark}, por otra parte, resultó ser más difícil de adoptar aunque tiene una similitud importante con \textit{SQL} que lo convierte en una herramienta útil para resolver tareas de este tipo. Además, su gran repertorio de funciones y su integración con otras soluciones y con servicios de nube la vuelven una herramienta versátil y competitiva. No obstante, tiene desventajas como su gran libertad para la parametrización y su API poco familiar que pueden convertirla en una herramienta más difícil de adoptar.
+Considerando ahora la facilidad de implementación y de adopción de las herramientas, \textit{Dask} resultó más sencillo de instalar, empezar a utilizar y de integrar con herramientas de \textit{Python} existentes. Igualmente, su documentación clara y concisa, su comunidad pequeña pero activa, un portal de usuario intuitivo y su parametrización automática fueron ventajas que la convierten en una herramienta fácil de adoptar y utilizar. Sin embargo, tiene desventajas como su inestabilidad y su necesidad de paquetes adicionales para resolver casos de uso comunes. \textit{Spark}, por otra parte, resultó ser más difícil de adoptar aunque tiene una similitud importante con \textit{SQL} que lo convierte en una herramienta útil para resolver tareas de este tipo. Además, su gran repertorio de funciones y su integración con otras soluciones y con servicios de nube la vuelven una herramienta versátil y competitiva. No obstante, tiene desventajas como su gran libertad para la parametrización y su API poco familiar que pueden convertirla en una herramienta más difícil de adoptar.
 
 Como trabajo futuro de esta investigación, se sugiere ampliar este análisis a herramientas convencionales como \textit{Pandas}, así como un mayor enfoque en la escritura, un mayor desglose de los procesos y hacer pruebas con una mayor cantidad de datos y recursos de infraestructura puede ser de gran utilidad para entender mejor cada \textit{framework} en el futuro e intentar resolver algunas de las preguntas que aparecieron durante la investigación. Con esto en mente, los recursos como archivos de código, muestras de datos y resultados están disponibles en \cite{repo-spark-rita}.
 
@@ -196,7 +200,7 @@ Como trabajo futuro de esta investigación, se sugiere ampliar este análisis a 
 
 The results showed that when the sample size is smaller than one million records, \textit{Dask} has a better performance, as it combines short execution times, low variation, fast writing, low start time, faster computation of the results and great stability. On the other hand, for larger sample sizes, \textit{Spark} was superior in three aspects: first, on the execution of more complex aggregations involving the creation of a new key; secondly, when writing results to \textit{MySQL}, where it attained lower write times for more than 500,000 records, and finally, it showed greater robustness, as it achieved a greater percentage of completed executions than \textit{Dask}. However, \textit{Dask} obtained greater performance on the other aspects and showed faster writing to parquet files, a better execution of the iterative algorithm due to superior memory management, lower completion times for aggregation processes involving obtaining maximum, minimum and average values and also in data preparation processes such as eliminating null values. The execution of the processes showed the great importance of writing capabilities, as this was often a decisive factor for a framework to be faster than the other. It was also identified that the gap of time between both frameworks, often favorable to \textit{Dask}, tended to close as the sample size increased, which suggests that \textit{Spark} becomes more competitive when the dataset is larger. 
 
-Regarding the simplicity of implementation and an easy adoption of a framework, \textit{Dask} resulted simpler to install, start using and to integrate with existing \textit{Python} tools. Its clear and concise documentation, small but active community, intuitive user portal and automatic parametrization were advantages which make it a tool that is smooth to use and adopt. However, it has disadvantages such as its instability and the necessity of additional packages to solve common use cases. \textit{Spark}, on the other hand, turned out to be harder to adopt as it has important similarities with \textit{SQL}, which makes it great to solve such tasks. \textit{Spark} has a  great collection of functions and close integration with other popular solutions and cloud services that make it a versatile and competitive tool. Among its disadvantages lie its great freedom to define parameters and an unfamiliar \textit{API} which can be difficult to use.
+Regarding the simplicity of implementation and an easy adoption of a framework, \textit{Dask} resulted simpler to install, start using and to integrate with existing \textit{Python} tools. Its clear and concise documentation, small but active community, intuitive user portal and automatic parametrization were advantages which make it a tool that is smooth to use and adopt. However, it has disadvantages such as its instability and the necessity of additional packages to solve common use cases. \textit{Spark}, on the other hand, turned out to be harder to adopt. Among its disadvantages lie its great freedom to define parameters and an unfamiliar \textit{API} which can be difficult to use. On the other hand, it has important similarities with SQL, which makes it great to solve such tasks. Spark also has a great collection of functions and close integration with other popular solutions and cloud services that make it a versatile and competitive tool.
 
 As further work of this research, it was suggested to widen the scope and include other tools such as \textit{Pandas}, increase the focus on writing the data, have a greater understanding of the parts of each process and conduct experiments with larger datasets and greater infrastructure in order to achieve greater understanding of the frameworks and solve some of the questions which arose during the investigation. With that in mind, resources like scripts, data samples and results are available in \cite{repo-spark-rita}.
 
@@ -299,87 +303,87 @@ As further work of this research, it was suggested to widen the scope and includ
 %AAAAA
 
 % Contexto
-\bibitem{seagate} Reinsel, D., Gantz, J., \&; Rydning, J. (2017, April). Data Age 2025: The Evolution of Data to Life-Critical . Don’t Focus on Big Data. \url{https://www.import.io/wp-content/uploads/2017/04/Seagate-WP-DataAge2025-March-2017.pdf}. 
+\bibitem{seagate}[1] Reinsel, D., Gantz, J., \&; Rydning, J. (2017, April). Data Age 2025: The Evolution of Data to Life-Critical . Don’t Focus on Big Data. \url{https://www.import.io/wp-content/uploads/2017/04/Seagate-WP-DataAge2025-March-2017.pdf}. 
 
 % Datos
-\bibitem{linktranstat} On-Time : Reporting Carrier On-Time Performance (1987-present), \url{https://www.transtats.bts.gov/Fields.asp?gnoyr_VQ=FGJ}
+\bibitem{linktranstat}[2] On-Time : Reporting Carrier On-Time Performance (1987-present), \url{https://www.transtats.bts.gov/Fields.asp?gnoyr_VQ=FGJ}
 
 % Dijkstra
-\bibitem{dijkstraexplicado} Boardman, S. (2014). Shortest path problem (Dijkstra’s algorithm). In Advancing Maths For AQA: 2ndEdition (2nd ed., pp. 23–43). essay, Pearson. \url{www.pearsonschoolsandfecolleges.co.uk/secondary/Mathematics/16plus/AdvancingMathsForAQA2ndEdition/Samples/SampleMaterial/Chp-02\%20023-043.pdf}. 
+\bibitem{dijkstraexplicado}[3] Boardman, S. (2014). Shortest path problem (Dijkstra’s algorithm). In Advancing Maths For AQA: 2ndEdition (2nd ed., pp. 23–43). essay, Pearson. \url{www.pearsonschoolsandfecolleges.co.uk/secondary/Mathematics/16plus/AdvancingMathsForAQA2ndEdition/Samples/SampleMaterial/Chp-02\%20023-043.pdf}. 
 
-\bibitem{dijkstrabellford} AbuSalim, S. W., Ibrahim, R., Saringat, M. Z., Jamel, S., \& Wahab, J. A. (2020, September). Comparative analysis between dijkstra and bellman-ford algorithms in shortest path optimization. In IOP Conference Series: Materials Science and Engineering (Vol. 917, No. 1, p. 012077). IOP Publishing. \url{https://iopscience.iop.org/article/10.1088/1757-899X/917/1/012077}
+\bibitem{dijkstrabellford}[4] AbuSalim, S. W., Ibrahim, R., Saringat, M. Z., Jamel, S., \& Wahab, J. A. (2020, September). Comparative analysis between dijkstra and bellman-ford algorithms in shortest path optimization. In IOP Conference Series: Materials Science and Engineering (Vol. 917, No. 1, p. 012077). IOP Publishing. \url{https://iopscience.iop.org/article/10.1088/1757-899X/917/1/012077}
 
 % Parquet
-\bibitem{column-oriented} Abadi, D. J., Boncz, P. A., \& Harizopoulos, S. (2009). Column-oriented database systems. Proceedings of the VLDB Endowment, 2(2), 1664-1665. \url{https://paperhub.s3.amazonaws.com/741f4f9f3201baa76ddf05d3bff631bd.pdf}.
+\bibitem{column-oriented}[5] Abadi, D. J., Boncz, P. A., \& Harizopoulos, S. (2009). Column-oriented database systems. Proceedings of the VLDB Endowment, 2(2), 1664-1665. \url{https://paperhub.s3.amazonaws.com/741f4f9f3201baa76ddf05d3bff631bd.pdf}.
 
-\bibitem{columnar-storage-blog} Rathbone, M. (2019, November 21). Beginners Guide to Columnar File Formats in Spark and Hadoop. Matthew Rathbone's Blog. \url{https://blog.matthewrathbone.com/2019/11/21/guide-to-columnar-file-formats.html}.
+\bibitem{columnar-storage-blog}[6] Rathbone, M. (2019, November 21). Beginners Guide to Columnar File Formats in Spark and Hadoop. Matthew Rathbone's Blog. \url{https://blog.matthewrathbone.com/2019/11/21/guide-to-columnar-file-formats.html}.
 
 % Caching
-\bibitem{aws-caching} Amazon Web Services, Inc. (2021). Caching Overview. Amazon AWS. \url{https://aws.amazon.com/caching/}. 
+\bibitem{aws-caching}[7] Amazon Web Services, Inc. (2021). Caching Overview. Amazon AWS. \url{https://aws.amazon.com/caching/}. 
 
 % Dask
-\bibitem{daskdocs} Anaconda Inc. (2018). Dask. Retrieved March 26, 2021, from \url{https://docs.dask.org/en/latest/index.html}
+\bibitem{daskdocs}[8] Anaconda Inc. (2018). Dask. Retrieved March 26, 2021, from \url{https://docs.dask.org/en/latest/index.html}
 
-\bibitem{daskpaper} Rocklin, M. (2015, July). Dask: Parallel computation with blocked algorithms and task scheduling. In Proceedings of the 14th python in science conference (Vol. 130, p. 136). Austin, TX: SciPy. \url{https://pdfs.semanticscholar.org/73b5/8192f30bb6be8e798084d4481b97124570ed.pdf}.
+\bibitem{daskpaper}[9] Rocklin, M. (2015, July). Dask: Parallel computation with blocked algorithms and task scheduling. In Proceedings of the 14th python in science conference (Vol. 130, p. 136). Austin, TX: SciPy. \url{https://pdfs.semanticscholar.org/73b5/8192f30bb6be8e798084d4481b97124570ed.pdf}.
 
-\bibitem{daskoverheads} Böhm, S., \& Beránek, J. (2020, November). Runtime vs Scheduler: Analyzing Dask’s Overheads. In 2020 IEEE/ACM Workflows in Support of Large-Scale Science (WORKS) (pp. 1-8). IEEE. \url{https://arxiv.org/pdf/2010.11105.pdf}.
+\bibitem{daskoverheads}[10] Böhm, S., \& Beránek, J. (2020, November). Runtime vs Scheduler: Analyzing Dask’s Overheads. In 2020 IEEE/ACM Workflows in Support of Large-Scale Science (WORKS) (pp. 1-8). IEEE. \url{https://arxiv.org/pdf/2010.11105.pdf}.
 
-\bibitem{daskscheduling} Anaconda Inc. (2018). Scheduling. Retrieved March 26, 2021, from \url{https://docs.dask.org/en/latest/scheduling.html}.
+\bibitem{daskscheduling}[11] Anaconda Inc. (2018). Scheduling. Retrieved March 26, 2021, from \url{https://docs.dask.org/en/latest/scheduling.html}.
 
-\bibitem{daskdistributed} Anaconda Inc. (2016). Dask.distributed. Retrieved March 26, 2021, from \url{https://distributed.dask.org/en/latest/}.
+\bibitem{daskdistributed}[12] Anaconda Inc. (2016). Dask.distributed. Retrieved March 26, 2021, from \url{https://distributed.dask.org/en/latest/}.
 
-\bibitem{daskdistributedsetup} Anaconda Inc. (n.d.). Quickstart. Dask.distributed 2021.05.1 documentation. \url{https://distributed.dask.org/en/latest/quickstart.html#setup-dask-distributed-the-hard-way}. 
+\bibitem{daskdistributedsetup}[13] Anaconda Inc. (n.d.). Quickstart. Dask.distributed 2021.05.1 documentation. \url{https://distributed.dask.org/en/latest/quickstart.html#setup-dask-distributed-the-hard-way}. 
 
-\bibitem{daskdataframe} Anaconda Inc. (2018). DataFrame. Retrieved April 02, 2021, from \url{https://docs.dask.org/en/latest/dataframe.html}.
+\bibitem{daskdataframe}[14] Anaconda Inc. (2018). DataFrame. Retrieved April 02, 2021, from \url{https://docs.dask.org/en/latest/dataframe.html}.
 
-\bibitem{daskbestpractices} Anaconda Inc. (2018). Dask - Best Practices. Retrieved April 04, 2021, from \url{https://docs.dask.org/en/latest/dataframe-best-practices.html}.
+\bibitem{daskbestpractices}[15] Anaconda Inc. (2018). Dask - Best Practices. Retrieved April 04, 2021, from \url{https://docs.dask.org/en/latest/dataframe-best-practices.html}.
 
 % Spark
-\bibitem{sparkberkeley} Zaharia, M., Xin, R. S., Wendell, P., Das, T., Armbrust, M., Dave, A., ... \& Stoica, I. (2016). Apache spark: a unified engine for big data processing. Communications of the ACM, 59(11), 56-65. Retrieved March 24, 2021, from \url{https://people.eecs.berkeley.edu/~alig/papers/spark-cacm.pdf}.
+\bibitem{sparkberkeley}[16] Zaharia, M., Xin, R. S., Wendell, P., Das, T., Armbrust, M., Dave, A., ... \& Stoica, I. (2016). Apache spark: a unified engine for big data processing. Communications of the ACM, 59(11), 56-65. Retrieved March 24, 2021, from \url{https://people.eecs.berkeley.edu/~alig/papers/spark-cacm.pdf}.
 
-\bibitem{sparkhardware} Apache Foundation. (n.d.). Hardware Provisioning. Hardware Provisioning - Spark 2.4.0 Documentation. \url{https://spark.apache.org/docs/2.4.0/hardware-provisioning.html}.
+\bibitem{sparkhardware}[17] Apache Foundation. (n.d.). Hardware Provisioning. Hardware Provisioning - Spark 2.4.0 Documentation. \url{https://spark.apache.org/docs/2.4.0/hardware-provisioning.html}.
 
-\bibitem{sparkconfcloudera} Ryza, S. (2015). How-to: Tune Your Apache Spark Jobs (Part 2). Cloudera Blog. \url{https://blog.cloudera.com/how-to-tune-your-apache-spark-jobs-part-2/}. 
+\bibitem{sparkconfcloudera}[18] Ryza, S. (2015). How-to: Tune Your Apache Spark Jobs (Part 2). Cloudera Blog. \url{https://blog.cloudera.com/how-to-tune-your-apache-spark-jobs-part-2/}. 
 
-\bibitem{sparkconfuds} Rao, S. (2020, April 21). Spark performance tuning guidelines. Unified Data Sciences (Big Data). \url{https://www.unifieddatascience.com/spark-performance-tuning-guidelines}. 
+\bibitem{sparkconfuds}[19] Rao, S. (2020, April 21). Spark performance tuning guidelines. Unified Data Sciences (Big Data). \url{https://www.unifieddatascience.com/spark-performance-tuning-guidelines}. 
 
-\bibitem{sparkibm} Kambhampati, S. (2020, June 30). Explore best practices for Spark performance optimization. Retrieved March 26, 2021, from \url{https://developer.ibm.com/technologies/artificial-intelligence/blogs/spark-performance-optimization-guidelines/}
+\bibitem{sparkibm}[20] Kambhampati, S. (2020, June 30). Explore best practices for Spark performance optimization. Retrieved March 26, 2021, from \url{https://developer.ibm.com/technologies/artificial-intelligence/blogs/spark-performance-optimization-guidelines/}
 
-\bibitem{sparkguide} Chambers, B., \& Zaharia, M. (2018). Spark: The definitive guide: Big data processing made simple. O'Reilly Media, Inc.
+\bibitem{sparkguide}[21] Chambers, B., \& Zaharia, M. (2018). Spark: The definitive guide: Big data processing made simple. O'Reilly Media, Inc.
 
-\bibitem{sparkclusteroverview} Cluster mode overview. (n.d.). Retrieved March 24, 2021, from \url{https://spark.apache.org/docs/2.4.0/cluster-overview.html}
+\bibitem{sparkclusteroverview}[22] Cluster mode overview. (n.d.). Retrieved March 24, 2021, from \url{https://spark.apache.org/docs/2.4.0/cluster-overview.html}
 
 
 % Datos comunidad dask y spark
-\bibitem{repo-dask} Dask. (2021). dask/dask. GitHub. \url{https://github.com/dask/dask}.
+\bibitem{repo-dask}[23] Dask. (2021). dask/dask. GitHub. \url{https://github.com/dask/dask}.
 
-\bibitem{repo-spark} Apache, Spark. (2021). apache/spark. GitHub. \url{https://github.com/apache/spark}.
+\bibitem{repo-spark}[24] Apache, Spark. (2021). apache/spark. GitHub. \url{https://github.com/apache/spark}.
 
-\bibitem{stackoverflow-stats} Stack Overflow. (2021). Stack Overflow Trends. Stack Overflow Insights - Developer Hiring, Marketing, and User Research. \url{https://insights.stackoverflow.com/trends?tags=dask\%2Cpyspark\%2Capache-spark}.   
+\bibitem{stackoverflow-stats}[25] Stack Overflow. (2021). Stack Overflow Trends. Stack Overflow Insights - Developer Hiring, Marketing, and User Research. \url{https://insights.stackoverflow.com/trends?tags=dask\%2Cpyspark\%2Capache-spark}.   
 
 % AWS
-\bibitem{ec2-instances} Amazon Web Services Inc. (2021). Amazon EC2 Instance Types.  \url{https://aws.amazon.com/ec2/instance-types/}.
+\bibitem{ec2-instances}[26] Amazon Web Services Inc. (2021). Amazon EC2 Instance Types.  \url{https://aws.amazon.com/ec2/instance-types/}.
 
 % Comparacion Spark - Dask
-\bibitem{comparative-evolution} Mehta, P., Dorkenwald, S., Zhao, D., Kaftan, T., Cheung, A., Balazinska, M., ... \& AlSayyad, Y. (2016). Comparative evaluation of big-data systems on scientific image analytics workloads. arXiv preprint arXiv:1612.02485. \url{https://homes.cs.washington.edu/~magda/papers/mehta-vldb17.pdf}. 
+\bibitem{comparative-evolution}[27] Mehta, P., Dorkenwald, S., Zhao, D., Kaftan, T., Cheung, A., Balazinska, M., ... \& AlSayyad, Y. (2016). Comparative evaluation of big-data systems on scientific image analytics workloads. arXiv preprint arXiv:1612.02485. \url{https://homes.cs.washington.edu/~magda/papers/mehta-vldb17.pdf}. 
 
-\bibitem{dask-spark-neuroimaging} Dugré, M., Hayot-Sasson, V., \& Glatard, T. (2019, November). A performance comparison of dask and apache spark for data-intensive neuroimaging pipelines. In 2019 IEEE/ACM Workflows in Support of Large-Scale Science (WORKS) (pp. 40-49). IEEE. \url{https://arxiv.org/pdf/1907.13030.pdf}.
+\bibitem{dask-spark-neuroimaging}[28] Dugré, M., Hayot-Sasson, V., \& Glatard, T. (2019, November). A performance comparison of dask and apache spark for data-intensive neuroimaging pipelines. In 2019 IEEE/ACM Workflows in Support of Large-Scale Science (WORKS) (pp. 40-49). IEEE. \url{https://arxiv.org/pdf/1907.13030.pdf}.
 
-\bibitem{koalas-dask} Meng, X., \& Kwon, H. (2021, April 8). How fast Koalas and PySpark are compared to Dask - The Databricks Blog. Databricks. \url{https://databricks.com/blog/2021/04/07/benchmark-koalas-pyspark-and-dask.html}. 
+\bibitem{koalas-dask}[29] Meng, X., \& Kwon, H. (2021, April 8). How fast Koalas and PySpark are compared to Dask - The Databricks Blog. Databricks. \url{https://databricks.com/blog/2021/04/07/benchmark-koalas-pyspark-and-dask.html}. 
 
 % Repo de git
-\bibitem{repo-spark-rita} Olarra, I. (2021). Comparación de Dask y Spark. Spark - Rita. \url{https://github.com/ikerforce/spark-rita}.
+\bibitem{repo-spark-rita}[30] Olarra, I. (2021). Comparación de Dask y Spark. Spark - Rita. \url{https://github.com/ikerforce/spark-rita}.
 
-\bibitem{compara-resultados} Olarra, I. (2021). Proceso de revisión de equivalencia de resultados. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/blob/master/results/revision_equivalencia_resultados.py}. 
+\bibitem{compara-resultados}[31] Olarra, I. (2021). Proceso de revisión de equivalencia de resultados. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/blob/master/results/revision_equivalencia_resultados.py}. 
 
-\bibitem{proceso-muestreo} Olarra, I. (2021). Proceso de obtención de muestras de datos. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/blob/master/src/muestreo_spark.py}.
+\bibitem{proceso-muestreo}[32] Olarra, I. (2021). Proceso de obtención de muestras de datos. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/blob/master/src/muestreo_spark.py}.
 
-\bibitem{tratamiento-datos} Olarra, I. (2021). Proceso de preparación de datos. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/tree/master/src/preprocessing}.
+\bibitem{tratamiento-datos}[33] Olarra, I. (2021). Proceso de preparación de datos. Spark - Rita. \url{https://github.com/ikerforce/spark-rita/tree/master/src/preprocessing}.
 
-\bibitem{issue-dask-yarn} Olarra, I. (2020, April 28). dask-yarn job fails with dumps\_msgpack ImportError · Issue \#147 · dask/dask-yarn. GitHub - Dask. \url{https://github.com/dask/dask-yarn/issues/147}. 
+\bibitem{issue-dask-yarn}[34] Olarra, I. (2020, April 28). dask-yarn job fails with dumps\_msgpack ImportError · Issue \#147 · dask/dask-yarn. GitHub - Dask. \url{https://github.com/dask/dask-yarn/issues/147}. 
 
 % Preguntas Stack-Overflow 
-\bibitem{q-dask-yarn} Olarra, I. (1969, November 1). dask-yarn script fails with distributed.scheduler.KilledWorker and empty workers. Stack Overflow. \url{https://stackoverflow.com/questions/67326749/dask-yarn-script-fails-with-distributed-scheduler-}\ \url{killedworker-and-empty-workers}. 
+\bibitem{q-dask-yarn}[35] Olarra, I. (1969, November 1). dask-yarn script fails with distributed.scheduler.KilledWorker and empty workers. Stack Overflow. \url{https://stackoverflow.com/questions/67326749/dask-yarn-script-fails-with-distributed-scheduler-}\ \url{killedworker-and-empty-workers}. 
 
 
 %BBBBB
@@ -441,7 +445,7 @@ As further work of this research, it was suggested to widen the scope and includ
 \small
 \label{ed}
 \begin{tabular}{c}
-\textit{Comparación de Dask y Spark en} \\ \textit{procesamiento de grandes volúmenes de datos,}\\ escrito por Iker Antonio Olarra Maldonado,\\ se terminó de imprimir en agosto de 2021\\ en los talleres de Tesis Matozo.\\ Campeche 156, colonia Roma,\\ Ciudad de México.
+\textit{Comparación de Dask y Spark en el} \\ \textit{procesamiento de grandes volúmenes de datos,}\\ escrito por Iker Antonio Olarra Maldonado,\\ se terminó de imprimir en agosto de 2021\\ en los talleres de Tesis Martínez,\\ Ciudad de México.
 \end{tabular}
 \end{table}
 

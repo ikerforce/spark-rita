@@ -2,13 +2,13 @@
 
 \noindent El objetivo de este análisis es introducir al cómputo en paralelo y distribuido y describir las capacidades principales de los \textit{frameworks}  de \textit{Big Data}: \textit{Spark} y \textit{Dask}. Además, se introduce al algoritmo de cálculo de ruta mínima \textit{Dijkstra} que será utilizado para la investigación.
 
-\section{Apache Spark}
+\section{\textit{Apache Spark}}
 
 \textit{Apache Spark} es un motor de cómputo unificado con bibliotecas para procesamiento de datos en paralelo en grupos de computadoras. Soporta múltiples lenguajes de programación como \textit{Python}, \textit{Java}, \textit{Scala} y \textit{R}. Entre sus aplicaciones más comunes están trabajos de \textit{SQL}, \textit{streaming} y \textit{machine learning} \cite{sparkguide}. \textit{Spark} facilita el cómputo de datos proveniente de diversas fuertes y la unión de las mismas debido a que soporta múltiples sistemas de almacenamiento. Por ejemplo: \textit{HDFS}, \textit{S3}, \textit{Cassandra} y \textit{SQL}. El desempeño de \textit{Spark} en múltiples actividades como conteo de palabras y ejecución de consultas de \textit{SQL} es comparable al de herramientas diseñadas para propósitos específicos como \textit{Impala} y \textit{Storm} \cite{sparkberkeley}, lo que lo convierte en un \textit{framework} multipropósito competitivo.
 
-\subsection{Arquitectura de Spark}
+\subsection{Arquitectura de \textit{Spark}}
 
-Uno de los elementos centrales de \textit{Spark} es su \textit{Lazy Evaluation}, es decir, que espera hasta el último momento para ejecutar las operaciones indicadas por el usuario. Gracias a esto cada instrucción se puede añadir a un plan de ejecución que se aplica a los datos iniciales y que se ejecuta al llamar una acción. Crear este plan y esperar hasta el último momento para ejecutarlo, le permite a \textit{Spark} analizarlo y optimizarlo para hacer su ejecución lo más eficiente posible. Un ejemplo concreto es un filtro que se realiza al final del plan de ejecución, cuando podría ejecutarse antes sin cambiar el proceso general. En estos casos \textit{Spark} lo pondría antes en el plan de forma automática para reducir los datos que tiene que procesar y así reducir el tiempo de ejecución.
+Uno de los elementos centrales de \textit{Spark} es su \textit{Lazy Evaluation}, es decir, que espera hasta el último momento para ejecutar las operaciones indicadas por el usuario. Gracias a esto, cada instrucción se puede añadir a un plan de ejecución que se aplica a los datos iniciales y que se ejecuta al llamar una acción. Crear este plan y esperar hasta el último momento para ejecutarlo, le permite a \textit{Spark} analizarlo y optimizarlo para hacer su ejecución lo más eficiente posible. Un ejemplo concreto es un filtro que se realiza al final del plan de ejecución, cuando podría ejecutarse antes sin cambiar el proceso general. En estos casos \textit{Spark} lo pondría antes en el plan de forma automática para reducir los datos que tiene que procesar y así reducir el tiempo de ejecución.
 
 Una aplicación de \textit{Spark} consiste de un proceso \textit{driver} y un conjunto de procesos llamados \textit{executor} que trabajan en conjunto durante la ejecución de la aplicación. El proceso \textit{driver} es la parte central de la aplicación, ya que se encarga de mantener información sobre el estado de la aplicación, responder a las instrucciones del usuario y analizar, distribuir y calendarizar el trabajo entre los ejecutores. Este proceso existe en uno solo de los nodos y está en constante comunicación con los demás \cite{sparkguide}. Los \textit{executors}, por otra parte, se encargan de realizar el trabajo que el \textit{driver} les asigna y de almacenar los datos utilizados durante la ejecución de la aplicación \cite{sparkclusteroverview}.
 
@@ -16,13 +16,13 @@ La principal abstracción de datos en \textit{Spark} son los \textit{Resilient D
 
 Otra característica importante de \textit{Spark} es su capacidad para recuperarse después de fallos. A diferencia de otras herramientas, \textit{Spark} no almacena resultados intermedios de manera predeterminada, sino que usa una estrategia llamada linaje. Esta estrategia consiste en que cada \textit{RDD} mantenga un registro de las transformaciones que se realizaron para construirlo y las vuelve a ejecutar en caso de que haya alguna falla. Realizar la recuperación de este forma tiene ventajas ya que es ligera en almacenamiento y no requiere operaciones de escritura. Además, la recuperación de información se puede realizar en paralelo en diferentes nodos, lo que acelera el proceso \cite{sparkberkeley}.
 
-Adicionalmente, \textit{Spark} tiene la capacidad de ejecutar múltiples tareas en paralelo, lo cual logra dividiendo los datos en fragmentos llamados \textit{particiones}, que son colecciones de registros que están en una computadora física específica \cite{sparkguide}. Es importante notar que el usuario no interactúa de forma explícita con las particiones, sino que da instrucciones de alto nivel y \textit{Spark} decide cómo se ejecutarán en el grupo de computadoras y cómo hará la partición de los datos totales.
+\textit{Spark} tiene la capacidad de ejecutar múltiples tareas en paralelo, lo cual logra dividiendo los datos en fragmentos llamados \textit{particiones}, que son colecciones de registros que están en una computadora física específica \cite{sparkguide}. Es importante notar que el usuario no interactúa de forma explícita con las particiones, sino que da instrucciones de alto nivel y \textit{Spark} decide cómo se ejecutarán en el grupo de computadoras y cómo hará la partición de los datos totales.
 
 \subsection{DataFrames}
 
 Los \textit{DataFrames} de \textit{Spark} son la API estructurada más popular del \textit{framework} y permiten representar tablas de datos a través de renglones y columnas nombradas que pueden extenderse a múltiples computadoras \cite{sparkguide}. Estas estructuras buscan que se pueda interactuar con los datos de la misma forma que en bases de datos analíticas. Los \textit{DataFrames} son \textit{RDDs} que cumplen con un esquema específico \cite{sparkberkeley} y se pueden manipular mediante consultas de \textit{SQL} y funciones preestablecidas para filtrado de datos y agregaciones \cite{sparkberkeley}. Esta estructura es la que más se utilizará durante esta investigación.
 
-\subsection{Mejores prácticas de Apache Spark}
+\subsection{Mejores prácticas de \textit{Spark}}
 
 Para optimizar el uso de recursos y reducir el tiempo de ejecución, se siguieron las mejores prácticas listadas en \cite{sparkibm}. A continuación se resumen los puntos más importantes.
 
@@ -75,9 +75,9 @@ Es importante utilizar los recursos del ambiente distribuido de forma inteligent
 	\item \texttt{--executor-cores} determina el número de cores que se asigna a cada ejecutor y va muy de la mano con el parámetro \texttt{--num-executors} por lo que se deben de calcular de manera conjunta. De acuerdo a \cite{sparkconfcloudera}, el número de cores que se le asigna a cada ejecutor determina el número de tareas simultáneas que puede realizar.
 \end{itemize}
 
-\section{Dask}
+\section{\textit{Dask}}
 
-\textit{Dask} es una librería de \textit{Python} para cómputo en paralelo que extiende herramientas populares en el análisis de datos, como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators}, a tareas que no caben en memoria o a ambientes distribuidos. \textit{Dask} cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en centros de datos con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas} \cite{daskdocs}. Al usar esta interfaz se genera una gráfica de tareas de forma automática que después es ejecutada en paralelo. Además Dask cuenta con distintas formas de ejecutar las tareas, sin embargo este trabajo se concentra en el modo \textit{Dask Distributed} que fue diseñado para ejecución en grupos de computadoras y que funciona en ambientes locales también \cite{daskscheduling}.
+\textit{Dask} es una librería de \textit{Python} para cómputo en paralelo que extiende herramientas populares en el análisis de datos, como \textit{NumPy}, \textit{Pandas} y \textit{Python iterators}, a tareas que no caben en memoria o a ambientes distribuidos. \textit{Dask} cuenta con un calendarizador dinámico de tareas y está desarrollado totalmente en \textit{Python}. Se puede utilizar en modo \textit{standalone} o en centros de datos con cientos de máquinas. Dask ofrece una interfaz familiar ya que emula a \textit{Numpy} y \textit{Pandas} \cite{daskdocs}. Al usar esta interfaz se genera una gráfica de tareas de forma automática que después es ejecutada en paralelo. Además Dask cuenta con distintas formas de ejecutar las tareas. Sin embargo, este trabajo se concentra en el modo \textit{Dask Distributed} que fue diseñado para ejecución en grupos de computadoras y que funciona en ambientes locales también \cite{daskscheduling}.
 
 \subsection{Arquitectura de \textit{Dask}}
 
@@ -88,10 +88,10 @@ Para poder operar con conjuntos de datos más grandes que la memoria disponible,
 
 \subsection{DataFrames}
 
-Un \textit{Dask DataFrame} es una estructura paralela y extensa, compuesta de múltiples \textit{Pandas DataFrames} más pequeños llamados particiones y que están separados sobre un índice. Los \textit{DataFrames} pueden estar en memoria o en disco en una o múltiples máquinas. Una operación sobre un \textit{Dask DataFrame} ejecuta múltiples operaciones en los \textit{Pandas DataFrames} que lo componen \cite{daskdataframe}. Una de las grandes ventajas de \textit{Dask} es que al estar conformado de \textit{Pandas DataFrames}, tiene una interfaz muy similar a la de \textit{Pandas}, lo que lo hace fácil de adoptar. No obstante, es importante notar que los \textit{Dask DataFrames} no implementan todas las capacidades de \textit{Pandas} por lo que puede haber funciones que aún no estén implementadas o operaciones que sean más costosas que en un \textit{Pandas DataFrame}.
+Un \textit{Dask DataFrame} es una estructura paralela y extensa, compuesta de múltiples \textit{Pandas DataFrames} más pequeños llamados particiones y que están separados sobre un índice. Los \textit{DataFrames} pueden estar en memoria o en disco en una o múltiples máquinas. Una operación sobre un \textit{Dask DataFrame} ejecuta múltiples operaciones en los \textit{Pandas DataFrames} que lo componen \cite{daskdataframe}. Una de las grandes ventajas de \textit{Dask} es que al estar conformado de \textit{Pandas DataFrames}, tiene una interfaz muy similar a la de \textit{Pandas}, lo que lo hace fácil de adoptar. No obstante, es importante notar que los \textit{Dask DataFrames} no implementan todas las capacidades de \textit{Pandas} por lo que puede haber funciones que aún no estén implementadas u operaciones que sean más costosas que en un \textit{Pandas DataFrame}.
 
 
-\subsection{Mejores prácticas en Dask}
+\subsection{Mejores prácticas en \textit{Dask}}
 
 En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas listadas en \cite{daskbestpractices}:
 \begin{itemize}
@@ -109,10 +109,10 @@ En el caso de \textit{Dask}, se siguieron las siguientes mejores prácticas list
 	\item Almacenar y cargar los datos en formato \textit{Apache Parquet}.
 \end{itemize}
 
-\section{Algoritmo de Dijkstra}
+\section{Algoritmo de \textit{Dijkstra}}
 
 
-El algoritmo de Dijkstra fue diseñado por el computólogo Edsger Dijkstra en 1959 para encontrar el camino más corto a través de una gráfica \cite{dijkstraexplicado}. Este algoritmo es utilizado ampliamente en distintas industrias y entre sus ejemplos más populares está la búsqueda de rutas de \textit{Google Maps} y de protocolos de ruteo para encontrar las rutas menos concurridas en internet. Este algoritmo tiene ventajas como que encuentra la ruta óptima y que una vez encontrada la ruta al destino especificado, el algoritmo puede detenerse sin la necesidad de visitar el resto de los nodos \cite{dijkstrabellford}. Sin embargo, una de sus mayores desventajas es la gran capacidad de cómputo que requiere, ya que consume mucho CPU y memoria para calcular la ruta óptima en gráficas extensas \cite{dijkstrabellford}. Esto lo convierte en un caso de uso ideal para la investigación ya que los \textit{frameworks} buscan satisfacer procesos que requieran grandes cantidades de recursos de cómputo. Además, analizar este escenario provee a la investigación de un caso de uso más complejo. Los pasos necesarios para ejecución se especifican en \cite{dijkstrabellford} y son los siguientes:
+El algoritmo de Dijkstra fue diseñado por el computólogo Edsger Dijkstra en 1959 para encontrar el camino más corto a través de una gráfica \cite{dijkstraexplicado}. Este algoritmo es utilizado ampliamente en distintas industrias y entre sus ejemplos más populares está la búsqueda de rutas de \textit{Google Maps} y de protocolos de ruteo para encontrar las rutas menos concurridas en internet. Este algoritmo tiene ventajas como que encuentra la ruta óptima y que una vez encontrada la ruta al destino especificado, el algoritmo puede detenerse sin la necesidad de visitar el resto de los nodos \cite{dijkstrabellford}. Sin embargo, una de sus mayores desventajas es la gran capacidad de cómputo que requiere, ya que consume mucho CPU y memoria para calcular la ruta óptima en gráficas extensas \cite{dijkstrabellford}. Esto lo convierte en un caso de uso ideal para la investigación, ya que los \textit{frameworks} buscan satisfacer procesos que requieran grandes cantidades de recursos de cómputo. Además, analizar este escenario provee a la investigación de un caso de uso más complejo. Los pasos necesarios para ejecución se especifican en \cite{dijkstrabellford} y son los siguientes:
 
 El algoritmo tiene los siguientes argumentos de entrada:
 \begin{itemize}
